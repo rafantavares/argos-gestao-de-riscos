@@ -1,0 +1,32 @@
+"""Enumerações compartilhadas entre os models e o módulo de ML."""
+import enum
+
+
+class PerfilUsuario(str, enum.Enum):
+    ADMIN = "admin"
+    GERENTE = "gerente"
+
+
+class CategoriaRisco(str, enum.Enum):
+    TECNICO = "tecnico"
+    ORGANIZACIONAL = "organizacional"
+    EXTERNO = "externo"
+    PESSOAL = "pessoal"
+
+
+class ProbabilidadeRisco(str, enum.Enum):
+    BAIXA = "baixa"
+    MEDIA = "media"
+    ALTA = "alta"
+
+
+class ImpactoRisco(str, enum.Enum):
+    BAIXO = "baixo"
+    MEDIO = "medio"
+    ALTO = "alto"
+
+
+def valores_enum(classe_enum):
+    """Usado como values_callable do SQLAlchemy: grava o .value (ex.: "tecnico")
+    no banco em vez do nome do membro Python (ex.: "TECNICO")."""
+    return [membro.value for membro in classe_enum]

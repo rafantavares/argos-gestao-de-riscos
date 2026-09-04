@@ -1,14 +1,26 @@
-fastapi==0.141.1
-uvicorn[standard]==0.52.1
-sqlalchemy==2.0.51
-psycopg2-binary==2.9.12
-python-jose[cryptography]==3.5.0
+# Framework web
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+
+# Banco de dados
+sqlalchemy==2.0.35
+psycopg2-binary==2.9.9
+
+# Validação de dados
+pydantic==2.9.2
+pydantic-settings==2.5.2
+email-validator==2.2.0
+
+# Autenticação e segurança
+python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-bcrypt==4.0.1
-scikit-learn==1.9.0
-pandas==3.0.5
-joblib==1.5.3
-python-dotenv==1.2.2
-pydantic-settings==2.14.2
-email-validator==2.3.0
-python-multipart==0.0.20
+python-multipart==0.0.12
+
+# Variáveis de ambiente
+python-dotenv==1.0.1
+
+# Machine Learning
+scikit-learn==1.5.2
+pandas==2.2.3
+numpy==2.1.1
+joblib==1.4.2
