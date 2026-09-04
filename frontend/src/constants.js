@@ -1,0 +1,40 @@
+// Valores devem bater exatamente com os enums do backend (app/models/enums.py).
+
+export const CATEGORIAS = [
+  { value: "tecnico", label: "Técnico" },
+  { value: "organizacional", label: "Organizacional" },
+  { value: "externo", label: "Externo" },
+  { value: "pessoal", label: "Pessoal" },
+];
+
+export const PROBABILIDADES = [
+  { value: "baixa", label: "Baixa" },
+  { value: "media", label: "Média" },
+  { value: "alta", label: "Alta" },
+];
+
+export const IMPACTOS = [
+  { value: "baixo", label: "Baixo" },
+  { value: "medio", label: "Médio" },
+  { value: "alto", label: "Alto" },
+];
+
+const ESCALA_PROBABILIDADE = { baixa: 1, media: 2, alta: 3 };
+const ESCALA_IMPACTO = { baixo: 1, medio: 2, alto: 3 };
+
+export const CORES_SEVERIDADE = {
+  baixo: "#2e7d32",
+  medio: "#ed6c02",
+  alto: "#c62828",
+};
+
+export function nivelSeveridade(probabilidade, impacto) {
+  const pontuacao = ESCALA_PROBABILIDADE[probabilidade] + ESCALA_IMPACTO[impacto];
+  if (pontuacao <= 3) return "baixo";
+  if (pontuacao === 4) return "medio";
+  return "alto";
+}
+
+export function rotulo(lista, value) {
+  return lista.find((item) => item.value === value)?.label ?? value;
+}
