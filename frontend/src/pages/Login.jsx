@@ -9,6 +9,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useAuth } from "../contexts/AuthContext";
+import { Logo } from "../components/Logo";
 
 export default function Login() {
   const { usuario, carregando, entrar } = useAuth();
@@ -45,9 +46,9 @@ export default function Login() {
       }}
     >
       <Paper sx={{ p: 4, width: 360 }} elevation={3}>
-        <Typography variant="h5" fontWeight={600} gutterBottom>
-          Gestão de Riscos de TI
-        </Typography>
+        <Box sx={{ mb: 2.5 }}>
+          <Logo size={30} fontSize={21} />
+        </Box>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
           Entre com seu email e senha.
         </Typography>

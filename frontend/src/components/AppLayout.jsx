@@ -18,6 +18,7 @@ import GroupIcon from "@mui/icons-material/Group";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { Logo } from "./Logo";
 
 const LARGURA_MENU = 220;
 
@@ -43,9 +44,9 @@ export default function AppLayout({ children }) {
     <Box sx={{ display: "flex" }}>
       <AppBar position="fixed" sx={{ zIndex: (tema) => tema.zIndex.drawer + 1 }}>
         <Toolbar sx={{ gap: 2 }}>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Gestão de Riscos de TI
-          </Typography>
+          <Box sx={{ flexGrow: 1 }}>
+            <Logo size={26} fontSize={18} />
+          </Box>
           <Chip
             label={usuario.perfil === "admin" ? "Admin" : "Gerente"}
             color="secondary"

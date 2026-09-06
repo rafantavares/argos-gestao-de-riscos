@@ -23,9 +23,9 @@ const ESCALA_PROBABILIDADE = { baixa: 1, media: 2, alta: 3 };
 const ESCALA_IMPACTO = { baixo: 1, medio: 2, alto: 3 };
 
 export const CORES_SEVERIDADE = {
-  baixo: "#2e7d32",
-  medio: "#ed6c02",
-  alto: "#c62828",
+  baixo: "#4ADE80",
+  medio: "#FBBF24",
+  alto: "#F87171",
 };
 
 export function nivelSeveridade(probabilidade, impacto) {

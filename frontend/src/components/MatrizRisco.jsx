@@ -35,13 +35,13 @@ export default function MatrizRisco({ riscos }) {
                   key={impacto.value}
                   elevation={0}
                   sx={{
-                    backgroundColor: CORES_SEVERIDADE[severidade],
-                    color: "#fff",
+                    backgroundColor: quantidade === 0 ? "transparent" : CORES_SEVERIDADE[severidade],
+                    border: quantidade === 0 ? "1px dashed #262D3B" : "none",
+                    color: quantidade === 0 ? "text.secondary" : "#0B0E14",
                     height: 64,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    opacity: quantidade === 0 ? 0.35 : 1,
                   }}
                 >
                   <Typography variant="h6">{quantidade}</Typography>
