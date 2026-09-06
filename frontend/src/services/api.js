@@ -80,3 +80,12 @@ export const recomendacoes = {
   listarTodasAdmin: () => api.get("/recomendacoes/admin/todas").then((r) => r.data),
   metricasHistorico: () => api.get("/recomendacoes/admin/metricas-historico").then((r) => r.data),
 };
+
+// --- planos de contingência (admin) ---
+export const planos = {
+  listar: () => api.get("/planos").then((r) => r.data),
+  criar: (dados) => api.post("/planos", dados).then((r) => r.data),
+  editar: (id, dados) => api.put(`/planos/${id}`, dados).then((r) => r.data),
+  alternarAtivo: (id, ativo) =>
+    api.patch(`/planos/${id}/ativo?ativo=${ativo}`).then((r) => r.data),
+};

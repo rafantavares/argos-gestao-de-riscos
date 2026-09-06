@@ -5,7 +5,9 @@ import { useAuth } from "./contexts/AuthContext";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
 import Gerentes from "./pages/admin/Gerentes";
+import PlanosContingencia from "./pages/admin/PlanosContingencia";
 import ProjetosAdmin from "./pages/admin/Projetos";
+import RiscosAdmin from "./pages/admin/Riscos";
 import GerenteDashboard from "./pages/gerente/Dashboard";
 import Recomendacao from "./pages/gerente/Recomendacao";
 import Riscos from "./pages/gerente/Riscos";
@@ -52,6 +54,22 @@ export default function App() {
         element={
           <PaginaProtegida perfil="admin">
             <Gerentes />
+          </PaginaProtegida>
+        }
+      />
+      <Route
+        path="/admin/riscos"
+        element={
+          <PaginaProtegida perfil="admin">
+            <RiscosAdmin />
+          </PaginaProtegida>
+        }
+      />
+      <Route
+        path="/admin/planos"
+        element={
+          <PaginaProtegida perfil="admin">
+            <PlanosContingencia />
           </PaginaProtegida>
         }
       />

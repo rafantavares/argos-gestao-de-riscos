@@ -57,3 +57,46 @@ virar 4D só porque o dataset ficou mais rico.
 - Frontend: 2 selects novos em `pages/gerente/Riscos.jsx`, chips
   correspondentes em `pages/gerente/Recomendacao.jsx`.
 - Migração: `app/core/migrar_fase2.py`.
+
+## Fase 3 — Dashboards e relatórios
+
+- Histórico de métricas de treinamento persistido no banco
+  (`MetricaTreinamento`, uma linha por algoritmo a cada retreino) em vez de
+  só sobrescrever `metricas.json` — gravado pelo *caller*
+  (`app/routers/recomendacoes.py`), não pelo módulo `app.ml` (que continua
+  sem depender de banco, testável isoladamente via CLI).
+- Endpoints admin novos: `GET /riscos/admin/todos`,
+  `GET /recomendacoes/admin/todas`, `GET /recomendacoes/admin/metricas-historico`.
+- Dashboard do gerente: gráfico de barras "riscos por status" + contagem por
+  categoria.
+- Dashboard do admin: gráfico de linha da evolução da acurácia dos 3
+  algoritmos entre retreinos, riscos por severidade (cross-projeto) e taxa
+  de aceitação de recomendações.
+- Biblioteca: `@mui/x-charts`, com cores fixas por série (não a paleta
+  automática da lib) — teal/azul/violeta para KNN/Árvore/Random Forest,
+  reaproveitando `CORES_SEVERIDADE`/`CORES_STATUS` onde fizer sentido
+  semanticamente.
+- Exportação CSV client-side (sem endpoint novo) na lista de riscos do
+  gerente e na visão cross-projeto do admin.
+
+## Fase 4 — Admin/governança
+
+- `PlanoContingencia` ganha `ativo` (default true) — plano não é apagado
+  (FK de `Recomendacao` histórica), só desativado.
+- CRUD admin-only em `app/routers/planos.py`: criar, editar, listar,
+  ativar/desativar.
+- **Bug real encontrado e corrigido durante o teste:** o seed inicial
+  (`app/core/seed.py`) insere os 12 planos com `id` explícito
+  (`bulk_insert_mappings`), o que não avança a sequence do Postgres. O
+  primeiro `INSERT` feito pela API (id automático) colidia com o id=1
+  (`UniqueViolation`). Corrigido com um `setval` na migração
+  (`app/core/migrar_fase4.py`).
+- Página `pages/admin/PlanosContingencia.jsx`: tabela + dialog de
+  criar/editar + toggle de ativo/inativo.
+- Página `pages/admin/Riscos.jsx`: visão somente-leitura cross-projeto, com
+  filtro por projeto e export CSV.
+- **Limitação conhecida (não é bug):** um plano novo só passa a ser
+  recomendado pelo modelo depois que pelo menos uma recomendação com esse
+  plano for aceita por um gerente — o feedback real vira exemplo de treino
+  (mesmo mecanismo incremental que já existia). Um plano recém-criado ainda
+  não aparece nas previsões do modelo até isso acontecer.

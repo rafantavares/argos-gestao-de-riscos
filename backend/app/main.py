@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.seed import semear_planos_contingencia
 from app.database import Base, SessaoLocal, engine
-from app.routers import auth, projetos, recomendacoes, riscos
+from app.routers import auth, planos, projetos, recomendacoes, riscos
 
 app = FastAPI(title="Sistema de Gestão de Riscos com Análise Preditiva")
 
@@ -20,6 +20,7 @@ app.include_router(auth.roteador)
 app.include_router(projetos.roteador)
 app.include_router(riscos.roteador)
 app.include_router(recomendacoes.roteador)
+app.include_router(planos.roteador)
 
 
 @app.on_event("startup")

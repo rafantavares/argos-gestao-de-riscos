@@ -12,6 +12,7 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
+import AssignmentIcon from "@mui/icons-material/Assignment";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import FolderIcon from "@mui/icons-material/Folder";
 import GroupIcon from "@mui/icons-material/Group";
@@ -26,6 +27,8 @@ const ITENS_ADMIN = [
   { rotulo: "Dashboard", caminho: "/admin", icone: <DashboardIcon /> },
   { rotulo: "Projetos", caminho: "/admin/projetos", icone: <FolderIcon /> },
   { rotulo: "Gerentes", caminho: "/admin/gerentes", icone: <GroupIcon /> },
+  { rotulo: "Riscos", caminho: "/admin/riscos", icone: <WarningAmberIcon /> },
+  { rotulo: "Planos de contingência", caminho: "/admin/planos", icone: <AssignmentIcon /> },
 ];
 
 const ITENS_GERENTE = [
