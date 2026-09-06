@@ -3,7 +3,7 @@ registra o aceite/rejeição do gerente e retreina o modelo com o feedback aceit
 from typing import List
 
 import pandas as pd
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.security import exigir_perfil, obter_usuario_atual
@@ -156,6 +156,7 @@ def listar_recomendacoes_do_risco(
 def responder_recomendacao(
     id_recomendacao: int,
     dados: RecomendacaoAtualizar,
+    tarefas_em_segundo_plano: BackgroundTasks,
     sessao: Session = Depends(obter_sessao),
     gerente: Usuario = Depends(obter_usuario_atual),
 ):
@@ -173,6 +174,8 @@ def responder_recomendacao(
 
     if dados.aceita:
         dataset_atualizado = _montar_dataset_com_feedback(sessao)
-        treinar_e_avaliar(dataset_atualizado)
+        # Retreino com GridSearchCV (tuning de hiperparâmetros) roda em segundo plano
+        # para não bloquear a resposta ao gerente por dezenas de segundos.
+        tarefas_em_segundo_plano.add_task(treinar_e_avaliar, dataset_atualizado)
 
     return recomendacao
