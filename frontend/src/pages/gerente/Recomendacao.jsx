@@ -6,14 +6,17 @@ import {
   Button,
   Chip,
   CircularProgress,
+  Divider,
+  MenuItem,
   Paper,
   Stack,
+  TextField,
   Typography,
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import { recomendacoes as servicoRecomendacoes, riscos as servicoRiscos } from "../../services/api";
-import { CATEGORIAS, IMPACTOS, PROBABILIDADES, rotulo } from "../../constants";
+import { CATEGORIAS, CORES_STATUS, IMPACTOS, PROBABILIDADES, STATUS_RISCO, rotulo } from "../../constants";
 
 const NOMES_ALGORITMOS = {
   knn: "KNN",
@@ -25,9 +28,17 @@ export default function Recomendacao() {
   const { idRisco } = useParams();
   const [risco, setRisco] = useState(null);
   const [recomendacao, setRecomendacao] = useState(null);
+  const [historico, setHistorico] = useState([]);
+  const [novoStatus, setNovoStatus] = useState("");
+  const [comentarioStatus, setComentarioStatus] = useState("");
+  const [atualizandoStatus, setAtualizandoStatus] = useState(false);
   const [carregando, setCarregando] = useState(true);
   const [processando, setProcessando] = useState(false);
   const [erro, setErro] = useState("");
+
+  async function carregarHistorico() {
+    setHistorico(await servicoRiscos.historico(idRisco));
+  }
 
   async function carregar() {
     setCarregando(true);
@@ -35,6 +46,8 @@ export default function Recomendacao() {
     try {
       const dadosRisco = await servicoRiscos.obter(idRisco);
       setRisco(dadosRisco);
+      setNovoStatus(dadosRisco.status);
+      await carregarHistorico();
 
       const existentes = await servicoRecomendacoes.listarPorRisco(idRisco);
       if (existentes.length > 0) {
@@ -47,6 +60,25 @@ export default function Recomendacao() {
       setErro(e.response?.data?.detail ?? "Não foi possível carregar a recomendação.");
     } finally {
       setCarregando(false);
+    }
+  }
+
+  async function atualizarStatus() {
+    setAtualizandoStatus(true);
+    setErro("");
+    try {
+      const atualizado = await servicoRiscos.atualizarStatus(
+        idRisco,
+        novoStatus,
+        comentarioStatus || undefined
+      );
+      setRisco(atualizado);
+      setComentarioStatus("");
+      await carregarHistorico();
+    } catch (e) {
+      setErro(e.response?.data?.detail ?? "Não foi possível atualizar o status.");
+    } finally {
+      setAtualizandoStatus(false);
     }
   }
 
@@ -110,6 +142,12 @@ export default function Recomendacao() {
             <Chip size="small" label={rotulo(CATEGORIAS, risco.categoria)} />
             <Chip size="small" label={`Probabilidade: ${rotulo(PROBABILIDADES, risco.probabilidade)}`} />
             <Chip size="small" label={`Impacto: ${rotulo(IMPACTOS, risco.impacto)}`} />
+            <Chip
+              size="small"
+              variant="outlined"
+              label={rotulo(STATUS_RISCO, risco.status)}
+              sx={{ color: CORES_STATUS[risco.status], borderColor: CORES_STATUS[risco.status] }}
+            />
           </Stack>
         </Paper>
       )}
@@ -176,6 +214,76 @@ export default function Recomendacao() {
               </Button>
             </Box>
           )}
+        </Paper>
+      )}
+
+      {risco && (
+        <Paper sx={{ p: 3, mt: 2 }}>
+          <Typography variant="overline" color="text.secondary">
+            Histórico do risco
+          </Typography>
+
+          {risco.status !== "encerrado" ? (
+            <Stack direction="row" spacing={2} sx={{ mt: 1, mb: 3 }}>
+              <TextField
+                select
+                label="Novo status"
+                size="small"
+                value={novoStatus}
+                onChange={(e) => setNovoStatus(e.target.value)}
+                sx={{ minWidth: 200 }}
+              >
+                {STATUS_RISCO.map((s) => (
+                  <MenuItem key={s.value} value={s.value}>
+                    {s.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                label="Comentário (opcional)"
+                size="small"
+                fullWidth
+                value={comentarioStatus}
+                onChange={(e) => setComentarioStatus(e.target.value)}
+              />
+              <Button
+                variant="outlined"
+                disabled={atualizandoStatus || novoStatus === risco.status}
+                onClick={atualizarStatus}
+              >
+                Atualizar
+              </Button>
+            </Stack>
+          ) : (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 3 }}>
+              Risco encerrado — não é possível mudar o status.
+            </Typography>
+          )}
+
+          <Stack divider={<Divider />} spacing={1.5}>
+            {historico.map((evento) => (
+              <Box key={evento.id}>
+                <Typography variant="body2">
+                  {evento.status_anterior ? (
+                    <>
+                      {rotulo(STATUS_RISCO, evento.status_anterior)} →{" "}
+                      <strong>{rotulo(STATUS_RISCO, evento.status_novo)}</strong>
+                    </>
+                  ) : (
+                    <strong>{rotulo(STATUS_RISCO, evento.status_novo)}</strong>
+                  )}
+                </Typography>
+                {evento.comentario && (
+                  <Typography variant="body2" color="text.secondary">
+                    {evento.comentario}
+                  </Typography>
+                )}
+                <Typography variant="caption" color="text.secondary">
+                  {new Date(evento.criado_em).toLocaleString("pt-BR")}
+                </Typography>
+              </Box>
+            ))}
+          </Stack>
         </Paper>
       )}
     </Box>

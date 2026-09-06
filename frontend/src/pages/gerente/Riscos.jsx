@@ -22,7 +22,7 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { projetos as servicoProjetos, riscos as servicoRiscos } from "../../services/api";
-import { CATEGORIAS, IMPACTOS, PROBABILIDADES, rotulo } from "../../constants";
+import { CATEGORIAS, CORES_STATUS, IMPACTOS, PROBABILIDADES, STATUS_RISCO, rotulo } from "../../constants";
 
 export default function Riscos() {
   const [riscos, setRiscos] = useState([]);
@@ -77,13 +77,14 @@ export default function Riscos() {
               <TableCell>Categoria</TableCell>
               <TableCell>Probabilidade</TableCell>
               <TableCell>Impacto</TableCell>
+              <TableCell>Status</TableCell>
               <TableCell align="right">Ações</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {!carregando && riscos.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5}>
+                <TableCell colSpan={6}>
                   <Typography color="text.secondary">Nenhum risco cadastrado ainda.</Typography>
                 </TableCell>
               </TableRow>
@@ -97,6 +98,17 @@ export default function Riscos() {
                 </TableCell>
                 <TableCell>
                   <Chip size="small" label={rotulo(IMPACTOS, risco.impacto)} />
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    size="small"
+                    label={rotulo(STATUS_RISCO, risco.status)}
+                    sx={{
+                      color: CORES_STATUS[risco.status],
+                      borderColor: CORES_STATUS[risco.status],
+                    }}
+                    variant="outlined"
+                  />
                 </TableCell>
                 <TableCell align="right">
                   <Button

@@ -28,6 +28,22 @@ export const CORES_SEVERIDADE = {
   alto: "#F87171",
 };
 
+export const STATUS_RISCO = [
+  { value: "identificado", label: "Identificado" },
+  { value: "em_monitoramento", label: "Em monitoramento" },
+  { value: "mitigado", label: "Mitigado" },
+  { value: "encerrado", label: "Encerrado" },
+];
+
+// Cores do ciclo de vida do risco (independentes da cor de severidade, pra
+// não confundir "em que fase o risco está" com "quão grave ele é").
+export const CORES_STATUS = {
+  identificado: "#8A93A6",
+  em_monitoramento: "#FBBF24",
+  mitigado: "#4ADE80",
+  encerrado: "#A78BFA",
+};
+
 export function nivelSeveridade(probabilidade, impacto) {
   const pontuacao = ESCALA_PROBABILIDADE[probabilidade] + ESCALA_IMPACTO[impacto];
   if (pontuacao <= 3) return "baixo";

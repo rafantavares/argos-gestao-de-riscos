@@ -65,6 +65,9 @@ export const riscos = {
   listarMeus: () => api.get("/riscos").then((r) => r.data),
   obter: (id) => api.get(`/riscos/${id}`).then((r) => r.data),
   listarPorProjeto: (idProjeto) => api.get(`/riscos/projeto/${idProjeto}`).then((r) => r.data),
+  atualizarStatus: (id, statusNovo, comentario) =>
+    api.patch(`/riscos/${id}/status`, { status: statusNovo, comentario }).then((r) => r.data),
+  historico: (id) => api.get(`/riscos/${id}/historico`).then((r) => r.data),
 };
 
 // --- recomendacoes ---

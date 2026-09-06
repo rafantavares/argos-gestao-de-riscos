@@ -26,6 +26,13 @@ class ImpactoRisco(str, enum.Enum):
     ALTO = "alto"
 
 
+class StatusRisco(str, enum.Enum):
+    IDENTIFICADO = "identificado"
+    EM_MONITORAMENTO = "em_monitoramento"
+    MITIGADO = "mitigado"
+    ENCERRADO = "encerrado"
+
+
 def valores_enum(classe_enum):
     """Usado como values_callable do SQLAlchemy: grava o .value (ex.: "tecnico")
     no banco em vez do nome do membro Python (ex.: "TECNICO")."""

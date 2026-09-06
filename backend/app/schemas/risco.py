@@ -1,9 +1,10 @@
 """Schemas Pydantic da entidade Risco."""
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.models.enums import CategoriaRisco, ImpactoRisco, ProbabilidadeRisco
+from app.models.enums import CategoriaRisco, ImpactoRisco, ProbabilidadeRisco, StatusRisco
 
 
 class RiscoBase(BaseModel):
@@ -23,4 +24,23 @@ class RiscoResposta(RiscoBase):
     id: int
     id_projeto: int
     id_gerente: int
+    status: StatusRisco
+    criado_em: datetime
+    atualizado_em: datetime
+
+
+class RiscoStatusAtualizar(BaseModel):
+    status: StatusRisco
+    comentario: Optional[str] = Field(default=None, max_length=1000)
+
+
+class HistoricoRiscoResposta(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    id_risco: int
+    id_usuario: int
+    status_anterior: Optional[StatusRisco]
+    status_novo: StatusRisco
+    comentario: Optional[str]
     criado_em: datetime
