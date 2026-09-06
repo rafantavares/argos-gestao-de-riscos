@@ -68,6 +68,7 @@ export const riscos = {
   atualizarStatus: (id, statusNovo, comentario) =>
     api.patch(`/riscos/${id}/status`, { status: statusNovo, comentario }).then((r) => r.data),
   historico: (id) => api.get(`/riscos/${id}/historico`).then((r) => r.data),
+  listarTodosAdmin: () => api.get("/riscos/admin/todos").then((r) => r.data),
 };
 
 // --- recomendacoes ---
@@ -76,4 +77,6 @@ export const recomendacoes = {
   listarMinhas: () => api.get("/recomendacoes").then((r) => r.data),
   listarPorRisco: (idRisco) => api.get(`/recomendacoes/risco/${idRisco}`).then((r) => r.data),
   responder: (id, aceita) => api.patch(`/recomendacoes/${id}`, { aceita }).then((r) => r.data),
+  listarTodasAdmin: () => api.get("/recomendacoes/admin/todas").then((r) => r.data),
+  metricasHistorico: () => api.get("/recomendacoes/admin/metricas-historico").then((r) => r.data),
 };

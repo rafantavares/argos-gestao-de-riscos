@@ -1,5 +1,6 @@
 """Router de recomendações: aciona o ML para recomendar um plano de contingência,
 registra o aceite/rejeição do gerente e retreina o modelo com o feedback aceito."""
+import json
 from typing import List
 
 import pandas as pd
@@ -7,18 +8,45 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.security import exigir_perfil, obter_usuario_atual
-from app.database import obter_sessao
+from app.database import SessaoLocal, obter_sessao
 from app.ml.predictor import prever_plano_contingencia
 from app.ml.preprocessor import carregar_dataset
 from app.ml.trainer import treinar_e_avaliar
 from app.models.enums import PerfilUsuario
+from app.models.metrica_treinamento import MetricaTreinamento
 from app.models.plano_contingencia import PlanoContingencia
+from app.models.projeto import Projeto
 from app.models.recomendacao import Recomendacao
 from app.models.risco import Risco
 from app.models.usuario import Usuario
+from app.schemas.metrica_treinamento import MetricaTreinamentoResposta
 from app.schemas.recomendacao import RecomendacaoAtualizar, RecomendacaoResposta
 
 roteador = APIRouter(prefix="/recomendacoes", tags=["Recomendações"])
+
+
+def _retreinar_e_registrar_metricas(dataset: pd.DataFrame) -> None:
+    """Roda em background (fora do ciclo de vida do request): retreina os 3
+    algoritmos e grava uma linha de histórico por algoritmo. Abre sua própria
+    sessão de banco porque tarefas em segundo plano não recebem a sessão via
+    Depends do request que as agendou."""
+    metricas = treinar_e_avaliar(dataset)
+
+    sessao = SessaoLocal()
+    try:
+        for algoritmo, valores in metricas.items():
+            sessao.add(
+                MetricaTreinamento(
+                    algoritmo=algoritmo,
+                    acuracia=valores["acuracia"],
+                    precisao=valores["precisao"],
+                    recall=valores["recall"],
+                    melhores_parametros=json.dumps(valores.get("melhores_parametros", {})),
+                )
+            )
+        sessao.commit()
+    finally:
+        sessao.close()
 
 
 def _obter_risco_do_gerente(id_risco: int, gerente: Usuario, sessao: Session) -> Risco:
@@ -187,6 +215,32 @@ def responder_recomendacao(
         dataset_atualizado = _montar_dataset_com_feedback(sessao)
         # Retreino com GridSearchCV (tuning de hiperparâmetros) roda em segundo plano
         # para não bloquear a resposta ao gerente por dezenas de segundos.
-        tarefas_em_segundo_plano.add_task(treinar_e_avaliar, dataset_atualizado)
+        tarefas_em_segundo_plano.add_task(_retreinar_e_registrar_metricas, dataset_atualizado)
 
     return recomendacao
+
+
+@roteador.get(
+    "/admin/metricas-historico",
+    response_model=List[MetricaTreinamentoResposta],
+    dependencies=[Depends(exigir_perfil(PerfilUsuario.ADMIN))],
+)
+def listar_historico_metricas(sessao: Session = Depends(obter_sessao)):
+    return sessao.query(MetricaTreinamento).order_by(MetricaTreinamento.criado_em).all()
+
+
+@roteador.get(
+    "/admin/todas",
+    response_model=List[RecomendacaoResposta],
+    dependencies=[Depends(exigir_perfil(PerfilUsuario.ADMIN))],
+)
+def listar_todas_recomendacoes(
+    sessao: Session = Depends(obter_sessao), admin: Usuario = Depends(obter_usuario_atual)
+):
+    return (
+        sessao.query(Recomendacao)
+        .join(Risco, Risco.id == Recomendacao.id_risco)
+        .join(Projeto, Projeto.id == Risco.id_projeto)
+        .filter(Projeto.id_admin == admin.id)
+        .all()
+    )

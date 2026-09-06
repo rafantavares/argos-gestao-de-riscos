@@ -6,6 +6,7 @@ from app.models.risco import Risco
 from app.models.historico_risco import HistoricoRisco
 from app.models.plano_contingencia import PlanoContingencia
 from app.models.recomendacao import Recomendacao
+from app.models.metrica_treinamento import MetricaTreinamento
 
 __all__ = [
     "Usuario",
@@ -15,4 +16,5 @@ __all__ = [
     "HistoricoRisco",
     "PlanoContingencia",
     "Recomendacao",
+    "MetricaTreinamento",
 ]

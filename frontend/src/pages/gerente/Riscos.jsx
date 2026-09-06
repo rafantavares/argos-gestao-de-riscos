@@ -21,6 +21,7 @@ import {
   Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import DownloadIcon from "@mui/icons-material/Download";
 import { projetos as servicoProjetos, riscos as servicoRiscos } from "../../services/api";
 import {
   CATEGORIAS,
@@ -32,6 +33,17 @@ import {
   URGENCIAS,
   rotulo,
 } from "../../constants";
+import { exportarCsv } from "../../utils/exportarCsv";
+
+const COLUNAS_CSV = [
+  { rotulo: "Título", valor: (r) => r.titulo },
+  { rotulo: "Categoria", valor: (r) => rotulo(CATEGORIAS, r.categoria) },
+  { rotulo: "Probabilidade", valor: (r) => rotulo(PROBABILIDADES, r.probabilidade) },
+  { rotulo: "Impacto", valor: (r) => rotulo(IMPACTOS, r.impacto) },
+  { rotulo: "Orçamento", valor: (r) => rotulo(ORCAMENTOS_IMPACTO, r.orcamento_impacto) },
+  { rotulo: "Urgência", valor: (r) => rotulo(URGENCIAS, r.urgencia) },
+  { rotulo: "Status", valor: (r) => rotulo(STATUS_RISCO, r.status) },
+];
 
 export default function Riscos() {
   const [riscos, setRiscos] = useState([]);
@@ -61,14 +73,24 @@ export default function Riscos() {
         <Typography variant="h5" fontWeight={600}>
           Riscos
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => setDialogoAberto(true)}
-          disabled={meusProjetos.length === 0}
-        >
-          Novo risco
-        </Button>
+        <Box sx={{ display: "flex", gap: 1.5 }}>
+          <Button
+            variant="outlined"
+            startIcon={<DownloadIcon />}
+            disabled={riscos.length === 0}
+            onClick={() => exportarCsv("riscos.csv", COLUNAS_CSV, riscos)}
+          >
+            Exportar CSV
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setDialogoAberto(true)}
+            disabled={meusProjetos.length === 0}
+          >
+            Novo risco
+          </Button>
+        </Box>
       </Box>
 
       {!carregando && meusProjetos.length === 0 && (

@@ -8,6 +8,7 @@ from app.core.security import exigir_perfil, obter_usuario_atual
 from app.database import obter_sessao
 from app.models.enums import PerfilUsuario, StatusRisco
 from app.models.historico_risco import HistoricoRisco
+from app.models.projeto import Projeto
 from app.models.projeto_gerente import ProjetoGerente
 from app.models.risco import Risco
 from app.models.usuario import Usuario
@@ -124,6 +125,23 @@ def listar_riscos_do_projeto(
 ):
     _verificar_gerente_vinculado(id_projeto, gerente, sessao)
     return sessao.query(Risco).filter(Risco.id_projeto == id_projeto).all()
+
+
+@roteador.get(
+    "/admin/todos",
+    response_model=List[RiscoResposta],
+    dependencies=[Depends(exigir_perfil(PerfilUsuario.ADMIN))],
+)
+def listar_todos_riscos_do_admin(
+    sessao: Session = Depends(obter_sessao), admin: Usuario = Depends(obter_usuario_atual)
+):
+    """Riscos de todos os projetos administrados pelo admin autenticado (visão cross-projeto)."""
+    return (
+        sessao.query(Risco)
+        .join(Projeto, Projeto.id == Risco.id_projeto)
+        .filter(Projeto.id_admin == admin.id)
+        .all()
+    )
 
 
 @roteador.patch(
