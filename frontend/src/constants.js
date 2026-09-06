@@ -19,6 +19,18 @@ export const IMPACTOS = [
   { value: "alto", label: "Alto" },
 ];
 
+export const ORCAMENTOS_IMPACTO = [
+  { value: "baixo", label: "Baixo" },
+  { value: "medio", label: "Médio" },
+  { value: "alto", label: "Alto" },
+];
+
+export const URGENCIAS = [
+  { value: "baixa", label: "Baixa" },
+  { value: "media", label: "Média" },
+  { value: "alta", label: "Alta" },
+];
+
 const ESCALA_PROBABILIDADE = { baixa: 1, media: 2, alta: 3 };
 const ESCALA_IMPACTO = { baixo: 1, medio: 2, alto: 3 };
 

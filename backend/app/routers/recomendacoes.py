@@ -52,7 +52,14 @@ def _montar_dataset_com_feedback(sessao: Session) -> pd.DataFrame:
     dataset_base = carregar_dataset()
 
     registros_feedback = (
-        sessao.query(Risco.categoria, Risco.probabilidade, Risco.impacto, Recomendacao.id_plano)
+        sessao.query(
+            Risco.categoria,
+            Risco.probabilidade,
+            Risco.impacto,
+            Risco.orcamento_impacto,
+            Risco.urgencia,
+            Recomendacao.id_plano,
+        )
         .join(Recomendacao, Recomendacao.id_risco == Risco.id)
         .filter(Recomendacao.aceita.is_(True))
         .all()
@@ -67,9 +74,11 @@ def _montar_dataset_com_feedback(sessao: Session) -> pd.DataFrame:
                 "categoria": categoria.value,
                 "probabilidade": probabilidade.value,
                 "impacto": impacto.value,
+                "orcamento_impacto": orcamento_impacto.value,
+                "urgencia": urgencia.value,
                 "id_plano_contingencia": id_plano,
             }
-            for categoria, probabilidade, impacto, id_plano in registros_feedback
+            for categoria, probabilidade, impacto, orcamento_impacto, urgencia, id_plano in registros_feedback
         ]
     )
 
@@ -93,6 +102,8 @@ def gerar_recomendacao(
         categoria=risco.categoria.value,
         probabilidade=risco.probabilidade.value,
         impacto=risco.impacto.value,
+        orcamento_impacto=risco.orcamento_impacto.value,
+        urgencia=risco.urgencia.value,
     )
 
     plano = (

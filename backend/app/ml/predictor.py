@@ -36,6 +36,8 @@ def prever_plano_contingencia(
     categoria: str,
     probabilidade: str,
     impacto: str,
+    orcamento_impacto: str,
+    urgencia: str,
     nome_algoritmo: Optional[str] = None,
 ) -> dict:
     """Retorna o id do plano de contingência recomendado, o algoritmo usado e a
@@ -45,7 +47,15 @@ def prever_plano_contingencia(
 
     modelo = _carregar_modelo(algoritmo_escolhido)
     entrada = pd.DataFrame(
-        [{"categoria": categoria, "probabilidade": probabilidade, "impacto": impacto}],
+        [
+            {
+                "categoria": categoria,
+                "probabilidade": probabilidade,
+                "impacto": impacto,
+                "orcamento_impacto": orcamento_impacto,
+                "urgencia": urgencia,
+            }
+        ],
         columns=COLUNAS_FEATURES,
     )
 

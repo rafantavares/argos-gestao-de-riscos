@@ -22,7 +22,16 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { projetos as servicoProjetos, riscos as servicoRiscos } from "../../services/api";
-import { CATEGORIAS, CORES_STATUS, IMPACTOS, PROBABILIDADES, STATUS_RISCO, rotulo } from "../../constants";
+import {
+  CATEGORIAS,
+  CORES_STATUS,
+  IMPACTOS,
+  ORCAMENTOS_IMPACTO,
+  PROBABILIDADES,
+  STATUS_RISCO,
+  URGENCIAS,
+  rotulo,
+} from "../../constants";
 
 export default function Riscos() {
   const [riscos, setRiscos] = useState([]);
@@ -144,6 +153,8 @@ function DialogoNovoRisco({ aberto, projetos, aoFechar, aoCriar }) {
   const [categoria, setCategoria] = useState("");
   const [probabilidade, setProbabilidade] = useState("");
   const [impacto, setImpacto] = useState("");
+  const [orcamentoImpacto, setOrcamentoImpacto] = useState("");
+  const [urgencia, setUrgencia] = useState("");
   const [idProjeto, setIdProjeto] = useState("");
   const [erro, setErro] = useState("");
 
@@ -151,7 +162,15 @@ function DialogoNovoRisco({ aberto, projetos, aoFechar, aoCriar }) {
     evento.preventDefault();
     setErro("");
     try {
-      await aoCriar({ titulo, categoria, probabilidade, impacto, id_projeto: idProjeto });
+      await aoCriar({
+        titulo,
+        categoria,
+        probabilidade,
+        impacto,
+        orcamento_impacto: orcamentoImpacto,
+        urgencia,
+        id_projeto: idProjeto,
+      });
     } catch (e) {
       setErro(e.response?.data?.detail ?? "Não foi possível cadastrar o risco.");
     }
@@ -218,6 +237,32 @@ function DialogoNovoRisco({ aberto, projetos, aoFechar, aoCriar }) {
             {IMPACTOS.map((i) => (
               <MenuItem key={i.value} value={i.value}>
                 {i.label}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            select
+            label="Impacto financeiro (orçamento)"
+            value={orcamentoImpacto}
+            onChange={(e) => setOrcamentoImpacto(e.target.value)}
+            required
+          >
+            {ORCAMENTOS_IMPACTO.map((o) => (
+              <MenuItem key={o.value} value={o.value}>
+                {o.label}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            select
+            label="Urgência (proximidade)"
+            value={urgencia}
+            onChange={(e) => setUrgencia(e.target.value)}
+            required
+          >
+            {URGENCIAS.map((u) => (
+              <MenuItem key={u.value} value={u.value}>
+                {u.label}
               </MenuItem>
             ))}
           </TextField>

@@ -16,7 +16,16 @@ import {
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import { recomendacoes as servicoRecomendacoes, riscos as servicoRiscos } from "../../services/api";
-import { CATEGORIAS, CORES_STATUS, IMPACTOS, PROBABILIDADES, STATUS_RISCO, rotulo } from "../../constants";
+import {
+  CATEGORIAS,
+  CORES_STATUS,
+  IMPACTOS,
+  ORCAMENTOS_IMPACTO,
+  PROBABILIDADES,
+  STATUS_RISCO,
+  URGENCIAS,
+  rotulo,
+} from "../../constants";
 
 const NOMES_ALGORITMOS = {
   knn: "KNN",
@@ -142,6 +151,11 @@ export default function Recomendacao() {
             <Chip size="small" label={rotulo(CATEGORIAS, risco.categoria)} />
             <Chip size="small" label={`Probabilidade: ${rotulo(PROBABILIDADES, risco.probabilidade)}`} />
             <Chip size="small" label={`Impacto: ${rotulo(IMPACTOS, risco.impacto)}`} />
+            <Chip
+              size="small"
+              label={`Orçamento: ${rotulo(ORCAMENTOS_IMPACTO, risco.orcamento_impacto)}`}
+            />
+            <Chip size="small" label={`Urgência: ${rotulo(URGENCIAS, risco.urgencia)}`} />
             <Chip
               size="small"
               variant="outlined"

@@ -6,8 +6,10 @@ from app.database import Base
 from app.models.enums import (
     CategoriaRisco,
     ImpactoRisco,
+    OrcamentoImpacto,
     ProbabilidadeRisco,
     StatusRisco,
+    Urgencia,
     valores_enum,
 )
 
@@ -26,6 +28,13 @@ class Risco(Base):
     )
     impacto = Column(
         Enum(ImpactoRisco, name="impacto_risco", values_callable=valores_enum), nullable=False
+    )
+    orcamento_impacto = Column(
+        Enum(OrcamentoImpacto, name="orcamento_impacto", values_callable=valores_enum),
+        nullable=False,
+    )
+    urgencia = Column(
+        Enum(Urgencia, name="urgencia", values_callable=valores_enum), nullable=False
     )
     status = Column(
         Enum(StatusRisco, name="status_risco", values_callable=valores_enum),

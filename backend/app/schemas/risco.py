@@ -4,7 +4,14 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.models.enums import CategoriaRisco, ImpactoRisco, ProbabilidadeRisco, StatusRisco
+from app.models.enums import (
+    CategoriaRisco,
+    ImpactoRisco,
+    OrcamentoImpacto,
+    ProbabilidadeRisco,
+    StatusRisco,
+    Urgencia,
+)
 
 
 class RiscoBase(BaseModel):
@@ -12,6 +19,8 @@ class RiscoBase(BaseModel):
     categoria: CategoriaRisco
     probabilidade: ProbabilidadeRisco
     impacto: ImpactoRisco
+    orcamento_impacto: OrcamentoImpacto
+    urgencia: Urgencia
 
 
 class RiscoCriar(RiscoBase):
