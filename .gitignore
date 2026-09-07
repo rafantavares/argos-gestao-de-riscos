@@ -3,6 +3,7 @@ backend/.venv/
 backend/.env
 backend/**/__pycache__/
 backend/app/ml/modelos/
+backend/.pytest_cache/
 *.pyc
 
 # Frontend

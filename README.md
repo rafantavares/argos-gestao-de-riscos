@@ -74,6 +74,25 @@ npm install
 npm run dev
 ```
 
+## Testes automatizados
+
+```bash
+cd backend
+pip install -r requirements-dev.txt
+python -m pytest
+```
+
+76 testes cobrindo autenticação e autorização por perfil, CRUD de projetos e
+vínculo de gerentes, ciclo de vida do risco (status e histórico), fluxo de
+recomendação de ML, catálogo de planos de contingência e o módulo de ML
+(geração do dataset e pré-processamento).
+
+Rodam contra um **SQLite em memória** criado e descartado a cada teste — não
+tocam no banco do Supabase nem exigem conexão de rede. O treinamento do modelo
+é simulado nos testes de integração (treinar de verdade levaria ~1 min por
+chamada); a qualidade do dataset e do pré-processamento é verificada
+separadamente em `tests/test_ml.py`.
+
 ## Contexto acadêmico
 
 Metodologia: Design Science Research (DSR) — Peffers et al. (2007). TCC I

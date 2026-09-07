@@ -100,3 +100,45 @@ virar 4D só porque o dataset ficou mais rico.
   plano for aceita por um gerente — o feedback real vira exemplo de treino
   (mesmo mecanismo incremental que já existia). Um plano recém-criado ainda
   não aparece nas previsões do modelo até isso acontecer.
+
+## Testes automatizados (evidência da avaliação técnica)
+
+76 testes em `backend/tests/`, executados com `python -m pytest`:
+
+| Arquivo | Testes | O que cobre |
+|---|---|---|
+| `test_auth.py` | 12 | Login, JWT, restrição de rotas por perfil |
+| `test_projetos.py` | 12 | CRUD de projetos, vínculo de gerentes, isolamento entre admins |
+| `test_riscos.py` | 15 | Cadastro, isolamento entre gerentes, ciclo de vida (status/histórico) |
+| `test_recomendacoes.py` | 14 | Fluxo de recomendação, aceite/rejeição, retroalimentação do modelo |
+| `test_planos.py` | 8 | Catálogo de planos, ativação/desativação |
+| `test_ml.py` | 15 | Dataset sintético (reprodutibilidade, cobertura, ruído) e pré-processamento |
+
+**Isolamento:** cada teste roda contra um SQLite em memória criado do zero e
+descartado ao final — não toca no Supabase nem depende de rede. A dependência
+`obter_sessao` é sobrescrita via `app.dependency_overrides`, e o `TestClient`
+é usado *sem* context manager de propósito, para não disparar o evento de
+startup (que criaria tabelas e semearia dados no banco real).
+
+**ML simulado nos testes de integração:** treinar de verdade levaria ~1 minuto
+por chamada (GridSearchCV) e dependeria dos `.joblib` em disco, que não são
+versionados. Nos testes de recomendação, predição e retreino são substituídos
+por versões instantâneas que registram o que foi chamado — o que se verifica
+ali é a integração (se as 5 features do risco chegam ao preditor, se o aceite
+dispara o retreino e se o dataset enviado inclui o feedback). As propriedades
+do modelo em si ficam em `test_ml.py`, que testa funções puras.
+
+**Testes com "dentes" (verificado por mutação):** para conferir que a suíte
+realmente pega regressões — e não só passa —, três defeitos foram injetados
+de propósito no código e todos foram detectados pelos testes esperados:
+remover a regra de "encerrado é terminal" (1 falha), remover o filtro por
+gerente nas consultas de risco (3 falhas, vazamento entre gerentes), e
+dessincronizar `PLANO_BASE_POR_CATEGORIA` do `seed.py` (2 falhas). O código
+foi restaurado depois de cada injeção.
+
+Esse último caso é o mais relevante para o TCC: o mapeamento entre categoria
+de risco e id de plano existe duplicado em `app/ml/gerar_dataset.py` e
+`app/core/seed.py`. Se um mudar sem o outro, o dataset passa a rotular riscos
+com planos da categoria errada — silenciosamente, sem erro em tempo de
+execução. `test_plano_canonico_bate_com_o_catalogo_semeado` trava essa
+regressão.
