@@ -1,4 +1,6 @@
 """Ponto de entrada da API FastAPI."""
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -8,9 +10,12 @@ from app.routers import auth, ml, planos, projetos, recomendacoes, relatorio, ri
 
 app = FastAPI(title="Sistema de Gestão de Riscos com Análise Preditiva")
 
+_origens_padrao = "http://localhost:5173,http://localhost:3000"
+_origens = os.getenv("CORS_ORIGINS", _origens_padrao).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[o.strip() for o in _origens],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,4 +42,9 @@ def preparar_banco() -> None:
 
 @app.get("/")
 def status():
+    return {"status": "ok"}
+
+
+@app.get("/health")
+def health():
     return {"status": "ok"}
