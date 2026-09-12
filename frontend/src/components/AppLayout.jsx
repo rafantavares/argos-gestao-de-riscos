@@ -1,8 +1,9 @@
-import LogoutIcon from "@mui/icons-material/Logout";
+import { useEffect, useState } from "react";
 import {
   AppBar,
+  Avatar,
   Box,
-  Chip,
+  Divider,
   Drawer,
   IconButton,
   List,
@@ -10,38 +11,95 @@ import {
   ListItemIcon,
   ListItemText,
   Toolbar,
+  Tooltip,
   Typography,
 } from "@mui/material";
-import AssignmentIcon from "@mui/icons-material/Assignment";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import FolderIcon from "@mui/icons-material/Folder";
-import GroupIcon from "@mui/icons-material/Group";
-import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import LogoutIcon from "@mui/icons-material/Logout";
+import InsightsIcon from "@mui/icons-material/Insights";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
+import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import SpaceDashboardOutlinedIcon from "@mui/icons-material/SpaceDashboardOutlined";
+import MemoryIcon from "@mui/icons-material/Memory";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { ml as servicoMl } from "../services/api";
+import { ALGORITMOS, NOMES_ALGORITMOS, VERSAO_SISTEMA, iniciais } from "../constants";
 import { Logo } from "./Logo";
 
-const LARGURA_MENU = 220;
+const LARGURA_MENU = 248;
 
 const ITENS_ADMIN = [
-  { rotulo: "Dashboard", caminho: "/admin", icone: <DashboardIcon /> },
-  { rotulo: "Projetos", caminho: "/admin/projetos", icone: <FolderIcon /> },
-  { rotulo: "Gerentes", caminho: "/admin/gerentes", icone: <GroupIcon /> },
-  { rotulo: "Riscos", caminho: "/admin/riscos", icone: <WarningAmberIcon /> },
-  { rotulo: "Planos de contingência", caminho: "/admin/planos", icone: <AssignmentIcon /> },
+  {
+    rotulo: "Visão geral",
+    dica: "Indicadores, performance dos algoritmos e últimas recomendações",
+    caminho: "/admin",
+    icone: <InsightsIcon />,
+  },
+  {
+    rotulo: "Projetos",
+    dica: "Cadastro de projetos e vínculo de gerentes",
+    caminho: "/admin/projetos",
+    icone: <AccountTreeIcon />,
+  },
+  {
+    rotulo: "Gerentes",
+    dica: "Usuários com perfil de gerente de projetos",
+    caminho: "/admin/gerentes",
+    icone: <ManageAccountsIcon />,
+  },
+  {
+    rotulo: "Riscos",
+    dica: "Visão consolidada dos riscos de todos os projetos",
+    caminho: "/admin/riscos",
+    icone: <ReportProblemOutlinedIcon />,
+  },
+  {
+    rotulo: "Planos de contingência",
+    dica: "Catálogo de planos que o modelo pode recomendar",
+    caminho: "/admin/planos",
+    icone: <ShieldOutlinedIcon />,
+  },
 ];
 
 const ITENS_GERENTE = [
-  { rotulo: "Dashboard", caminho: "/gerente", icone: <DashboardIcon /> },
-  { rotulo: "Riscos", caminho: "/gerente/riscos", icone: <WarningAmberIcon /> },
+  {
+    rotulo: "Visão geral",
+    dica: "Matriz de risco, riscos críticos e ações pendentes",
+    caminho: "/gerente",
+    icone: <SpaceDashboardOutlinedIcon />,
+  },
+  {
+    rotulo: "Riscos",
+    dica: "Cadastro e acompanhamento dos riscos dos seus projetos",
+    caminho: "/gerente/riscos",
+    icone: <ReportProblemOutlinedIcon />,
+  },
 ];
+
+function algoritmoAtivo(metricas) {
+  if (!metricas) return null;
+  const candidatos = ALGORITMOS.filter((a) => metricas[a]);
+  if (candidatos.length === 0) return null;
+  const melhor = candidatos.reduce((a, b) => (metricas[b].acuracia > metricas[a].acuracia ? b : a));
+  return { nome: melhor, acuracia: metricas[melhor].acuracia, f1: metricas[melhor].f1 };
+}
 
 export default function AppLayout({ children }) {
   const { usuario, sair } = useAuth();
   const navigate = useNavigate();
   const localizacao = useLocation();
+  const [metricas, setMetricas] = useState(null);
 
-  const itens = usuario.perfil === "admin" ? ITENS_ADMIN : ITENS_GERENTE;
+  useEffect(() => {
+    servicoMl.metricas().then(setMetricas).catch(() => setMetricas(null));
+  }, []);
+
+  const ehAdmin = usuario.perfil === "admin";
+  const itens = ehAdmin ? ITENS_ADMIN : ITENS_GERENTE;
+  const cargo = ehAdmin ? "Administrador" : "Gerente de projetos";
+  const ativo = algoritmoAtivo(metricas);
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -50,15 +108,14 @@ export default function AppLayout({ children }) {
           <Box sx={{ flexGrow: 1 }}>
             <Logo size={26} fontSize={18} />
           </Box>
-          <Chip
-            label={usuario.perfil === "admin" ? "Admin" : "Gerente"}
-            color="secondary"
-            size="small"
-          />
-          <Typography variant="body2">{usuario.nome}</Typography>
-          <IconButton color="inherit" onClick={sair} title="Sair">
-            <LogoutIcon />
-          </IconButton>
+          <Typography variant="body2" color="text.secondary" sx={{ display: { xs: "none", sm: "block" } }}>
+            {usuario.nome}
+          </Typography>
+          <Tooltip title="Sair da conta">
+            <IconButton color="inherit" onClick={sair} aria-label="Sair">
+              <LogoutIcon />
+            </IconButton>
+          </Tooltip>
         </Toolbar>
       </AppBar>
 
@@ -67,25 +124,85 @@ export default function AppLayout({ children }) {
         sx={{
           width: LARGURA_MENU,
           flexShrink: 0,
-          [`& .MuiDrawer-paper`]: { width: LARGURA_MENU, boxSizing: "border-box" },
+          [`& .MuiDrawer-paper`]: {
+            width: LARGURA_MENU,
+            boxSizing: "border-box",
+            display: "flex",
+            flexDirection: "column",
+          },
         }}
       >
         <Toolbar />
-        <List>
+
+        {/* Perfil do usuário logado */}
+        <Box sx={{ px: 2, pt: 2.5, pb: 2, display: "flex", alignItems: "center", gap: 1.5 }}>
+          <Avatar
+            sx={{
+              width: 42,
+              height: 42,
+              bgcolor: ehAdmin ? "secondary.main" : "primary.main",
+              color: "#0B0E14",
+              fontWeight: 700,
+              fontFamily: '"Space Grotesk", sans-serif',
+            }}
+          >
+            {iniciais(usuario.nome)}
+          </Avatar>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="body2" fontWeight={600} noWrap>
+              {usuario.nome}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>
+              {cargo}
+            </Typography>
+          </Box>
+        </Box>
+        <Divider />
+
+        <List sx={{ px: 1.5, py: 1.5, flexGrow: 1 }}>
           {itens.map((item) => (
-            <ListItemButton
-              key={item.caminho}
-              selected={localizacao.pathname === item.caminho}
-              onClick={() => navigate(item.caminho)}
-            >
-              <ListItemIcon>{item.icone}</ListItemIcon>
-              <ListItemText primary={item.rotulo} />
-            </ListItemButton>
+            <Tooltip key={item.caminho} title={item.dica} placement="right" arrow enterDelay={500}>
+              <ListItemButton
+                selected={localizacao.pathname === item.caminho}
+                onClick={() => navigate(item.caminho)}
+                sx={{ mb: 0.5 }}
+              >
+                <ListItemIcon>{item.icone}</ListItemIcon>
+                <ListItemText primary={item.rotulo} primaryTypographyProps={{ fontSize: 14, fontWeight: 500 }} />
+              </ListItemButton>
+            </Tooltip>
           ))}
         </List>
+
+        {/* Informações do sistema */}
+        <Divider />
+        <Box sx={{ px: 2, py: 2 }}>
+          <Typography
+            variant="caption"
+            sx={{ color: "text.secondary", textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 600 }}
+          >
+            Informações do sistema
+          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1 }}>
+            <MemoryIcon sx={{ fontSize: 18, color: "secondary.main" }} />
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="caption" sx={{ display: "block" }} noWrap>
+                {ativo ? NOMES_ALGORITMOS[ativo.nome] : "Modelo não treinado"}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                {ativo ? `Acurácia ${(ativo.acuracia * 100).toFixed(1)}%` : "—"}
+                {ativo?.f1 != null ? ` · F1 ${(ativo.f1 * 100).toFixed(1)}%` : ""}
+              </Typography>
+            </Box>
+          </Box>
+          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
+            Versão {VERSAO_SISTEMA}
+            {metricas?._dataset ? ` · ${metricas._dataset.n_exemplos} exemplos de treino` : ""}
+          </Typography>
+        </Box>
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+      <Box component="main" sx={{ flexGrow: 1, p: 3, minWidth: 0 }}>
         <Toolbar />
         {children}
       </Box>

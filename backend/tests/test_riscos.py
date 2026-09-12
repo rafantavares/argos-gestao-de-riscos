@@ -8,6 +8,7 @@ RISCO_VALIDO = {
     "impacto": "alto",
     "orcamento_impacto": "alto",
     "urgencia": "media",
+    "fase_projeto": "execucao",
 }
 
 
@@ -24,6 +25,7 @@ def test_gerente_cadastra_risco_em_projeto_vinculado(
     corpo = resposta.json()
     assert corpo["titulo"] == RISCO_VALIDO["titulo"]
     assert corpo["status"] == "identificado"
+    assert corpo["fase_projeto"] == "execucao"
 
 
 def test_cadastro_de_risco_grava_primeiro_evento_do_historico(
@@ -63,11 +65,25 @@ def test_admin_nao_pode_cadastrar_risco(cliente, cabecalho_admin, projeto):
 def test_cadastro_sem_os_novos_atributos_de_ml_e_rejeitado(
     cliente, cabecalho_gerente, projeto_com_gerente
 ):
-    """orcamento_impacto e urgencia são obrigatórios: alimentam o modelo de ML."""
-    payload = {k: v for k, v in RISCO_VALIDO.items() if k not in ("orcamento_impacto", "urgencia")}
+    """orcamento_impacto, urgencia e fase_projeto são obrigatórios: alimentam o modelo de ML."""
+    payload = {
+        k: v
+        for k, v in RISCO_VALIDO.items()
+        if k not in ("orcamento_impacto", "urgencia", "fase_projeto")
+    }
 
     resposta = cliente.post(
         "/riscos", headers=cabecalho_gerente, json={**payload, "id_projeto": projeto_com_gerente.id}
+    )
+
+    assert resposta.status_code == 422
+
+
+def test_fase_do_projeto_invalida_e_rejeitada(cliente, cabecalho_gerente, projeto_com_gerente):
+    resposta = cliente.post(
+        "/riscos",
+        headers=cabecalho_gerente,
+        json={**RISCO_VALIDO, "fase_projeto": "manutencao", "id_projeto": projeto_com_gerente.id},
     )
 
     assert resposta.status_code == 422

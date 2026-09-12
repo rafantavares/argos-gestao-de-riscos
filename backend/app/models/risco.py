@@ -5,6 +5,7 @@ from sqlalchemy.orm import relationship
 from app.database import Base
 from app.models.enums import (
     CategoriaRisco,
+    FaseProjeto,
     ImpactoRisco,
     OrcamentoImpacto,
     ProbabilidadeRisco,
@@ -35,6 +36,12 @@ class Risco(Base):
     )
     urgencia = Column(
         Enum(Urgencia, name="urgencia", values_callable=valores_enum), nullable=False
+    )
+    fase_projeto = Column(
+        Enum(FaseProjeto, name="fase_projeto", values_callable=valores_enum),
+        nullable=False,
+        default=FaseProjeto.PLANEJAMENTO,
+        server_default=FaseProjeto.PLANEJAMENTO.value,
     )
     status = Column(
         Enum(StatusRisco, name="status_risco", values_callable=valores_enum),

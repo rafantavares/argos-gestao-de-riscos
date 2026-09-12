@@ -28,6 +28,8 @@ class ImpactoRisco(str, enum.Enum):
 
 class StatusRisco(str, enum.Enum):
     IDENTIFICADO = "identificado"
+    # Atribuído automaticamente quando o gerente aceita uma recomendação de plano.
+    EM_TRATAMENTO = "em_tratamento"
     EM_MONITORAMENTO = "em_monitoramento"
     MITIGADO = "mitigado"
     ENCERRADO = "encerrado"
@@ -48,6 +50,17 @@ class Urgencia(str, enum.Enum):
     BAIXA = "baixa"
     MEDIA = "media"
     ALTA = "alta"
+
+
+class FaseProjeto(str, enum.Enum):
+    """Fase do ciclo de vida do projeto (PMBOK) em que o risco foi identificado.
+    Influencia o plano adequado: um risco descoberto na execução deixa menos
+    margem de reação do que um identificado na iniciação."""
+
+    INICIACAO = "iniciacao"
+    PLANEJAMENTO = "planejamento"
+    EXECUCAO = "execucao"
+    ENCERRAMENTO = "encerramento"
 
 
 def valores_enum(classe_enum):

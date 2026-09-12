@@ -24,8 +24,10 @@ def ml_simulado(monkeypatch, plano):
         registro["predicoes"].append(kwargs)
         return {
             "id_plano_contingencia": plano.id,
+            "nivel_severidade": "alto",
+            "confianca": 0.91,
             "algoritmo_usado": "random_forest",
-            "acuracia_momento": 0.7855,
+            "acuracia_momento": 0.8733,
         }
 
     def retreinar_falso(dataset):
@@ -46,13 +48,14 @@ def test_gerar_recomendacao_para_risco_proprio(cliente, cabecalho_gerente, risco
     assert corpo["id_risco"] == risco.id
     assert corpo["id_plano"] == plano.id
     assert corpo["algoritmo_usado"] == "random_forest"
+    assert corpo["confianca"] == 0.91
     assert corpo["aceita"] is None
 
 
-def test_recomendacao_usa_os_cinco_atributos_do_risco(
+def test_recomendacao_usa_os_seis_atributos_do_risco(
     cliente, cabecalho_gerente, risco, ml_simulado
 ):
-    """O preditor precisa receber as 5 features, incluindo as adicionadas na fase 2."""
+    """O preditor precisa receber as 6 features, incluindo fase_projeto (fase 5)."""
     cliente.post(f"/recomendacoes/gerar/{risco.id}", headers=cabecalho_gerente)
 
     assert ml_simulado["predicoes"] == [
@@ -62,6 +65,7 @@ def test_recomendacao_usa_os_cinco_atributos_do_risco(
             "impacto": "alto",
             "orcamento_impacto": "alto",
             "urgencia": "alta",
+            "fase_projeto": "execucao",
         }
     ]
 
@@ -115,10 +119,47 @@ def test_aceitar_recomendacao_dispara_retreino(cliente, cabecalho_gerente, risco
     assert len(ml_simulado["retreinos"]) == 1
 
 
+def test_aceitar_recomendacao_coloca_o_risco_em_tratamento(
+    cliente, cabecalho_gerente, risco, ml_simulado
+):
+    """Aceite do plano muda o status do risco para em_tratamento e registra no histórico."""
+    id_recomendacao = cliente.post(
+        f"/recomendacoes/gerar/{risco.id}", headers=cabecalho_gerente
+    ).json()["id"]
+
+    cliente.patch(
+        f"/recomendacoes/{id_recomendacao}", headers=cabecalho_gerente, json={"aceita": True}
+    )
+
+    risco_atualizado = cliente.get(f"/riscos/{risco.id}", headers=cabecalho_gerente).json()
+    assert risco_atualizado["status"] == "em_tratamento"
+
+    historico = cliente.get(f"/riscos/{risco.id}/historico", headers=cabecalho_gerente).json()
+    assert historico[-1]["status_anterior"] == "identificado"
+    assert historico[-1]["status_novo"] == "em_tratamento"
+
+
+def test_aceitar_recomendacao_nao_regride_risco_ja_mitigado(
+    cliente, cabecalho_gerente, risco, ml_simulado
+):
+    cliente.patch(
+        f"/riscos/{risco.id}/status", headers=cabecalho_gerente, json={"status": "mitigado"}
+    )
+    id_recomendacao = cliente.post(
+        f"/recomendacoes/gerar/{risco.id}", headers=cabecalho_gerente
+    ).json()["id"]
+
+    cliente.patch(
+        f"/recomendacoes/{id_recomendacao}", headers=cabecalho_gerente, json={"aceita": True}
+    )
+
+    assert cliente.get(f"/riscos/{risco.id}", headers=cabecalho_gerente).json()["status"] == "mitigado"
+
+
 def test_rejeitar_recomendacao_nao_dispara_retreino(
     cliente, cabecalho_gerente, risco, ml_simulado
 ):
-    """Só o feedback aceito vira exemplo de treino."""
+    """Só o feedback aceito vira exemplo de treino, e rejeitar mantém o status."""
     id_recomendacao = cliente.post(
         f"/recomendacoes/gerar/{risco.id}", headers=cabecalho_gerente
     ).json()["id"]
@@ -130,6 +171,7 @@ def test_rejeitar_recomendacao_nao_dispara_retreino(
     assert resposta.status_code == 200
     assert resposta.json()["aceita"] is False
     assert ml_simulado["retreinos"] == []
+    assert cliente.get(f"/riscos/{risco.id}", headers=cabecalho_gerente).json()["status"] == "identificado"
 
 
 def test_dataset_de_retreino_inclui_o_feedback_aceito(

@@ -13,6 +13,9 @@ class Recomendacao(Base):
     id_plano = Column(Integer, ForeignKey("planos_contingencia.id"), nullable=False)
     algoritmo_usado = Column(String(50), nullable=False)
     acuracia_momento = Column(Float, nullable=False)
+    # Probabilidade da classe prevista (predict_proba), 0.0 a 1.0. Nulo nas
+    # recomendações geradas antes desse campo existir.
+    confianca = Column(Float, nullable=True)
     aceita = Column(Boolean, nullable=True, default=None)
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
 

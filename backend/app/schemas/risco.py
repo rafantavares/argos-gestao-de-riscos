@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.enums import (
     CategoriaRisco,
+    FaseProjeto,
     ImpactoRisco,
     OrcamentoImpacto,
     ProbabilidadeRisco,
@@ -21,6 +22,7 @@ class RiscoBase(BaseModel):
     impacto: ImpactoRisco
     orcamento_impacto: OrcamentoImpacto
     urgencia: Urgencia
+    fase_projeto: FaseProjeto
 
 
 class RiscoCriar(RiscoBase):

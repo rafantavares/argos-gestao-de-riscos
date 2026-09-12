@@ -9,10 +9,12 @@ from sqlalchemy.orm import Session
 
 from app.core.security import exigir_perfil, obter_usuario_atual
 from app.database import SessaoLocal, obter_sessao
-from app.ml.predictor import prever_plano_contingencia
+from app.ml.gerar_dataset import nivel_do_plano
+from app.ml.predictor import metricas_por_algoritmo, prever_plano_contingencia
 from app.ml.preprocessor import carregar_dataset
 from app.ml.trainer import treinar_e_avaliar
-from app.models.enums import PerfilUsuario
+from app.models.enums import PerfilUsuario, StatusRisco
+from app.models.historico_risco import HistoricoRisco
 from app.models.metrica_treinamento import MetricaTreinamento
 from app.models.plano_contingencia import PlanoContingencia
 from app.models.projeto import Projeto
@@ -34,13 +36,14 @@ def _retreinar_e_registrar_metricas(dataset: pd.DataFrame) -> None:
 
     sessao = SessaoLocal()
     try:
-        for algoritmo, valores in metricas.items():
+        for algoritmo, valores in metricas_por_algoritmo(metricas).items():
             sessao.add(
                 MetricaTreinamento(
                     algoritmo=algoritmo,
                     acuracia=valores["acuracia"],
                     precisao=valores["precisao"],
                     recall=valores["recall"],
+                    f1=valores.get("f1"),
                     melhores_parametros=json.dumps(valores.get("melhores_parametros", {})),
                 )
             )
@@ -76,7 +79,9 @@ def _obter_recomendacao_do_gerente(
 
 def _montar_dataset_com_feedback(sessao: Session) -> pd.DataFrame:
     """Combina o dataset.csv original com os riscos cuja recomendação foi aceita
-    pelo gerente, usados como novos exemplos validados para o retreinamento."""
+    pelo gerente, usados como novos exemplos validados para o retreinamento.
+    O rótulo (nível de severidade) é derivado do plano aceito; planos fora do
+    catálogo base (cadastrados depois pelo admin) não têm nível e são ignorados."""
     dataset_base = carregar_dataset()
 
     registros_feedback = (
@@ -86,6 +91,7 @@ def _montar_dataset_com_feedback(sessao: Session) -> pd.DataFrame:
             Risco.impacto,
             Risco.orcamento_impacto,
             Risco.urgencia,
+            Risco.fase_projeto,
             Recomendacao.id_plano,
         )
         .join(Recomendacao, Recomendacao.id_risco == Risco.id)
@@ -93,24 +99,28 @@ def _montar_dataset_com_feedback(sessao: Session) -> pd.DataFrame:
         .all()
     )
 
-    if not registros_feedback:
-        return dataset_base
-
-    df_feedback = pd.DataFrame(
-        [
+    linhas_feedback = []
+    for categoria, probabilidade, impacto, orcamento_impacto, urgencia, fase_projeto, id_plano in registros_feedback:
+        nivel = nivel_do_plano(categoria.value, id_plano)
+        if nivel is None:
+            continue
+        linhas_feedback.append(
             {
                 "categoria": categoria.value,
                 "probabilidade": probabilidade.value,
                 "impacto": impacto.value,
                 "orcamento_impacto": orcamento_impacto.value,
                 "urgencia": urgencia.value,
+                "fase_projeto": fase_projeto.value,
+                "nivel_severidade": nivel,
                 "id_plano_contingencia": id_plano,
             }
-            for categoria, probabilidade, impacto, orcamento_impacto, urgencia, id_plano in registros_feedback
-        ]
-    )
+        )
 
-    return pd.concat([dataset_base, df_feedback], ignore_index=True)
+    if not linhas_feedback:
+        return dataset_base
+
+    return pd.concat([dataset_base, pd.DataFrame(linhas_feedback)], ignore_index=True)
 
 
 @roteador.post(
@@ -132,6 +142,7 @@ def gerar_recomendacao(
         impacto=risco.impacto.value,
         orcamento_impacto=risco.orcamento_impacto.value,
         urgencia=risco.urgencia.value,
+        fase_projeto=risco.fase_projeto.value,
     )
 
     plano = (
@@ -150,6 +161,7 @@ def gerar_recomendacao(
         id_plano=plano.id,
         algoritmo_usado=resultado["algoritmo_usado"],
         acuracia_momento=resultado["acuracia_momento"],
+        confianca=resultado.get("confianca"),
     )
     sessao.add(nova_recomendacao)
     sessao.commit()
@@ -208,6 +220,23 @@ def responder_recomendacao(
         )
 
     recomendacao.aceita = dados.aceita
+
+    # Aceitar o plano coloca o risco "em tratamento" (só a partir de
+    # "identificado", para não regredir um risco já mitigado/monitorado).
+    # Rejeitar mantém o status como está.
+    risco = recomendacao.risco
+    if dados.aceita and risco.status == StatusRisco.IDENTIFICADO:
+        risco.status = StatusRisco.EM_TRATAMENTO
+        sessao.add(
+            HistoricoRisco(
+                id_risco=risco.id,
+                id_usuario=gerente.id,
+                status_anterior=StatusRisco.IDENTIFICADO,
+                status_novo=StatusRisco.EM_TRATAMENTO,
+                comentario=f"Plano de contingência #{recomendacao.id_plano} aceito via recomendação",
+            )
+        )
+
     sessao.commit()
     sessao.refresh(recomendacao)
 

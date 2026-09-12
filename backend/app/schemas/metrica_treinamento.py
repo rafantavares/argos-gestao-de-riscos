@@ -1,5 +1,6 @@
 """Schema Pydantic da entidade MetricaTreinamento."""
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -12,4 +13,5 @@ class MetricaTreinamentoResposta(BaseModel):
     acuracia: float
     precisao: float
     recall: float
+    f1: Optional[float] = None
     criado_em: datetime

@@ -81,6 +81,20 @@ export const recomendacoes = {
   metricasHistorico: () => api.get("/recomendacoes/admin/metricas-historico").then((r) => r.data),
 };
 
+// --- módulo de ML ---
+export const ml = {
+  metricas: () => api.get("/ml/metricas").then((r) => r.data),
+  importanciaFeatures: () => api.get("/ml/feature-importance").then((r) => r.data),
+};
+
+// --- relatórios (admin) ---
+export const relatorio = {
+  riscos: (idProjeto) =>
+    api
+      .get("/relatorio/riscos", { params: idProjeto ? { id_projeto: idProjeto } : {} })
+      .then((r) => r.data),
+};
+
 // --- planos de contingência (admin) ---
 export const planos = {
   listar: () => api.get("/planos").then((r) => r.data),

@@ -15,5 +15,6 @@ class MetricaTreinamento(Base):
     acuracia = Column(Float, nullable=False)
     precisao = Column(Float, nullable=False)
     recall = Column(Float, nullable=False)
+    f1 = Column(Float, nullable=True)
     melhores_parametros = Column(Text, nullable=True)
     criado_em = Column(DateTime(timezone=True), server_default=func.now())

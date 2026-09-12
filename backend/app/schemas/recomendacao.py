@@ -18,6 +18,7 @@ class RecomendacaoResposta(RecomendacaoBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    confianca: Optional[float] = None
     aceita: Optional[bool] = None
     criado_em: datetime
     plano: PlanoContingenciaResposta

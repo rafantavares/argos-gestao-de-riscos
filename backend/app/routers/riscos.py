@@ -69,6 +69,7 @@ def cadastrar_risco(
         impacto=dados.impacto,
         orcamento_impacto=dados.orcamento_impacto,
         urgencia=dados.urgencia,
+        fase_projeto=dados.fase_projeto,
         id_projeto=dados.id_projeto,
         id_gerente=gerente.id,
     )

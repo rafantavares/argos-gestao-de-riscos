@@ -21,6 +21,7 @@ from app.database import Base, obter_sessao
 from app.main import app
 from app.models.enums import (
     CategoriaRisco,
+    FaseProjeto,
     ImpactoRisco,
     OrcamentoImpacto,
     PerfilUsuario,
@@ -167,6 +168,7 @@ def risco(sessao, projeto_com_gerente, gerente) -> Risco:
         impacto=ImpactoRisco.ALTO,
         orcamento_impacto=OrcamentoImpacto.ALTO,
         urgencia=Urgencia.ALTA,
+        fase_projeto=FaseProjeto.EXECUCAO,
         id_projeto=projeto_com_gerente.id,
         id_gerente=gerente.id,
     )
