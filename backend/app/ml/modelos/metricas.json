@@ -1,0 +1,67 @@
+{
+  "knn": {
+    "acuracia": 0.7733333333333333,
+    "precisao": 0.7852134902134902,
+    "recall": 0.7760269360269361,
+    "f1": 0.7738187109899319,
+    "desvio_padrao_acuracia": 0.06000115619188941,
+    "n_divisoes": 10,
+    "melhores_parametros": {
+      "classificador__n_neighbors": 11,
+      "classificador__weights": "distance"
+    }
+  },
+  "arvore_decisao": {
+    "acuracia": 0.8897849462365592,
+    "precisao": 0.8981572131572133,
+    "recall": 0.8924242424242426,
+    "f1": 0.8892279359562977,
+    "desvio_padrao_acuracia": 0.042007795388424835,
+    "n_divisoes": 10,
+    "melhores_parametros": {
+      "classificador__max_depth": null,
+      "classificador__min_samples_leaf": 2
+    },
+    "importancia_features": {
+      "categoria": 0.015275221599550595,
+      "probabilidade": 0.4138026300662575,
+      "impacto": 0.31502375425867096,
+      "orcamento_impacto": 0.023330297503619504,
+      "urgencia": 0.12563662429026262,
+      "fase_projeto": 0.10693147228163874
+    }
+  },
+  "random_forest": {
+    "acuracia": 0.893010752688172,
+    "precisao": 0.9080500980500981,
+    "recall": 0.8942760942760943,
+    "f1": 0.8946352274378928,
+    "desvio_padrao_acuracia": 0.06507153405197932,
+    "n_divisoes": 10,
+    "melhores_parametros": {
+      "classificador__max_depth": null,
+      "classificador__min_samples_leaf": 2,
+      "classificador__n_estimators": 200
+    },
+    "importancia_features": {
+      "categoria": 0.07352993119670986,
+      "probabilidade": 0.2993786225070254,
+      "impacto": 0.34937389312493783,
+      "orcamento_impacto": 0.0577261551278103,
+      "urgencia": 0.111734746743803,
+      "fase_projeto": 0.10825665129971364
+    }
+  },
+  "_dataset": {
+    "n_exemplos": 309,
+    "n_features": 6,
+    "features": [
+      "categoria",
+      "probabilidade",
+      "impacto",
+      "orcamento_impacto",
+      "urgencia",
+      "fase_projeto"
+    ]
+  }
+}
