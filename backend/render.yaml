@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: gestao-risco-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_CHAVE_SECRETA
+        sync: false
+      - key: JWT_ALGORITMO
+        value: HS256
+      - key: JWT_EXPIRACAO_MINUTOS
+        value: 60
+      - key: CORS_ORIGINS
+        value: https://gestao-risco.vercel.app,http://localhost:5173
+    rootDir: backend
