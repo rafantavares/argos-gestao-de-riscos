@@ -7,9 +7,7 @@ from pydantic import BaseModel
 from app.models.enums import (
     CategoriaRisco,
     FaseProjeto,
-    ImpactoRisco,
     OrcamentoImpacto,
-    ProbabilidadeRisco,
     StatusRisco,
     Urgencia,
 )
@@ -32,9 +30,17 @@ class RiscoRelatorio(BaseModel):
     projeto: str
     id_projeto: int
     gerente: str
+    indice: str
     categoria: CategoriaRisco
-    probabilidade: ProbabilidadeRisco
-    impacto: ImpactoRisco
+    area_afetada: str
+    descricao_impacto: str
+    probabilidade: int
+    impacto: int
+    exposicao: int
+    avaliacao_exposicao: str
+    mitigacao: Optional[str] = None
+    contingencia: Optional[str] = None
+    gatilho: Optional[str] = None
     orcamento_impacto: OrcamentoImpacto
     urgencia: Urgencia
     fase_projeto: FaseProjeto

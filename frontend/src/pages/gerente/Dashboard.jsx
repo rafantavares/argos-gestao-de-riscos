@@ -5,6 +5,8 @@ import {
   Button,
   Grid,
   IconButton,
+  InputAdornment,
+  MenuItem,
   Paper,
   Stack,
   Table,
@@ -12,12 +14,14 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
+import FilterListIcon from "@mui/icons-material/FilterList";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PendingActionsIcon from "@mui/icons-material/PendingActions";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
@@ -40,6 +44,7 @@ export default function Dashboard() {
   const [meusProjetos, setMeusProjetos] = useState([]);
   const [recomendacoes, setRecomendacoes] = useState([]);
   const [respondendo, setRespondendo] = useState(null);
+  const [filtroProjeto, setFiltroProjeto] = useState("");
   const navigate = useNavigate();
 
   async function carregar() {
@@ -60,7 +65,9 @@ export default function Dashboard() {
   const riscoPorId = useMemo(() => new Map(riscos.map((r) => [r.id, r])), [riscos]);
   const projetoPorId = useMemo(() => new Map(meusProjetos.map((p) => [p.id, p])), [meusProjetos]);
 
-  const riscosAbertos = riscos.filter((r) => r.status !== "encerrado");
+  const riscosDoFiltro = filtroProjeto ? riscos.filter((r) => r.id_projeto === filtroProjeto) : riscos;
+
+  const riscosAbertos = riscosDoFiltro.filter((r) => r.status !== "encerrado");
   const riscosCriticos = [...riscosAbertos]
     .sort(
       (a, b) =>
@@ -70,12 +77,12 @@ export default function Dashboard() {
     .slice(0, 5);
 
   const acoesPendentes = recomendacoes
-    .filter((r) => r.aceita === null && riscoPorId.has(r.id_risco))
+    .filter((r) => r.aceita === null && riscoPorId.has(r.id_risco) && riscosDoFiltro.some((risco) => risco.id === r.id_risco))
     .sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
 
-  const contagemPorCategoria = CATEGORIAS.map((c) => riscos.filter((r) => r.categoria === c.value).length);
-  const contagemAlta = riscos.filter((r) => nivelSeveridade(r.probabilidade, r.impacto) === "alto").length;
-  const tendenciaRiscos = useMemo(() => tendenciaSemanal(riscos), [riscos]);
+  const contagemPorCategoria = CATEGORIAS.map((c) => riscosDoFiltro.filter((r) => r.categoria === c.value).length);
+  const contagemAlta = riscosDoFiltro.filter((r) => nivelSeveridade(r.probabilidade, r.impacto) === "alto").length;
+  const tendenciaRiscos = useMemo(() => tendenciaSemanal(riscosDoFiltro), [riscosDoFiltro]);
 
   async function responder(recomendacao, aceita) {
     setRespondendo(recomendacao.id);
@@ -89,13 +96,39 @@ export default function Dashboard() {
 
   return (
     <Box>
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" fontWeight={600}>
-          Visão geral
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Exposição dos seus projetos e o que precisa da sua decisão.
-        </Typography>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2, mb: 3 }}>
+        <Box>
+          <Typography variant="h5" fontWeight={600}>
+            Visão geral
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Exposição dos seus projetos e o que precisa da sua decisão.
+          </Typography>
+        </Box>
+        {meusProjetos.length > 0 && (
+          <TextField
+            select
+            size="small"
+            label="Projeto"
+            value={filtroProjeto}
+            onChange={(e) => setFiltroProjeto(e.target.value)}
+            sx={{ minWidth: 200 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <FilterListIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+          >
+            <MenuItem value="">Todos os projetos</MenuItem>
+            {meusProjetos.map((p) => (
+              <MenuItem key={p.id} value={p.id}>
+                {p.nome}
+              </MenuItem>
+            ))}
+          </TextField>
+        )}
       </Box>
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
@@ -105,7 +138,7 @@ export default function Dashboard() {
         <Grid item xs={12} sm={6} md={3}>
           <CartaoEstatistica
             titulo="Riscos cadastrados"
-            valor={riscos.length}
+            valor={riscosDoFiltro.length}
             icone={<ReportProblemOutlinedIcon />}
             tendencia={tendenciaRiscos}
             cor="#FBBF24"
@@ -223,7 +256,7 @@ export default function Dashboard() {
                           </Typography>
                           <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>
                             {projetoPorId.get(risco.id_projeto)?.nome ?? "—"} · pontuação{" "}
-                            {pontuacaoSeveridade(risco.probabilidade, risco.impacto)}/9
+                            {pontuacaoSeveridade(risco.probabilidade, risco.impacto)}/25
                           </Typography>
                         </TableCell>
                         <TableCell>

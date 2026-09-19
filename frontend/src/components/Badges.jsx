@@ -1,5 +1,6 @@
 import { Chip } from "@mui/material";
 import {
+  AREAS_AFETADAS,
   CATEGORIAS,
   CORES_CATEGORIA,
   CORES_SEVERIDADE,
@@ -7,7 +8,9 @@ import {
   ROTULOS_SEVERIDADE,
   STATUS_RISCO,
   URGENCIAS,
+  faixaExposicao,
   nivelSeveridade,
+  pontuacaoSeveridade,
   rotulo,
 } from "../constants";
 
@@ -29,12 +32,35 @@ export function ChipStatus({ status, size = "small" }) {
 const SEVERIDADE_FEMININO = { baixo: "baixa", medio: "média", alto: "alta" };
 
 export function ChipSeveridade({ probabilidade, impacto, size = "small" }) {
+  // Riscos (notas 1-5): mostra a avaliação da exposição e a pontuação.
+  if (typeof probabilidade === "number") {
+    const pontuacao = pontuacaoSeveridade(probabilidade, impacto);
+    const faixa = faixaExposicao(pontuacao);
+    return (
+      <Chip
+        size={size}
+        label={`${faixa.label} · ${pontuacao}`}
+        sx={{ bgcolor: faixa.cor, color: "#0B0E14", fontWeight: 700 }}
+      />
+    );
+  }
   const nivel = nivelSeveridade(probabilidade, impacto);
   return (
     <Chip
       size={size}
       label={`Severidade ${SEVERIDADE_FEMININO[nivel] ?? ROTULOS_SEVERIDADE[nivel]}`}
       sx={{ bgcolor: CORES_SEVERIDADE[nivel], color: "#0B0E14", fontWeight: 700 }}
+    />
+  );
+}
+
+export function ChipArea({ area, size = "small" }) {
+  return (
+    <Chip
+      size={size}
+      variant="outlined"
+      label={rotulo(AREAS_AFETADAS, area)}
+      sx={{ fontWeight: 600, borderColor: "#3A4356" }}
     />
   );
 }

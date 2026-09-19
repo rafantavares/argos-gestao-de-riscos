@@ -68,6 +68,8 @@ export const riscos = {
   atualizarStatus: (id, statusNovo, comentario) =>
     api.patch(`/riscos/${id}/status`, { status: statusNovo, comentario }).then((r) => r.data),
   historico: (id) => api.get(`/riscos/${id}/historico`).then((r) => r.data),
+  atualizarTratamento: (id, dados) => api.patch(`/riscos/${id}/tratamento`, dados).then((r) => r.data),
+  assistente: (dados) => api.post("/riscos/assistente", dados).then((r) => r.data),
   listarTodosAdmin: () => api.get("/riscos/admin/todos").then((r) => r.data),
 };
 
@@ -89,9 +91,14 @@ export const ml = {
 
 // --- relatórios (admin) ---
 export const relatorio = {
-  riscos: (idProjeto) =>
+  riscos: (idProjeto, idGerente) =>
     api
-      .get("/relatorio/riscos", { params: idProjeto ? { id_projeto: idProjeto } : {} })
+      .get("/relatorio/riscos", {
+        params: {
+          ...(idProjeto ? { id_projeto: idProjeto } : {}),
+          ...(idGerente ? { id_gerente: idGerente } : {}),
+        },
+      })
       .then((r) => r.data),
 };
 

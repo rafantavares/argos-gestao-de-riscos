@@ -1,14 +1,23 @@
 """Model ORM da entidade Risco."""
-from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String, func
+from sqlalchemy import (
+    CheckConstraint,
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    SmallInteger,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.orm import relationship
 
 from app.database import Base
 from app.models.enums import (
     CategoriaRisco,
     FaseProjeto,
-    ImpactoRisco,
     OrcamentoImpacto,
-    ProbabilidadeRisco,
     StatusRisco,
     Urgencia,
     valores_enum,
@@ -17,19 +26,27 @@ from app.models.enums import (
 
 class Risco(Base):
     __tablename__ = "riscos"
+    __table_args__ = (
+        CheckConstraint("probabilidade BETWEEN 1 AND 5", name="ck_riscos_probabilidade"),
+        CheckConstraint("impacto BETWEEN 1 AND 5", name="ck_riscos_impacto"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
+    # Identificador do risco dentro do projeto ("R01", "R02", ...).
+    indice = Column(String(10), nullable=False, default="R01", server_default="R01")
     titulo = Column(String(200), nullable=False)
+    # Grupo PMBOK (feature do ML); derivado da área afetada quando não informado.
     categoria = Column(
         Enum(CategoriaRisco, name="categoria_risco", values_callable=valores_enum), nullable=False
     )
-    probabilidade = Column(
-        Enum(ProbabilidadeRisco, name="probabilidade_risco", values_callable=valores_enum),
-        nullable=False,
+    # Categoria de negócio (área do projeto afetada): valores de AreaAfetada.
+    area_afetada = Column(
+        String(40), nullable=False, default="cronograma", server_default="cronograma"
     )
-    impacto = Column(
-        Enum(ImpactoRisco, name="impacto_risco", values_callable=valores_enum), nullable=False
-    )
+    descricao_impacto = Column(Text, nullable=False, default="", server_default="")
+    # Escalas de 1 a 5 (rótulos em app/core/exposicao.py).
+    probabilidade = Column(SmallInteger, nullable=False)
+    impacto = Column(SmallInteger, nullable=False)
     orcamento_impacto = Column(
         Enum(OrcamentoImpacto, name="orcamento_impacto", values_callable=valores_enum),
         nullable=False,
@@ -43,6 +60,9 @@ class Risco(Base):
         default=FaseProjeto.PLANEJAMENTO,
         server_default=FaseProjeto.PLANEJAMENTO.value,
     )
+    mitigacao = Column(Text, nullable=True)
+    contingencia = Column(Text, nullable=True)
+    gatilho = Column(Text, nullable=True)
     status = Column(
         Enum(StatusRisco, name="status_risco", values_callable=valores_enum),
         nullable=False,

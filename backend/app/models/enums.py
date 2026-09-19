@@ -15,6 +15,10 @@ class CategoriaRisco(str, enum.Enum):
 
 
 class ProbabilidadeRisco(str, enum.Enum):
+    """Escala de 3 níveis, usada apenas nos planos de contingência do catálogo
+    (rótulo da situação típica do plano). Os riscos usam a escala 1-5 de
+    app/core/exposicao.py."""
+
     BAIXA = "baixa"
     MEDIA = "media"
     ALTA = "alta"
@@ -61,6 +65,38 @@ class FaseProjeto(str, enum.Enum):
     PLANEJAMENTO = "planejamento"
     EXECUCAO = "execucao"
     ENCERRAMENTO = "encerramento"
+
+
+class AreaAfetada(str, enum.Enum):
+    """Categoria de negócio do risco (área do projeto afetada), como usada no
+    registro de riscos do MR-MPS-SW / PMBOK. Cada área pertence a um dos 4
+    grupos da RBS do PMBOK (CategoriaRisco), que é o que alimenta o ML e o
+    catálogo de planos -- ver AREA_PARA_CATEGORIA."""
+
+    CRONOGRAMA = "cronograma"
+    CUSTO = "custo"
+    ESCOPO = "escopo"
+    QUALIDADE = "qualidade"
+    SEGURANCA_INFORMACAO = "seguranca_informacao"
+    INFRAESTRUTURA = "infraestrutura"
+    USABILIDADE = "usabilidade"
+    EQUIPE = "equipe"
+    FORNECEDORES = "fornecedores"
+    LEGAL_REGULATORIO = "legal_regulatorio"
+
+
+AREA_PARA_CATEGORIA = {
+    AreaAfetada.CRONOGRAMA: CategoriaRisco.ORGANIZACIONAL,
+    AreaAfetada.CUSTO: CategoriaRisco.ORGANIZACIONAL,
+    AreaAfetada.ESCOPO: CategoriaRisco.ORGANIZACIONAL,
+    AreaAfetada.QUALIDADE: CategoriaRisco.TECNICO,
+    AreaAfetada.SEGURANCA_INFORMACAO: CategoriaRisco.TECNICO,
+    AreaAfetada.INFRAESTRUTURA: CategoriaRisco.TECNICO,
+    AreaAfetada.USABILIDADE: CategoriaRisco.TECNICO,
+    AreaAfetada.EQUIPE: CategoriaRisco.PESSOAL,
+    AreaAfetada.FORNECEDORES: CategoriaRisco.EXTERNO,
+    AreaAfetada.LEGAL_REGULATORIO: CategoriaRisco.EXTERNO,
+}
 
 
 def valores_enum(classe_enum):

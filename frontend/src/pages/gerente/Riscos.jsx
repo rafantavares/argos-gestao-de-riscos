@@ -5,6 +5,7 @@ import {
   Box,
   Button,
   Chip,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -20,6 +21,8 @@ import {
   Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DownloadIcon from "@mui/icons-material/Download";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
@@ -30,27 +33,35 @@ import {
   riscos as servicoRiscos,
 } from "../../services/api";
 import {
+  AREAS_AFETADAS,
   CATEGORIAS,
-  CORES_SEVERIDADE,
   FASES_PROJETO,
   IMPACTOS,
   ORCAMENTOS_IMPACTO,
   PROBABILIDADES,
   STATUS_RISCO,
   URGENCIAS,
-  nivelSeveridade,
+  faixaExposicao,
   pontuacaoSeveridade,
   rotulo,
 } from "../../constants";
-import { ChipAceite, ChipCategoria, ChipSeveridade, ChipStatus, ChipUrgencia } from "../../components/Badges";
+import { ChipAceite, ChipArea, ChipSeveridade, ChipStatus, ChipUrgencia } from "../../components/Badges";
 import EstadoVazio from "../../components/EstadoVazio";
 import { exportarCsv } from "../../utils/exportarCsv";
 
 const COLUNAS_CSV = [
-  { rotulo: "Título", valor: (r) => r.titulo },
-  { rotulo: "Categoria", valor: (r) => rotulo(CATEGORIAS, r.categoria) },
-  { rotulo: "Probabilidade", valor: (r) => rotulo(PROBABILIDADES, r.probabilidade) },
-  { rotulo: "Impacto", valor: (r) => rotulo(IMPACTOS, r.impacto) },
+  { rotulo: "Índice", valor: (r) => r.indice },
+  { rotulo: "Categoria (área afetada)", valor: (r) => rotulo(AREAS_AFETADAS, r.area_afetada) },
+  { rotulo: "Risco", valor: (r) => r.titulo },
+  { rotulo: "Descrição do impacto", valor: (r) => r.descricao_impacto },
+  { rotulo: "Impacto", valor: (r) => `${r.impacto} - ${rotulo(IMPACTOS, r.impacto)}` },
+  { rotulo: "Probabilidade", valor: (r) => `${r.probabilidade} - ${rotulo(PROBABILIDADES, r.probabilidade)}` },
+  { rotulo: "Exposição", valor: (r) => r.exposicao },
+  { rotulo: "Avaliação da exposição", valor: (r) => r.avaliacao_exposicao },
+  { rotulo: "Mitigação", valor: (r) => r.mitigacao ?? "" },
+  { rotulo: "Contingência", valor: (r) => r.contingencia ?? "" },
+  { rotulo: "Gatilho", valor: (r) => r.gatilho ?? "" },
+  { rotulo: "Grupo PMBOK", valor: (r) => rotulo(CATEGORIAS, r.categoria) },
   { rotulo: "Orçamento", valor: (r) => rotulo(ORCAMENTOS_IMPACTO, r.orcamento_impacto) },
   { rotulo: "Urgência", valor: (r) => rotulo(URGENCIAS, r.urgencia) },
   { rotulo: "Fase do projeto", valor: (r) => rotulo(FASES_PROJETO, r.fase_projeto) },
@@ -113,7 +124,7 @@ export default function Riscos() {
             Riscos
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Ordenados por severidade. Clique em um risco para ver a recomendação do modelo.
+            Ordenados por exposição (impacto × probabilidade). Clique em um risco para ver a recomendação do modelo.
           </Typography>
         </Box>
         <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
@@ -211,7 +222,7 @@ export default function Riscos() {
 }
 
 function CartaoRisco({ risco, projeto, recomendacao, aoAbrir }) {
-  const nivel = nivelSeveridade(risco.probabilidade, risco.impacto);
+  const faixa = faixaExposicao(risco.exposicao);
   const fase = FASES_PROJETO.find((f) => f.value === risco.fase_projeto);
 
   return (
@@ -221,7 +232,7 @@ function CartaoRisco({ risco, projeto, recomendacao, aoAbrir }) {
         p: 2,
         height: "100%",
         cursor: "pointer",
-        borderLeft: `5px solid ${CORES_SEVERIDADE[nivel]}`,
+        borderLeft: `5px solid ${faixa.cor}`,
         transition: "transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease",
         "&:hover": { transform: "translateY(-2px)", boxShadow: 4, borderColor: "primary.main" },
         display: "flex",
@@ -232,6 +243,9 @@ function CartaoRisco({ risco, projeto, recomendacao, aoAbrir }) {
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 1 }}>
         <Box sx={{ minWidth: 0 }}>
           <Typography variant="subtitle1" fontWeight={600} sx={{ lineHeight: 1.25 }}>
+            <Box component="span" sx={{ color: "primary.main", mr: 0.8 }}>
+              {risco.indice}
+            </Box>
             {risco.titulo}
           </Typography>
           <Typography variant="caption" color="text.secondary">
@@ -242,7 +256,7 @@ function CartaoRisco({ risco, projeto, recomendacao, aoAbrir }) {
       </Box>
 
       <Stack direction="row" spacing={0.8} useFlexGap flexWrap="wrap">
-        <ChipCategoria categoria={risco.categoria} />
+        <ChipArea area={risco.area_afetada} />
         <ChipSeveridade probabilidade={risco.probabilidade} impacto={risco.impacto} />
         <ChipUrgencia urgencia={risco.urgencia} />
         {fase && (
@@ -253,8 +267,8 @@ function CartaoRisco({ risco, projeto, recomendacao, aoAbrir }) {
       </Stack>
 
       <Typography variant="caption" color="text.secondary">
-        Probabilidade {rotulo(PROBABILIDADES, risco.probabilidade).toLowerCase()} · impacto{" "}
-        {rotulo(IMPACTOS, risco.impacto).toLowerCase()} · orçamento{" "}
+        Probabilidade {risco.probabilidade} ({rotulo(PROBABILIDADES, risco.probabilidade).toLowerCase()}) · impacto{" "}
+        {risco.impacto} ({rotulo(IMPACTOS, risco.impacto).toLowerCase()}) · orçamento{" "}
         {rotulo(ORCAMENTOS_IMPACTO, risco.orcamento_impacto).toLowerCase()}
       </Typography>
 
@@ -328,15 +342,103 @@ function IconeProgressoFase({ progresso }) {
   );
 }
 
+function CampoTexto({ label, value, onChange, ajuda, obrigatorio = false, linhas = 2, ...props }) {
+  return (
+    <TextField
+      fullWidth
+      multiline
+      minRows={linhas}
+      label={label}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      helperText={ajuda}
+      required={obrigatorio}
+      {...props}
+    />
+  );
+}
+
+// Painel do assistente de IA: sugestão de área, riscos parecidos e auditoria de
+// coerência entre a descrição do impacto e as notas.
+function PainelAssistente({ analise, carregando, aoUsarArea, aoAplicarNota }) {
+  if (!analise && !carregando) return null;
+  const { area_sugerida: areaSugerida, similares = [], alertas_coerencia: alertas = [] } = analise ?? {};
+  if (!carregando && !areaSugerida && similares.length === 0 && alertas.length === 0) return null;
+
+  return (
+    <Paper
+      variant="outlined"
+      sx={{ p: 1.5, borderColor: "rgba(167, 139, 250, 0.45)", bgcolor: "rgba(167, 139, 250, 0.06)" }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 0.8, mb: 1 }}>
+        <AutoAwesomeIcon sx={{ fontSize: 18, color: "secondary.main" }} />
+        <Typography variant="caption" fontWeight={700} sx={{ color: "secondary.main", letterSpacing: 0.5 }}>
+          ASSISTENTE DE IA
+        </Typography>
+        {carregando && <CircularProgress size={12} />}
+      </Box>
+      <Stack spacing={1}>
+        {areaSugerida && (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+            <Typography variant="body2">
+              Área sugerida: <strong>{rotulo(AREAS_AFETADAS, areaSugerida.area_afetada)}</strong>{" "}
+              <Typography component="span" variant="caption" color="text.secondary">
+                ({Math.round(areaSugerida.confianca * 100)}% de confiança · grupo PMBOK{" "}
+                {rotulo(CATEGORIAS, areaSugerida.categoria).toLowerCase()})
+              </Typography>
+            </Typography>
+            <Button size="small" onClick={() => aoUsarArea(areaSugerida.area_afetada)}>
+              Usar
+            </Button>
+          </Box>
+        )}
+        {similares.length > 0 && (
+          <Alert severity="warning" icon={<ContentCopyIcon fontSize="small" />} sx={{ py: 0 }}>
+            Já existe risco parecido neste projeto:{" "}
+            {similares.map((s) => `${s.indice} — ${s.titulo} (${Math.round(s.similaridade * 100)}%)`).join("; ")}.
+            Confira antes de cadastrar para evitar duplicidade.
+          </Alert>
+        )}
+        {alertas.map((alerta) => (
+          <Alert
+            key={alerta.tipo}
+            severity="warning"
+            sx={{ py: 0 }}
+            action={
+              <Button
+                size="small"
+                color="inherit"
+                onClick={() => aoAplicarNota(alerta.tipo.startsWith("probabilidade") ? "probabilidade" : "impacto", alerta.valor_sugerido)}
+              >
+                Aplicar {alerta.valor_sugerido}
+              </Button>
+            }
+          >
+            {alerta.mensagem}
+          </Alert>
+        ))}
+      </Stack>
+    </Paper>
+  );
+}
+
+const ATRASO_ASSISTENTE_MS = 600;
+
 function DialogoNovoRisco({ aberto, projetos, projetoInicial, aoFechar, aoCriar }) {
   const [titulo, setTitulo] = useState("");
-  const [categoria, setCategoria] = useState("");
+  const [descricaoImpacto, setDescricaoImpacto] = useState("");
+  const [areaAfetada, setAreaAfetada] = useState("");
   const [probabilidade, setProbabilidade] = useState("");
   const [impacto, setImpacto] = useState("");
   const [orcamentoImpacto, setOrcamentoImpacto] = useState("");
   const [urgencia, setUrgencia] = useState("");
   const [faseProjeto, setFaseProjeto] = useState("");
+  const [mitigacao, setMitigacao] = useState("");
+  const [contingencia, setContingencia] = useState("");
+  const [gatilho, setGatilho] = useState("");
   const [idProjeto, setIdProjeto] = useState("");
+  const [analise, setAnalise] = useState(null);
+  const [analisando, setAnalisando] = useState(false);
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
 
@@ -344,10 +446,59 @@ function DialogoNovoRisco({ aberto, projetos, projetoInicial, aoFechar, aoCriar 
     if (aberto) {
       setIdProjeto(projetoInicial || (projetos.length === 1 ? projetos[0].id : ""));
       setErro("");
+      setAnalise(null);
     }
   }, [aberto, projetoInicial, projetos]);
 
-  const previaSeveridade = probabilidade && impacto ? nivelSeveridade(probabilidade, impacto) : null;
+  // Consulta o assistente enquanto o gerente digita (com pequena espera para
+  // não chamar a API a cada tecla).
+  useEffect(() => {
+    if (!aberto || !idProjeto || titulo.trim().length < 3) {
+      setAnalise(null);
+      return undefined;
+    }
+    let cancelado = false;
+    const temporizador = setTimeout(async () => {
+      setAnalisando(true);
+      try {
+        const resposta = await servicoRiscos.assistente({
+          id_projeto: idProjeto,
+          titulo,
+          descricao_impacto: descricaoImpacto,
+          area_afetada: areaAfetada || undefined,
+          probabilidade: probabilidade || undefined,
+          impacto: impacto || undefined,
+        });
+        if (!cancelado) setAnalise(resposta);
+      } catch {
+        if (!cancelado) setAnalise(null);
+      } finally {
+        if (!cancelado) setAnalisando(false);
+      }
+    }, ATRASO_ASSISTENTE_MS);
+    return () => {
+      cancelado = true;
+      clearTimeout(temporizador);
+    };
+  }, [aberto, idProjeto, titulo, descricaoImpacto, areaAfetada, probabilidade, impacto]);
+
+  const exposicao = probabilidade && impacto ? pontuacaoSeveridade(probabilidade, impacto) : null;
+  const faixa = exposicao ? faixaExposicao(exposicao) : null;
+  const grupoPmbok = areaAfetada ? AREAS_AFETADAS.find((a) => a.value === areaAfetada)?.categoria : null;
+
+  function aplicarNota(campo, valor) {
+    if (campo === "probabilidade") setProbabilidade(valor);
+    else setImpacto(valor);
+  }
+
+  // Preenche só o que o gerente ainda não escreveu.
+  function aplicarSugestoes() {
+    const sugestao = analise?.sugestao_plano;
+    if (!sugestao) return;
+    if (!mitigacao) setMitigacao(sugestao.mitigacao);
+    if (!contingencia) setContingencia(sugestao.contingencia);
+    if (!gatilho) setGatilho(sugestao.gatilho);
+  }
 
   async function aoEnviar(evento) {
     evento.preventDefault();
@@ -356,36 +507,58 @@ function DialogoNovoRisco({ aberto, projetos, projetoInicial, aoFechar, aoCriar 
     try {
       await aoCriar({
         titulo,
-        categoria,
+        descricao_impacto: descricaoImpacto,
+        area_afetada: areaAfetada,
         probabilidade,
         impacto,
         orcamento_impacto: orcamentoImpacto,
         urgencia,
         fase_projeto: faseProjeto,
+        mitigacao: mitigacao || null,
+        contingencia: contingencia || null,
+        gatilho: gatilho || null,
         id_projeto: idProjeto,
       });
     } catch (e) {
-      setErro(e.response?.data?.detail ?? "Não foi possível cadastrar o risco.");
+      const detalhe = e.response?.data?.detail;
+      setErro(typeof detalhe === "string" ? detalhe : "Não foi possível cadastrar o risco. Verifique os campos.");
     } finally {
       setEnviando(false);
     }
   }
 
   return (
-    <Dialog open={aberto} onClose={aoFechar} fullWidth maxWidth="sm">
+    <Dialog open={aberto} onClose={aoFechar} fullWidth maxWidth="md">
       <Box component="form" onSubmit={aoEnviar}>
         <DialogTitle sx={{ pb: 0.5 }}>Novo risco</DialogTitle>
         <Typography variant="body2" color="text.secondary" sx={{ px: 3, pb: 1 }}>
-          Todos os campos alimentam o modelo de recomendação.
+          Registro no formato PMBOK / MR-MPS-SW. O identificador (R01, R02...) é gerado automaticamente.
         </Typography>
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 1 }}>
           {erro && <Alert severity="error">{erro}</Alert>}
 
-          <SecaoFormulario titulo="Identificação do risco" descricao="O que pode acontecer e de que natureza é o risco.">
+          <SecaoFormulario titulo="Identificação do risco" descricao="O que pode acontecer, onde e qual a consequência.">
+            <Grid item xs={12} sm={6}>
+              <CampoSelect
+                label="Projeto"
+                value={idProjeto}
+                onChange={setIdProjeto}
+                opcoes={projetos.map((p) => ({ value: p.id, label: p.nome }))}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <CampoSelect
+                label="Categoria (área afetada)"
+                value={areaAfetada}
+                onChange={setAreaAfetada}
+                opcoes={AREAS_AFETADAS}
+                helperText={grupoPmbok ? `Grupo PMBOK: ${rotulo(CATEGORIAS, grupoPmbok)}` : " "}
+              />
+            </Grid>
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Título"
+                label="Risco (título)"
                 value={titulo}
                 onChange={(e) => setTitulo(e.target.value)}
                 required
@@ -394,18 +567,67 @@ function DialogoNovoRisco({ aberto, projetos, projetoInicial, aoFechar, aoCriar 
               />
             </Grid>
             <Grid item xs={12}>
-              <CampoSelect label="Categoria (PMBOK)" value={categoria} onChange={setCategoria} opcoes={CATEGORIAS} />
+              <CampoTexto
+                label="Descrição do impacto"
+                value={descricaoImpacto}
+                onChange={setDescricaoImpacto}
+                obrigatorio
+                ajuda="Consequência se o problema se concretizar."
+                inputProps={{ minLength: 5, maxLength: 2000 }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <PainelAssistente
+                analise={analise}
+                carregando={analisando}
+                aoUsarArea={setAreaAfetada}
+                aoAplicarNota={aplicarNota}
+              />
             </Grid>
           </SecaoFormulario>
 
-          <SecaoFormulario titulo="Avaliação" descricao="Dimensões que definem a severidade do risco.">
-            <Grid item xs={6}>
-              <CampoSelect label="Probabilidade" value={probabilidade} onChange={setProbabilidade} opcoes={PROBABILIDADES} />
+          <SecaoFormulario
+            titulo="Avaliação"
+            descricao="Impacto e probabilidade de 1 a 5. A exposição é o produto dos dois."
+          >
+            <Grid item xs={12} sm={6}>
+              <CampoSelect
+                label="Impacto"
+                value={impacto}
+                onChange={setImpacto}
+                opcoes={IMPACTOS}
+                renderOpcao={(o) => `${o.value} — ${o.label}`}
+              />
             </Grid>
-            <Grid item xs={6}>
-              <CampoSelect label="Impacto" value={impacto} onChange={setImpacto} opcoes={IMPACTOS} />
+            <Grid item xs={12} sm={6}>
+              <CampoSelect
+                label="Probabilidade"
+                value={probabilidade}
+                onChange={setProbabilidade}
+                opcoes={PROBABILIDADES}
+                renderOpcao={(o) => `${o.value} — ${o.label}`}
+              />
             </Grid>
-            <Grid item xs={6}>
+            <Grid item xs={12}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.2, flexWrap: "wrap" }}>
+                <Typography variant="caption" color="text.secondary">
+                  Exposição (impacto × probabilidade):
+                </Typography>
+                {exposicao ? (
+                  <>
+                    <Typography variant="h6" sx={{ lineHeight: 1 }}>
+                      {exposicao}
+                    </Typography>
+                    <ChipSeveridade probabilidade={probabilidade} impacto={impacto} />
+                  </>
+                ) : (
+                  <Typography variant="caption" color="text.secondary">
+                    preencha impacto e probabilidade
+                  </Typography>
+                )}
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={4}>
               <CampoSelect
                 label="Impacto no orçamento"
                 value={orcamentoImpacto}
@@ -413,29 +635,10 @@ function DialogoNovoRisco({ aberto, projetos, projetoInicial, aoFechar, aoCriar 
                 opcoes={ORCAMENTOS_IMPACTO}
               />
             </Grid>
-            <Grid item xs={6}>
+            <Grid item xs={12} sm={4}>
               <CampoSelect label="Urgência (proximidade)" value={urgencia} onChange={setUrgencia} opcoes={URGENCIAS} />
             </Grid>
-            {previaSeveridade && (
-              <Grid item xs={12}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Severidade na matriz:
-                  </Typography>
-                  <ChipSeveridade probabilidade={probabilidade} impacto={impacto} />
-                </Box>
-              </Grid>
-            )}
-          </SecaoFormulario>
-
-          <SecaoFormulario
-            titulo="Contexto do projeto"
-            descricao="Onde o risco foi identificado. A fase influencia o plano adequado: riscos descobertos tarde deixam menos margem de reação."
-          >
-            <Grid item xs={12} sm={6}>
-              <CampoSelect label="Projeto" value={idProjeto} onChange={setIdProjeto} opcoes={projetos.map((p) => ({ value: p.id, label: p.nome }))} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={4}>
               <CampoSelect
                 label="Fase do projeto"
                 value={faseProjeto}
@@ -457,6 +660,57 @@ function DialogoNovoRisco({ aberto, projetos, projetoInicial, aoFechar, aoCriar 
               />
             </Grid>
           </SecaoFormulario>
+
+          <Box>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 1 }}>
+              <Box>
+                <Typography variant="overline" sx={{ color: "primary.main", fontWeight: 700, letterSpacing: 1 }}>
+                  Tratamento
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.2 }}>
+                  Opcional agora: ao aceitar o plano recomendado, os campos vazios são preenchidos e você só revisa.
+                </Typography>
+              </Box>
+              <Tooltip title="Preenche os campos vazios a partir da área afetada e da exposição">
+                <span>
+                  <Button
+                    size="small"
+                    startIcon={<AutoAwesomeIcon />}
+                    disabled={!analise?.sugestao_plano}
+                    onClick={aplicarSugestoes}
+                  >
+                    Sugerir com IA
+                  </Button>
+                </span>
+              </Tooltip>
+            </Box>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <CampoTexto
+                  label="Mitigação (ação preventiva)"
+                  value={mitigacao}
+                  onChange={setMitigacao}
+                  ajuda="O que fazer para tentar evitar o risco."
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <CampoTexto
+                  label="Contingência (ação reativa)"
+                  value={contingencia}
+                  onChange={setContingencia}
+                  ajuda="O que fazer se o problema realmente acontecer."
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <CampoTexto
+                  label="Gatilho"
+                  value={gatilho}
+                  onChange={setGatilho}
+                  ajuda="Evento, sintoma ou indicador que avisa a hora de acionar a contingência."
+                />
+              </Grid>
+            </Grid>
+          </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={aoFechar}>Cancelar</Button>

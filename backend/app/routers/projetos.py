@@ -29,21 +29,56 @@ def _obter_projeto_do_admin(id_projeto: int, admin: Usuario, sessao: Session) ->
     return projeto
 
 
+def _obter_projeto_acessivel(id_projeto: int, usuario: Usuario, sessao: Session) -> Projeto:
+    """Projeto que o usuário autenticado pode ver/editar: para admin, os que ele
+    administra; para gerente, os que ele criou ou aos quais foi vinculado."""
+    if usuario.perfil == PerfilUsuario.ADMIN:
+        return _obter_projeto_do_admin(id_projeto, usuario, sessao)
+
+    projeto = (
+        sessao.query(Projeto)
+        .join(ProjetoGerente, ProjetoGerente.id_projeto == Projeto.id)
+        .filter(Projeto.id == id_projeto, ProjetoGerente.id_gerente == usuario.id)
+        .first()
+    )
+    if projeto is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Projeto não encontrado"
+        )
+    return projeto
+
+
 @roteador.post(
     "",
     response_model=ProjetoResposta,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(exigir_perfil(PerfilUsuario.ADMIN))],
+    dependencies=[Depends(exigir_perfil(PerfilUsuario.ADMIN, PerfilUsuario.GERENTE))],
 )
 def criar_projeto(
     dados: ProjetoCriar,
     sessao: Session = Depends(obter_sessao),
-    admin: Usuario = Depends(obter_usuario_atual),
+    usuario: Usuario = Depends(obter_usuario_atual),
 ):
-    novo_projeto = Projeto(nome=dados.nome, descricao=dados.descricao, id_admin=admin.id)
+    if usuario.perfil == PerfilUsuario.ADMIN:
+        id_admin = usuario.id
+    else:
+        admin = sessao.query(Usuario).filter(Usuario.perfil == PerfilUsuario.ADMIN).first()
+        if admin is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Nenhum administrador cadastrado no sistema",
+            )
+        id_admin = admin.id
+
+    novo_projeto = Projeto(nome=dados.nome, descricao=dados.descricao, id_admin=id_admin)
     sessao.add(novo_projeto)
     sessao.commit()
     sessao.refresh(novo_projeto)
+
+    if usuario.perfil == PerfilUsuario.GERENTE:
+        sessao.add(ProjetoGerente(id_projeto=novo_projeto.id, id_gerente=usuario.id))
+        sessao.commit()
+
     return novo_projeto
 
 
@@ -80,15 +115,15 @@ def listar_projetos_do_gerente(
 @roteador.put(
     "/{id_projeto}",
     response_model=ProjetoResposta,
-    dependencies=[Depends(exigir_perfil(PerfilUsuario.ADMIN))],
+    dependencies=[Depends(exigir_perfil(PerfilUsuario.ADMIN, PerfilUsuario.GERENTE))],
 )
 def editar_projeto(
     id_projeto: int,
     dados: ProjetoAtualizar,
     sessao: Session = Depends(obter_sessao),
-    admin: Usuario = Depends(obter_usuario_atual),
+    usuario: Usuario = Depends(obter_usuario_atual),
 ):
-    projeto = _obter_projeto_do_admin(id_projeto, admin, sessao)
+    projeto = _obter_projeto_acessivel(id_projeto, usuario, sessao)
 
     if dados.nome is not None:
         projeto.nome = dados.nome

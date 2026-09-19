@@ -1,10 +1,10 @@
 {
   "knn": {
-    "acuracia": 0.7733333333333333,
-    "precisao": 0.7852134902134902,
-    "recall": 0.7760269360269361,
-    "f1": 0.7738187109899319,
-    "desvio_padrao_acuracia": 0.06000115619188941,
+    "acuracia": 0.8066666666666666,
+    "precisao": 0.7921238553901093,
+    "recall": 0.765324074074074,
+    "f1": 0.7657387717681836,
+    "desvio_padrao_acuracia": 0.06463573143221774,
     "n_divisoes": 10,
     "melhores_parametros": {
       "classificador__n_neighbors": 11,
@@ -12,48 +12,48 @@
     }
   },
   "arvore_decisao": {
-    "acuracia": 0.8897849462365592,
-    "precisao": 0.8981572131572133,
-    "recall": 0.8924242424242426,
-    "f1": 0.8892279359562977,
-    "desvio_padrao_acuracia": 0.042007795388424835,
+    "acuracia": 0.89,
+    "precisao": 0.895399504033405,
+    "recall": 0.8457244008714596,
+    "f1": 0.8623775924511218,
+    "desvio_padrao_acuracia": 0.03958114029012638,
     "n_divisoes": 10,
     "melhores_parametros": {
-      "classificador__max_depth": null,
+      "classificador__max_depth": 5,
       "classificador__min_samples_leaf": 2
     },
     "importancia_features": {
-      "categoria": 0.015275221599550595,
-      "probabilidade": 0.4138026300662575,
-      "impacto": 0.31502375425867096,
-      "orcamento_impacto": 0.023330297503619504,
-      "urgencia": 0.12563662429026262,
-      "fase_projeto": 0.10693147228163874
+      "categoria": 0.008597237642342728,
+      "probabilidade": 0.18711039799243964,
+      "impacto": 0.4006005924262286,
+      "orcamento_impacto": 0.013060241646913336,
+      "urgencia": 0.16593623041888628,
+      "fase_projeto": 0.2246952998731894
     }
   },
   "random_forest": {
-    "acuracia": 0.893010752688172,
-    "precisao": 0.9080500980500981,
-    "recall": 0.8942760942760943,
-    "f1": 0.8946352274378928,
-    "desvio_padrao_acuracia": 0.06507153405197932,
+    "acuracia": 0.8733333333333334,
+    "precisao": 0.8687883515979491,
+    "recall": 0.8481318082788671,
+    "f1": 0.8478379500533201,
+    "desvio_padrao_acuracia": 0.04666666666666665,
     "n_divisoes": 10,
     "melhores_parametros": {
       "classificador__max_depth": null,
       "classificador__min_samples_leaf": 2,
-      "classificador__n_estimators": 200
+      "classificador__n_estimators": 50
     },
     "importancia_features": {
-      "categoria": 0.07352993119670986,
-      "probabilidade": 0.2993786225070254,
-      "impacto": 0.34937389312493783,
-      "orcamento_impacto": 0.0577261551278103,
-      "urgencia": 0.111734746743803,
-      "fase_projeto": 0.10825665129971364
+      "categoria": 0.08605282228327057,
+      "probabilidade": 0.28778658018363534,
+      "impacto": 0.31124022689275216,
+      "orcamento_impacto": 0.05233204383638434,
+      "urgencia": 0.14253710783065568,
+      "fase_projeto": 0.1200512189733018
     }
   },
   "_dataset": {
-    "n_exemplos": 309,
+    "n_exemplos": 300,
     "n_features": 6,
     "features": [
       "categoria",

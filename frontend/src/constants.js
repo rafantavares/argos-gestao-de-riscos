@@ -17,17 +17,65 @@ export const CORES_CATEGORIA = {
   pessoal: "#FB923C",
 };
 
+// Escalas do registro de riscos (MR-MPS-SW / PMBOK): notas de 1 a 5.
 export const PROBABILIDADES = [
+  { value: 1, label: "Quase nula" },
+  { value: 2, label: "Não provável" },
+  { value: 3, label: "Provável" },
+  { value: 4, label: "Muito provável" },
+  { value: 5, label: "Esperado" },
+];
+
+export const IMPACTOS = [
+  { value: 1, label: "Limitado" },
+  { value: 2, label: "Baixo" },
+  { value: 3, label: "Moderado" },
+  { value: 4, label: "Elevado" },
+  { value: 5, label: "Alto" },
+];
+
+// Escala de 3 níveis usada apenas pelos planos de contingência do catálogo
+// (situação típica em que o plano se aplica).
+export const PROBABILIDADES_PLANO = [
   { value: "baixa", label: "Baixa" },
   { value: "media", label: "Média" },
   { value: "alta", label: "Alta" },
 ];
 
-export const IMPACTOS = [
+export const IMPACTOS_PLANO = [
   { value: "baixo", label: "Baixo" },
   { value: "medio", label: "Médio" },
   { value: "alto", label: "Alto" },
 ];
+
+// Categoria de negócio do risco (área do projeto afetada). Cada área pertence a
+// um dos 4 grupos PMBOK (CATEGORIAS), que alimenta o modelo de recomendação --
+// mesmo mapeamento de AREA_PARA_CATEGORIA em app/models/enums.py.
+export const AREAS_AFETADAS = [
+  { value: "cronograma", label: "Cronograma", categoria: "organizacional" },
+  { value: "custo", label: "Custo", categoria: "organizacional" },
+  { value: "escopo", label: "Escopo", categoria: "organizacional" },
+  { value: "qualidade", label: "Qualidade", categoria: "tecnico" },
+  { value: "seguranca_informacao", label: "Segurança da informação", categoria: "tecnico" },
+  { value: "infraestrutura", label: "Infraestrutura", categoria: "tecnico" },
+  { value: "usabilidade", label: "Usabilidade", categoria: "tecnico" },
+  { value: "equipe", label: "Equipe", categoria: "pessoal" },
+  { value: "fornecedores", label: "Fornecedores", categoria: "externo" },
+  { value: "legal_regulatorio", label: "Legal e regulatório", categoria: "externo" },
+];
+
+// Faixas da exposição (pontuação = probabilidade x impacto, de 1 a 25).
+export const FAIXAS_EXPOSICAO = [
+  { ate: 3, label: "Muito Leve", cor: "#4ADE80" },
+  { ate: 10, label: "Leve", cor: "#A3E635" },
+  { ate: 15, label: "Moderado", cor: "#FBBF24" },
+  { ate: 20, label: "Grave", cor: "#FB923C" },
+  { ate: 25, label: "Muito Grave", cor: "#F87171" },
+];
+
+export function faixaExposicao(pontuacao) {
+  return FAIXAS_EXPOSICAO.find((faixa) => pontuacao <= faixa.ate) ?? FAIXAS_EXPOSICAO[FAIXAS_EXPOSICAO.length - 1];
+}
 
 export const ORCAMENTOS_IMPACTO = [
   { value: "baixo", label: "Baixo" },
@@ -96,16 +144,25 @@ export const CORES_ALGORITMOS = {
 
 export const ALGORITMOS = ["knn", "arvore_decisao", "random_forest"];
 
+// Aceita as notas 1-5 dos riscos (faixas da exposição) e, para os planos do
+// catálogo, a escala de 3 níveis em texto.
 export function nivelSeveridade(probabilidade, impacto) {
+  if (typeof probabilidade === "number") {
+    const exposicao = probabilidade * impacto;
+    if (exposicao <= 10) return "baixo";
+    if (exposicao <= 15) return "medio";
+    return "alto";
+  }
   const pontuacao = ESCALA_PROBABILIDADE[probabilidade] + ESCALA_IMPACTO[impacto];
   if (pontuacao <= 3) return "baixo";
   if (pontuacao === 4) return "medio";
   return "alto";
 }
 
-// Pontuação numérica (probabilidade x impacto, 1 a 9) usada para ordenar riscos
-// por criticidade -- escala clássica da matriz PMBOK.
+// Exposição numérica (probabilidade x impacto, 1 a 25) usada para ordenar riscos
+// por criticidade.
 export function pontuacaoSeveridade(probabilidade, impacto) {
+  if (typeof probabilidade === "number") return probabilidade * impacto;
   return (ESCALA_PROBABILIDADE[probabilidade] ?? 0) * (ESCALA_IMPACTO[impacto] ?? 0);
 }
 

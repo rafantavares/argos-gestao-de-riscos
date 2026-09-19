@@ -46,8 +46,8 @@ def _carregar_modelo(nome_algoritmo: str):
 
 def prever_plano_contingencia(
     categoria: str,
-    probabilidade: str,
-    impacto: str,
+    probabilidade: int,
+    impacto: int,
     orcamento_impacto: str,
     urgencia: str,
     fase_projeto: str,

@@ -8,12 +8,14 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.security import exigir_perfil, obter_usuario_atual
+from app.assistente.sugestoes import gerar_sugestao
+from app.core.exposicao import nivel_exposicao, pontuacao_exposicao
 from app.database import SessaoLocal, obter_sessao
 from app.ml.gerar_dataset import nivel_do_plano
 from app.ml.predictor import metricas_por_algoritmo, prever_plano_contingencia
 from app.ml.preprocessor import carregar_dataset
 from app.ml.trainer import treinar_e_avaliar
-from app.models.enums import PerfilUsuario, StatusRisco
+from app.models.enums import AreaAfetada, PerfilUsuario, StatusRisco
 from app.models.historico_risco import HistoricoRisco
 from app.models.metrica_treinamento import MetricaTreinamento
 from app.models.plano_contingencia import PlanoContingencia
@@ -107,8 +109,8 @@ def _montar_dataset_com_feedback(sessao: Session) -> pd.DataFrame:
         linhas_feedback.append(
             {
                 "categoria": categoria.value,
-                "probabilidade": probabilidade.value,
-                "impacto": impacto.value,
+                "probabilidade": probabilidade,
+                "impacto": impacto,
                 "orcamento_impacto": orcamento_impacto.value,
                 "urgencia": urgencia.value,
                 "fase_projeto": fase_projeto.value,
@@ -138,8 +140,8 @@ def gerar_recomendacao(
 
     resultado = prever_plano_contingencia(
         categoria=risco.categoria.value,
-        probabilidade=risco.probabilidade.value,
-        impacto=risco.impacto.value,
+        probabilidade=risco.probabilidade,
+        impacto=risco.impacto,
         orcamento_impacto=risco.orcamento_impacto.value,
         urgencia=risco.urgencia.value,
         fase_projeto=risco.fase_projeto.value,
@@ -236,6 +238,18 @@ def responder_recomendacao(
                 comentario=f"Plano de contingência #{recomendacao.id_plano} aceito via recomendação",
             )
         )
+
+    if dados.aceita:
+        # Pré-preenche o que o gerente ainda não escreveu (mitigação, contingência,
+        # gatilho): ele passa a revisar a proposta em vez de começar do zero.
+        sugestao = gerar_sugestao(
+            AreaAfetada(risco.area_afetada),
+            nivel_exposicao(pontuacao_exposicao(risco.probabilidade, risco.impacto)),
+            descricao_plano=recomendacao.plano.descricao,
+        )
+        for campo in ("mitigacao", "contingencia", "gatilho"):
+            if not getattr(risco, campo):
+                setattr(risco, campo, sugestao[campo])
 
     sessao.commit()
     sessao.refresh(recomendacao)

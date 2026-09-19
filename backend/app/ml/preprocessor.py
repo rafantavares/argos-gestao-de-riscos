@@ -1,10 +1,10 @@
 """Pré-processamento dos dados usados pelo módulo de ML.
 
 categoria é nominal (sem ordem) -> one-hot encoding.
-probabilidade, impacto, orcamento_impacto, urgencia e fase_projeto são
-ordinais (baixa/baixo < média/médio < alta/alto; iniciação < planejamento <
-execução < encerramento) -> encoding ordinal, preservando a ordem natural das
-categorias do PMBOK.
+probabilidade e impacto são notas ordinais de 1 a 5; orcamento_impacto,
+urgencia e fase_projeto também são ordinais (baixo < médio < alto; iniciação <
+planejamento < execução < encerramento) -> encoding ordinal, preservando a
+ordem natural das categorias do PMBOK.
 
 Alvo: nivel_severidade (0 = baixo, 1 = médio, 2 = alto) -- ver
 app/ml/gerar_dataset.py para a justificativa.
@@ -35,8 +35,8 @@ COLUNAS_ORDINAIS = [
 
 COLUNAS_FEATURES = [COLUNA_CATEGORIA, *COLUNAS_ORDINAIS]
 
-ORDEM_PROBABILIDADE = ["baixa", "media", "alta"]
-ORDEM_IMPACTO = ["baixo", "medio", "alto"]
+ORDEM_PROBABILIDADE = [1, 2, 3, 4, 5]
+ORDEM_IMPACTO = [1, 2, 3, 4, 5]
 ORDEM_ORCAMENTO = ["baixo", "medio", "alto"]
 ORDEM_URGENCIA = ["baixa", "media", "alta"]
 ORDEM_FASE = ["iniciacao", "planejamento", "execucao", "encerramento"]

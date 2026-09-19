@@ -12,12 +12,38 @@ def test_admin_cria_projeto(cliente, cabecalho_admin):
     assert resposta.json()["nome"] == "Sistema de Folha"
 
 
-def test_gerente_nao_pode_criar_projeto(cliente, cabecalho_gerente):
+def test_gerente_pode_criar_projeto_e_fica_autovinculado(cliente, cabecalho_gerente, admin):
     resposta = cliente.post(
         "/projetos", headers=cabecalho_gerente, json={"nome": "Projeto", "descricao": ""}
     )
 
-    assert resposta.status_code == 403
+    assert resposta.status_code == 201
+    id_projeto = resposta.json()["id"]
+
+    meus = cliente.get("/projetos/meus", headers=cabecalho_gerente)
+    assert meus.status_code == 200
+    assert id_projeto in [p["id"] for p in meus.json()]
+
+
+def test_gerente_edita_projeto_vinculado(cliente, cabecalho_gerente, projeto_com_gerente):
+    resposta = cliente.put(
+        f"/projetos/{projeto_com_gerente.id}",
+        headers=cabecalho_gerente,
+        json={"nome": "Novo nome", "descricao": None},
+    )
+
+    assert resposta.status_code == 200
+    assert resposta.json()["nome"] == "Novo nome"
+
+
+def test_gerente_nao_edita_projeto_de_outro_gerente(cliente, cabecalho_outro_gerente, projeto_com_gerente):
+    resposta = cliente.put(
+        f"/projetos/{projeto_com_gerente.id}",
+        headers=cabecalho_outro_gerente,
+        json={"nome": "Novo nome", "descricao": None},
+    )
+
+    assert resposta.status_code == 404
 
 
 def test_admin_lista_apenas_os_proprios_projetos(cliente, sessao, cabecalho_admin, projeto):

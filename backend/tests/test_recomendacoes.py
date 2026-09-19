@@ -61,8 +61,8 @@ def test_recomendacao_usa_os_seis_atributos_do_risco(
     assert ml_simulado["predicoes"] == [
         {
             "categoria": "tecnico",
-            "probabilidade": "alta",
-            "impacto": "alto",
+            "probabilidade": 4,
+            "impacto": 5,
             "orcamento_impacto": "alto",
             "urgencia": "alta",
             "fase_projeto": "execucao",

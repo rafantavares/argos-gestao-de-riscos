@@ -35,18 +35,21 @@ from app.ml.preprocessor import (
 @pytest.mark.parametrize(
     "categoria, probabilidade, impacto, orcamento, urgencia, fase, esperado",
     [
-        # Exposição base (matriz PMBOK probabilidade x impacto), sem modificadores.
-        ("pessoal", "baixa", "baixo", "medio", "media", "planejamento", 0),
-        ("pessoal", "media", "medio", "medio", "media", "planejamento", 1),
-        ("pessoal", "alta", "alto", "medio", "media", "planejamento", 2),
+        # Exposição base (probabilidade x impacto, 1-25), sem modificadores.
+        ("pessoal", 1, 2, "medio", "media", "planejamento", 0),
+        ("pessoal", 2, 5, "medio", "media", "planejamento", 0),  # 10: limite do Leve
+        ("pessoal", 3, 4, "medio", "media", "planejamento", 1),  # 12: Moderado
+        ("pessoal", 3, 5, "medio", "media", "planejamento", 1),  # 15: limite do Moderado
+        ("pessoal", 4, 4, "medio", "media", "planejamento", 2),  # 16: Grave
+        ("pessoal", 5, 5, "medio", "media", "planejamento", 2),  # 25: Muito Grave
         # Agravante temporal: urgência alta em execução sobe um nível.
-        ("pessoal", "media", "medio", "medio", "alta", "execucao", 2),
+        ("pessoal", 3, 4, "medio", "alta", "execucao", 2),
         # Atenuante: baixo custo ainda na iniciação desce um nível.
-        ("pessoal", "media", "medio", "baixo", "media", "iniciacao", 0),
-        # Regra técnica: probabilidade alta + impacto alto é sempre nível alto.
-        ("tecnico", "alta", "alto", "baixo", "baixa", "iniciacao", 2),
-        # Regra externa: impacto alto + urgência alta é resposta emergencial.
-        ("externo", "baixa", "alto", "baixo", "alta", "iniciacao", 2),
+        ("pessoal", 3, 4, "baixo", "media", "iniciacao", 0),
+        # Regra técnica: probabilidade e impacto >= 4 é sempre nível alto.
+        ("tecnico", 4, 4, "baixo", "baixa", "iniciacao", 2),
+        # Regra externa: impacto >= 4 + urgência alta é resposta emergencial.
+        ("externo", 2, 4, "baixo", "alta", "iniciacao", 2),
     ],
 )
 def test_regras_de_negocio_do_nivel_de_severidade(
@@ -148,23 +151,23 @@ def test_separar_features_alvo_usa_as_seis_features():
 
 
 def test_pre_processador_preserva_a_ordem_das_variaveis_ordinais():
-    """baixa < média < alta (e iniciação < ... < encerramento) precisa virar
-    0 < 1 < 2 (< 3): a ordem carrega o significado de severidade/tempo e não
-    pode ser tratada como categoria nominal."""
+    """Notas 1 < ... < 5, baixo < médio < alto (e iniciação < ... < encerramento)
+    precisam virar 0 < 1 < ...: a ordem carrega o significado de severidade/tempo
+    e não pode ser tratada como categoria nominal."""
     df = pd.DataFrame(
         [
             {
                 "categoria": "tecnico",
-                "probabilidade": "baixa",
-                "impacto": "baixo",
+                "probabilidade": 1,
+                "impacto": 1,
                 "orcamento_impacto": "baixo",
                 "urgencia": "baixa",
                 "fase_projeto": "iniciacao",
             },
             {
                 "categoria": "tecnico",
-                "probabilidade": "alta",
-                "impacto": "alto",
+                "probabilidade": 5,
+                "impacto": 5,
                 "orcamento_impacto": "alto",
                 "urgencia": "alta",
                 "fase_projeto": "encerramento",
@@ -176,7 +179,7 @@ def test_pre_processador_preserva_a_ordem_das_variaveis_ordinais():
 
     # As 5 últimas colunas são as ordinais (as primeiras são o one-hot da categoria).
     assert list(transformado[0][-5:]) == [0.0, 0.0, 0.0, 0.0, 0.0]
-    assert list(transformado[1][-5:]) == [2.0, 2.0, 2.0, 2.0, 3.0]
+    assert list(transformado[1][-5:]) == [4.0, 4.0, 2.0, 2.0, 3.0]
 
 
 def test_categoria_desconhecida_nao_quebra_o_pre_processador():
@@ -188,8 +191,8 @@ def test_categoria_desconhecida_nao_quebra_o_pre_processador():
         [
             {
                 "categoria": "categoria-inexistente",
-                "probabilidade": "media",
-                "impacto": "medio",
+                "probabilidade": 3,
+                "impacto": 3,
                 "orcamento_impacto": "medio",
                 "urgencia": "media",
                 "fase_projeto": "execucao",
@@ -201,8 +204,8 @@ def test_categoria_desconhecida_nao_quebra_o_pre_processador():
 
 
 def test_niveis_declarados_no_gerador_sao_os_esperados():
-    assert PROBABILIDADES == ["baixa", "media", "alta"]
-    assert IMPACTOS == ["baixo", "medio", "alto"]
+    assert PROBABILIDADES == [1, 2, 3, 4, 5]
+    assert IMPACTOS == [1, 2, 3, 4, 5]
     assert ORCAMENTOS == ["baixo", "medio", "alto"]
     assert URGENCIAS == ["baixa", "media", "alta"]
     assert FASES == ["iniciacao", "planejamento", "execucao", "encerramento"]

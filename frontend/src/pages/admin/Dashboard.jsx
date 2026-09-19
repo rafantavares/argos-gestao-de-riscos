@@ -31,6 +31,7 @@ import {
 } from "../../services/api";
 import {
   ALGORITMOS,
+  AREAS_AFETADAS,
   CATEGORIAS,
   CORES_ALGORITMOS,
   CORES_CATEGORIA,
@@ -62,11 +63,19 @@ const METRICAS_COMPARADAS = [
 
 const COLUNAS_RELATORIO = [
   { rotulo: "Projeto", valor: (l) => l.projeto },
+  { rotulo: "Índice", valor: (l) => l.indice },
   { rotulo: "Risco", valor: (l) => l.titulo },
   { rotulo: "Gerente", valor: (l) => l.gerente },
-  { rotulo: "Categoria", valor: (l) => rotulo(CATEGORIAS, l.categoria) },
-  { rotulo: "Probabilidade", valor: (l) => rotulo(PROBABILIDADES, l.probabilidade) },
-  { rotulo: "Impacto", valor: (l) => rotulo(IMPACTOS, l.impacto) },
+  { rotulo: "Categoria (área afetada)", valor: (l) => rotulo(AREAS_AFETADAS, l.area_afetada) },
+  { rotulo: "Grupo PMBOK", valor: (l) => rotulo(CATEGORIAS, l.categoria) },
+  { rotulo: "Descrição do impacto", valor: (l) => l.descricao_impacto },
+  { rotulo: "Impacto", valor: (l) => `${l.impacto} - ${rotulo(IMPACTOS, l.impacto)}` },
+  { rotulo: "Probabilidade", valor: (l) => `${l.probabilidade} - ${rotulo(PROBABILIDADES, l.probabilidade)}` },
+  { rotulo: "Exposição", valor: (l) => l.exposicao },
+  { rotulo: "Avaliação da exposição", valor: (l) => l.avaliacao_exposicao },
+  { rotulo: "Mitigação", valor: (l) => l.mitigacao ?? "" },
+  { rotulo: "Contingência", valor: (l) => l.contingencia ?? "" },
+  { rotulo: "Gatilho", valor: (l) => l.gatilho ?? "" },
   { rotulo: "Orçamento", valor: (l) => rotulo(ORCAMENTOS_IMPACTO, l.orcamento_impacto) },
   { rotulo: "Urgência", valor: (l) => rotulo(URGENCIAS, l.urgencia) },
   { rotulo: "Fase do projeto", valor: (l) => rotulo(FASES_PROJETO, l.fase_projeto) },
@@ -97,6 +106,7 @@ export default function Dashboard() {
   const [metricas, setMetricas] = useState(null);
   const [importancia, setImportancia] = useState(null);
   const [projetoExportacao, setProjetoExportacao] = useState("");
+  const [gerenteExportacao, setGerenteExportacao] = useState("");
   const [exportando, setExportando] = useState(false);
 
   useEffect(() => {
@@ -172,15 +182,16 @@ export default function Dashboard() {
   async function exportarRelatorio() {
     setExportando(true);
     try {
-      const dados = await servicoRelatorio.riscos(projetoExportacao || undefined);
+      const dados = await servicoRelatorio.riscos(projetoExportacao || undefined, gerenteExportacao || undefined);
       // Uma linha por (risco, recomendação); risco sem recomendação vira uma linha só.
       const linhas = dados.riscos.flatMap((risco) =>
         risco.recomendacoes.length === 0
           ? [{ ...risco, recomendacao: null }]
           : risco.recomendacoes.map((rec) => ({ ...risco, recomendacao: rec }))
       );
-      const sufixo = projetoExportacao ? `projeto-${projetoExportacao}` : "todos-projetos";
-      exportarCsv(`relatorio-riscos-${sufixo}.csv`, COLUNAS_RELATORIO, linhas);
+      const sufixoProjeto = projetoExportacao ? `projeto-${projetoExportacao}` : "todos-projetos";
+      const sufixoGerente = gerenteExportacao ? `-gerente-${gerenteExportacao}` : "";
+      exportarCsv(`relatorio-riscos-${sufixoProjeto}${sufixoGerente}.csv`, COLUNAS_RELATORIO, linhas);
     } finally {
       setExportando(false);
     }
@@ -212,6 +223,21 @@ export default function Dashboard() {
             {projetos.map((p) => (
               <MenuItem key={p.id} value={p.id}>
                 {p.nome}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            select
+            size="small"
+            label="Gerente do relatório"
+            value={gerenteExportacao}
+            onChange={(e) => setGerenteExportacao(e.target.value)}
+            sx={{ minWidth: 190 }}
+          >
+            <MenuItem value="">Todos os gerentes</MenuItem>
+            {gerentes.map((g) => (
+              <MenuItem key={g.id} value={g.id}>
+                {g.nome}
               </MenuItem>
             ))}
           </TextField>

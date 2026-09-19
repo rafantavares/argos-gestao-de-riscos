@@ -162,10 +162,13 @@ def plano(sessao) -> PlanoContingencia:
 @pytest.fixture
 def risco(sessao, projeto_com_gerente, gerente) -> Risco:
     novo_risco = Risco(
+        indice="R01",
         titulo="Risco de teste",
         categoria=CategoriaRisco.TECNICO,
-        probabilidade=ProbabilidadeRisco.ALTA,
-        impacto=ImpactoRisco.ALTO,
+        area_afetada="infraestrutura",
+        descricao_impacto="Descrição do impacto usada nos testes automatizados.",
+        probabilidade=4,
+        impacto=5,
         orcamento_impacto=OrcamentoImpacto.ALTO,
         urgencia=Urgencia.ALTA,
         fase_projeto=FaseProjeto.EXECUCAO,

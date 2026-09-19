@@ -5,6 +5,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session, joinedload
 
+from app.core.exposicao import avaliacao_exposicao, pontuacao_exposicao
 from app.core.security import exigir_perfil, obter_usuario_atual
 from app.database import obter_sessao
 from app.models.enums import PerfilUsuario
@@ -24,6 +25,7 @@ roteador = APIRouter(
 @roteador.get("/riscos", response_model=RelatorioRiscosResposta)
 def relatorio_riscos(
     id_projeto: Optional[int] = Query(default=None, description="Projeto a exportar; omitido = todos os projetos do admin"),
+    id_gerente: Optional[int] = Query(default=None, description="Gerente a filtrar; omitido = todos os gerentes"),
     sessao: Session = Depends(obter_sessao),
     admin: Usuario = Depends(obter_usuario_atual),
 ):
@@ -40,16 +42,18 @@ def relatorio_riscos(
     ids_projetos = [p.id for p in projetos]
     nomes_projetos = {p.id: p.nome for p in projetos}
 
-    riscos = (
+    consulta_riscos = (
         sessao.query(Risco)
         .options(
             joinedload(Risco.gerente),
             joinedload(Risco.recomendacoes).joinedload(Recomendacao.plano),
         )
         .filter(Risco.id_projeto.in_(ids_projetos))
-        .order_by(Risco.id_projeto, Risco.id)
-        .all()
     )
+    if id_gerente is not None:
+        consulta_riscos = consulta_riscos.filter(Risco.id_gerente == id_gerente)
+
+    riscos = consulta_riscos.order_by(Risco.id_projeto, Risco.id).all()
 
     linhas = [
         RiscoRelatorio(
@@ -58,9 +62,19 @@ def relatorio_riscos(
             projeto=nomes_projetos[risco.id_projeto],
             id_projeto=risco.id_projeto,
             gerente=risco.gerente.nome,
+            indice=risco.indice,
             categoria=risco.categoria,
+            area_afetada=risco.area_afetada,
+            descricao_impacto=risco.descricao_impacto,
             probabilidade=risco.probabilidade,
             impacto=risco.impacto,
+            exposicao=pontuacao_exposicao(risco.probabilidade, risco.impacto),
+            avaliacao_exposicao=avaliacao_exposicao(
+                pontuacao_exposicao(risco.probabilidade, risco.impacto)
+            ),
+            mitigacao=risco.mitigacao,
+            contingencia=risco.contingencia,
+            gatilho=risco.gatilho,
             orcamento_impacto=risco.orcamento_impacto,
             urgencia=risco.urgencia,
             fase_projeto=risco.fase_projeto,

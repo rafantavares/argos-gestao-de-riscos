@@ -17,19 +17,21 @@ aprendidas normalmente).
 
 Regras de negócio que definem o nível canônico:
 
-1. Exposição base (matriz PMBOK): probabilidade x impacto define o nível
-   inicial -- é a mesma leitura da matriz de risco visual do frontend.
+1. Exposição base (registro MR-MPS-SW/PMBOK): probabilidade x impacto (escalas
+   de 1 a 5, produto de 1 a 25) define o nível inicial: Muito Leve/Leve
+   (1-10) = baixo, Moderado (11-15) = médio, Grave/Muito Grave (16-25) = alto
+   -- é a mesma leitura da matriz de risco visual do frontend.
 2. Agravante temporal: urgência alta em risco descoberto tarde (execução ou
    encerramento) sobe um nível -- há pouco tempo de reação.
 3. Atenuante: risco de baixa exposição financeira identificado ainda na
    iniciação desce um nível -- o replanejamento é barato nesse momento.
 4. Regras específicas por categoria:
-   - técnico com probabilidade alta e impacto alto -> nível alto (substituir
+   - técnico com probabilidade >= 4 e impacto >= 4 -> nível alto (substituir
      a tecnologia/arquitetura);
-   - externo com impacto alto e urgência alta -> nível alto (resposta
+   - externo com impacto >= 4 e urgência alta -> nível alto (resposta
      emergencial contratual).
 
-Amostragem: o espaço tem 4 x 3^4 x 4 = 1296 combinações; o dataset sorteia
+Amostragem: o espaço tem 4 x 5^2 x 3^2 x 4 = 3600 combinações; o dataset sorteia
 EXEMPLOS_POR_CATEGORIA combinações distintas por categoria (distribuição
 balanceada entre as 4 categorias do PMBOK), totalizando 300 registros.
 
@@ -49,6 +51,8 @@ import random
 from itertools import product
 from pathlib import Path
 
+from app.core.exposicao import nivel_exposicao, pontuacao_exposicao
+
 SEMENTE = 42
 EXEMPLOS_POR_CATEGORIA = 75
 TAXA_RUIDO = 0.08
@@ -56,14 +60,11 @@ TAXA_RUIDO = 0.08
 CAMINHO_SAIDA = Path(__file__).parent / "dataset.csv"
 
 CATEGORIAS = ["tecnico", "organizacional", "externo", "pessoal"]
-PROBABILIDADES = ["baixa", "media", "alta"]
-IMPACTOS = ["baixo", "medio", "alto"]
+PROBABILIDADES = [1, 2, 3, 4, 5]
+IMPACTOS = [1, 2, 3, 4, 5]
 ORCAMENTOS = ["baixo", "medio", "alto"]
 URGENCIAS = ["baixa", "media", "alta"]
 FASES = ["iniciacao", "planejamento", "execucao", "encerramento"]
-
-ESCALA_PROBABILIDADE = {"baixa": 1, "media": 2, "alta": 3}
-ESCALA_IMPACTO = {"baixo": 1, "medio": 2, "alto": 3}
 
 NIVEIS_SEVERIDADE = ("baixo", "medio", "alto")
 
@@ -77,20 +78,16 @@ PLANO_BASE_POR_CATEGORIA = {
 }
 
 
-def exposicao_base(probabilidade: str, impacto: str) -> int:
-    """Matriz PMBOK probabilidade x impacto (produto 1-9): 1-2 baixo, 3-4 médio, 6-9 alto."""
-    produto = ESCALA_PROBABILIDADE[probabilidade] * ESCALA_IMPACTO[impacto]
-    if produto <= 2:
-        return 0
-    if produto <= 4:
-        return 1
-    return 2
+def exposicao_base(probabilidade: int, impacto: int) -> int:
+    """Exposição (probabilidade x impacto, 1-25) em 3 níveis: 1-10 baixo,
+    11-15 médio, 16-25 alto (mesmas faixas de app/core/exposicao.py)."""
+    return nivel_exposicao(pontuacao_exposicao(probabilidade, impacto))
 
 
 def nivel_severidade(
     categoria: str,
-    probabilidade: str,
-    impacto: str,
+    probabilidade: int,
+    impacto: int,
     orcamento: str,
     urgencia: str,
     fase: str,
@@ -108,10 +105,10 @@ def nivel_severidade(
     nivel = max(0, min(2, nivel))
 
     # Regras específicas por categoria.
-    if categoria == "tecnico" and probabilidade == "alta" and impacto == "alto":
+    if categoria == "tecnico" and probabilidade >= 4 and impacto >= 4:
         # Falha técnica quase certa e grave: substituir a tecnologia/arquitetura.
         nivel = 2
-    if categoria == "externo" and impacto == "alto" and urgencia == "alta":
+    if categoria == "externo" and impacto >= 4 and urgencia == "alta":
         # Fornecedor/mercado prestes a falhar com impacto alto: resposta emergencial.
         nivel = 2
 

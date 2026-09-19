@@ -18,7 +18,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import { planos as servicoPlanos } from "../../services/api";
-import { CATEGORIAS, IMPACTOS, PROBABILIDADES, rotulo } from "../../constants";
+import { CATEGORIAS, IMPACTOS_PLANO, PROBABILIDADES_PLANO, rotulo } from "../../constants";
 import { ChipCategoria, ChipSeveridade } from "../../components/Badges";
 import TabelaDados from "../../components/TabelaDados";
 
@@ -219,14 +219,14 @@ function DialogoPlano({ titulo, aberto, valoresIniciais, aoFechar, aoSalvar }) {
             onChange={(e) => setProbabilidade(e.target.value)}
             required
           >
-            {PROBABILIDADES.map((p) => (
+            {PROBABILIDADES_PLANO.map((p) => (
               <MenuItem key={p.value} value={p.value}>
                 {p.label}
               </MenuItem>
             ))}
           </TextField>
           <TextField select label="Impacto típico" value={impacto} onChange={(e) => setImpacto(e.target.value)} required>
-            {IMPACTOS.map((i) => (
+            {IMPACTOS_PLANO.map((i) => (
               <MenuItem key={i.value} value={i.value}>
                 {i.label}
               </MenuItem>

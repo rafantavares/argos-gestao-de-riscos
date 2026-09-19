@@ -21,6 +21,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
+import EditNoteIcon from "@mui/icons-material/EditNote";
 import ShieldIcon from "@mui/icons-material/Shield";
 import { recomendacoes as servicoRecomendacoes, riscos as servicoRiscos } from "../../services/api";
 import {
@@ -38,11 +39,9 @@ import {
   rotulo,
 } from "../../constants";
 import BarraConfianca from "../../components/BarraConfianca";
-import { ChipSeveridade, ChipStatus } from "../../components/Badges";
+import { ChipArea, ChipSeveridade, ChipStatus } from "../../components/Badges";
 
-const ATRASO_REDIRECIONAMENTO_MS = 2200;
-
-const CORES_NIVEL_TEXTO = { baixa: "#4ADE80", baixo: "#4ADE80", media: "#FBBF24", medio: "#FBBF24", alta: "#F87171", alto: "#F87171" };
+const CORES_NIVEL_TEXTO = { 1: "#4ADE80", 2: "#A3E635", 3: "#FBBF24", 4: "#FB923C", 5: "#F87171", baixa: "#4ADE80", baixo: "#4ADE80", media: "#FBBF24", medio: "#FBBF24", alta: "#F87171", alto: "#F87171" };
 
 const ESCALA_PROB = { baixa: 1, media: 2, alta: 3 };
 const ESCALA_IMP = { baixo: 1, medio: 2, alto: 3 };
@@ -67,7 +66,7 @@ function explicarRecomendacao(risco, plano) {
   };
 
   const partes = [
-    `Riscos ${ADJETIVO[risco.categoria]} de probabilidade ${rotulo(PROBABILIDADES, risco.probabilidade).toLowerCase()} e impacto ${rotulo(IMPACTOS, risco.impacto).toLowerCase()}`,
+    `Riscos ${ADJETIVO[risco.categoria]} de probabilidade ${risco.probabilidade} (${rotulo(PROBABILIDADES, risco.probabilidade).toLowerCase()}) e impacto ${risco.impacto} (${rotulo(IMPACTOS, risco.impacto).toLowerCase()})`,
   ];
   if (risco.urgencia === "alta") partes.push("com urgência alta");
   partes.push(`identificados ${FASE[risco.fase_projeto] ?? "no projeto"}`);
@@ -77,7 +76,7 @@ function explicarRecomendacao(risco, plano) {
     complemento = " A urgência alta em fase avançada eleva o nível de resposta, pois há pouco tempo de reação.";
   } else if (risco.fase_projeto === "iniciacao" && risco.orcamento_impacto === "baixo") {
     complemento = " Identificado cedo e com baixa exposição financeira, o replanejamento ainda é barato.";
-  } else if (risco.categoria === "externo" && risco.impacto === "alto" && risco.urgencia === "alta") {
+  } else if (risco.categoria === "externo" && risco.impacto >= 4 && risco.urgencia === "alta") {
     complemento = " Riscos externos iminentes de alto impacto exigem resposta contratual emergencial.";
   }
 
@@ -97,7 +96,6 @@ export default function Recomendacao() {
   const [processando, setProcessando] = useState(false);
   const [confirmacao, setConfirmacao] = useState(null); // { aceita: bool }
   const [erro, setErro] = useState("");
-  const temporizador = useRef(null);
   // Evita gerar duas recomendações quando o efeito roda duas vezes (StrictMode em dev).
   const carregandoRef = useRef(false);
 
@@ -132,7 +130,6 @@ export default function Recomendacao() {
 
   useEffect(() => {
     carregar();
-    return () => clearTimeout(temporizador.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idRisco]);
 
@@ -147,7 +144,6 @@ export default function Recomendacao() {
       const riscoAtualizado = await servicoRiscos.obter(idRisco);
       setRisco(riscoAtualizado);
       setNovoStatus(riscoAtualizado.status);
-      temporizador.current = setTimeout(() => navigate("/gerente/riscos"), ATRASO_REDIRECIONAMENTO_MS);
     } catch (e) {
       setErro(e.response?.data?.detail ?? "Não foi possível registrar a resposta.");
     } finally {
@@ -205,7 +201,7 @@ export default function Recomendacao() {
       </Typography>
       {risco && (
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          {risco.titulo}
+          {risco.indice} — {risco.titulo}
         </Typography>
       )}
 
@@ -237,12 +233,17 @@ export default function Recomendacao() {
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {confirmacao.aceita
-                ? "O risco passou para \"em tratamento\" e o feedback foi incorporado ao treinamento do modelo."
+                ? "O risco passou para \"em tratamento\", o feedback foi incorporado ao treinamento do modelo e a contingência (plano aceito), a mitigação e o gatilho foram pré-preenchidos no registro do risco — revise e ajuste."
                 : "O status do risco foi mantido. Você pode gerar uma nova recomendação a qualquer momento."}
             </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1.5 }}>
-              Redirecionando para a lista de riscos...
-            </Typography>
+            <Stack direction="row" spacing={1.5} justifyContent="center" sx={{ mt: 2 }}>
+              <Button variant="contained" startIcon={<EditNoteIcon />} onClick={() => setConfirmacao(null)}>
+                Revisar registro do risco
+              </Button>
+              <Button variant="outlined" onClick={() => navigate("/gerente/riscos")}>
+                Voltar para riscos
+              </Button>
+            </Stack>
           </Paper>
         </Grow>
       )}
@@ -357,9 +358,9 @@ export default function Recomendacao() {
                   </Typography>
                 </Box>
                 <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mb: 2 }}>
-                  <ChipFeature rotulo="Categoria" valor={rotulo(CATEGORIAS, risco.categoria)} cor={CORES_CATEGORIA[risco.categoria]} />
-                  <ChipFeature rotulo="Probabilidade" valor={rotulo(PROBABILIDADES, risco.probabilidade)} cor={CORES_NIVEL_TEXTO[risco.probabilidade]} />
-                  <ChipFeature rotulo="Impacto" valor={rotulo(IMPACTOS, risco.impacto)} cor={CORES_NIVEL_TEXTO[risco.impacto]} />
+                  <ChipFeature rotulo="Grupo PMBOK" valor={rotulo(CATEGORIAS, risco.categoria)} cor={CORES_CATEGORIA[risco.categoria]} />
+                  <ChipFeature rotulo="Probabilidade" valor={`${risco.probabilidade} · ${rotulo(PROBABILIDADES, risco.probabilidade)}`} cor={CORES_NIVEL_TEXTO[risco.probabilidade]} />
+                  <ChipFeature rotulo="Impacto" valor={`${risco.impacto} · ${rotulo(IMPACTOS, risco.impacto)}`} cor={CORES_NIVEL_TEXTO[risco.impacto]} />
                   <ChipFeature rotulo="Orçamento" valor={rotulo(ORCAMENTOS_IMPACTO, risco.orcamento_impacto)} cor={CORES_NIVEL_TEXTO[risco.orcamento_impacto]} />
                   <ChipFeature rotulo="Urgência" valor={rotulo(URGENCIAS, risco.urgencia)} cor={CORES_NIVEL_TEXTO[risco.urgencia]} />
                   <ChipFeature rotulo="Fase" valor={rotulo(FASES_PROJETO, risco.fase_projeto)} cor="#2DD4BF" />
@@ -377,6 +378,8 @@ export default function Recomendacao() {
           </Box>
         </Fade>
       )}
+
+      {risco && !confirmacao && <RegistroRisco risco={risco} aoSalvar={setRisco} />}
 
       {risco && (
         <Paper sx={{ p: 3 }}>
@@ -451,6 +454,105 @@ export default function Recomendacao() {
         </Paper>
       )}
     </Box>
+  );
+}
+
+// Registro do risco (formato MR-MPS-SW): identificação, avaliação e os campos de
+// tratamento, que o gerente revisa e refina (podem vir pré-preenchidos pela IA).
+function RegistroRisco({ risco, aoSalvar }) {
+  const [descricaoImpacto, setDescricaoImpacto] = useState(risco.descricao_impacto ?? "");
+  const [mitigacao, setMitigacao] = useState(risco.mitigacao ?? "");
+  const [contingencia, setContingencia] = useState(risco.contingencia ?? "");
+  const [gatilho, setGatilho] = useState(risco.gatilho ?? "");
+  const [salvando, setSalvando] = useState(false);
+  const [mensagem, setMensagem] = useState(null); // { tipo, texto }
+
+  // Reflete o que o backend gravou (ex.: pré-preenchimento ao aceitar o plano).
+  useEffect(() => {
+    setDescricaoImpacto(risco.descricao_impacto ?? "");
+    setMitigacao(risco.mitigacao ?? "");
+    setContingencia(risco.contingencia ?? "");
+    setGatilho(risco.gatilho ?? "");
+  }, [risco.descricao_impacto, risco.mitigacao, risco.contingencia, risco.gatilho]);
+
+  const alterado =
+    descricaoImpacto !== (risco.descricao_impacto ?? "") ||
+    mitigacao !== (risco.mitigacao ?? "") ||
+    contingencia !== (risco.contingencia ?? "") ||
+    gatilho !== (risco.gatilho ?? "");
+
+  async function salvar() {
+    setSalvando(true);
+    setMensagem(null);
+    try {
+      const atualizado = await servicoRiscos.atualizarTratamento(risco.id, {
+        descricao_impacto: descricaoImpacto,
+        mitigacao,
+        contingencia,
+        gatilho,
+      });
+      aoSalvar(atualizado);
+      setMensagem({ tipo: "success", texto: "Registro atualizado." });
+    } catch (e) {
+      const detalhe = e.response?.data?.detail;
+      setMensagem({ tipo: "error", texto: typeof detalhe === "string" ? detalhe : "Não foi possível salvar. Verifique os campos." });
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <Paper sx={{ p: 3, mb: 2 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5, flexWrap: "wrap" }}>
+        <EditNoteIcon sx={{ color: "primary.main", fontSize: 22 }} />
+        <Typography variant="subtitle1" fontWeight={600}>
+          Registro do risco {risco.indice}
+        </Typography>
+        <ChipArea area={risco.area_afetada} />
+        <ChipSeveridade probabilidade={risco.probabilidade} impacto={risco.impacto} />
+      </Box>
+      <Stack spacing={2}>
+        <TextField
+          label="Descrição do impacto"
+          value={descricaoImpacto}
+          onChange={(e) => setDescricaoImpacto(e.target.value)}
+          multiline
+          minRows={2}
+          fullWidth
+        />
+        <TextField
+          label="Mitigação (ação preventiva)"
+          value={mitigacao}
+          onChange={(e) => setMitigacao(e.target.value)}
+          multiline
+          minRows={2}
+          fullWidth
+        />
+        <TextField
+          label="Contingência (ação reativa)"
+          value={contingencia}
+          onChange={(e) => setContingencia(e.target.value)}
+          multiline
+          minRows={2}
+          fullWidth
+        />
+        <TextField
+          label="Gatilho"
+          value={gatilho}
+          onChange={(e) => setGatilho(e.target.value)}
+          multiline
+          minRows={2}
+          fullWidth
+          helperText="Evento, sintoma ou indicador que avisa a hora de acionar a contingência."
+        />
+        {mensagem && <Alert severity={mensagem.tipo}>{mensagem.texto}</Alert>}
+        <Box>
+          <Button variant="contained" disabled={salvando || !alterado || descricaoImpacto.trim().length < 5} onClick={salvar}>
+            {salvando ? "Salvando..." : "Salvar registro"}
+          </Button>
+        </Box>
+      </Stack>
+    </Paper>
   );
 }
 

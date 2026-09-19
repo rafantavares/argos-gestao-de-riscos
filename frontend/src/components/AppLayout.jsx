@@ -71,6 +71,12 @@ const ITENS_GERENTE = [
     icone: <SpaceDashboardOutlinedIcon />,
   },
   {
+    rotulo: "Projetos",
+    dica: "Seus projetos — crie novos ou edite os existentes",
+    caminho: "/gerente/projetos",
+    icone: <AccountTreeIcon />,
+  },
+  {
     rotulo: "Riscos",
     dica: "Cadastro e acompanhamento dos riscos dos seus projetos",
     caminho: "/gerente/riscos",

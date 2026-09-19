@@ -3,27 +3,35 @@ import { Box, Button, Chip, MenuItem, TextField, Typography } from "@mui/materia
 import DownloadIcon from "@mui/icons-material/Download";
 import { projetos as servicoProjetos, riscos as servicoRiscos } from "../../services/api";
 import {
+  AREAS_AFETADAS,
   CATEGORIAS,
-  CORES_SEVERIDADE,
   FASES_PROJETO,
   IMPACTOS,
   PROBABILIDADES,
   STATUS_RISCO,
   URGENCIAS,
-  nivelSeveridade,
+  faixaExposicao,
   pontuacaoSeveridade,
   rotulo,
 } from "../../constants";
-import { ChipCategoria, ChipSeveridade, ChipStatus, ChipUrgencia } from "../../components/Badges";
+import { ChipArea, ChipSeveridade, ChipStatus, ChipUrgencia } from "../../components/Badges";
 import TabelaDados from "../../components/TabelaDados";
 import { exportarCsv } from "../../utils/exportarCsv";
 
 const COLUNAS_CSV = (nomeProjeto) => [
   { rotulo: "Projeto", valor: (r) => nomeProjeto(r.id_projeto) },
-  { rotulo: "Título", valor: (r) => r.titulo },
-  { rotulo: "Categoria", valor: (r) => rotulo(CATEGORIAS, r.categoria) },
-  { rotulo: "Probabilidade", valor: (r) => rotulo(PROBABILIDADES, r.probabilidade) },
-  { rotulo: "Impacto", valor: (r) => rotulo(IMPACTOS, r.impacto) },
+  { rotulo: "Índice", valor: (r) => r.indice },
+  { rotulo: "Categoria (área afetada)", valor: (r) => rotulo(AREAS_AFETADAS, r.area_afetada) },
+  { rotulo: "Risco", valor: (r) => r.titulo },
+  { rotulo: "Descrição do impacto", valor: (r) => r.descricao_impacto },
+  { rotulo: "Impacto", valor: (r) => `${r.impacto} - ${rotulo(IMPACTOS, r.impacto)}` },
+  { rotulo: "Probabilidade", valor: (r) => `${r.probabilidade} - ${rotulo(PROBABILIDADES, r.probabilidade)}` },
+  { rotulo: "Exposição", valor: (r) => r.exposicao },
+  { rotulo: "Avaliação da exposição", valor: (r) => r.avaliacao_exposicao },
+  { rotulo: "Mitigação", valor: (r) => r.mitigacao ?? "" },
+  { rotulo: "Contingência", valor: (r) => r.contingencia ?? "" },
+  { rotulo: "Gatilho", valor: (r) => r.gatilho ?? "" },
+  { rotulo: "Grupo PMBOK", valor: (r) => rotulo(CATEGORIAS, r.categoria) },
   { rotulo: "Urgência", valor: (r) => rotulo(URGENCIAS, r.urgencia) },
   { rotulo: "Fase do projeto", valor: (r) => rotulo(FASES_PROJETO, r.fase_projeto) },
   { rotulo: "Status", valor: (r) => rotulo(STATUS_RISCO, r.status) },
@@ -69,12 +77,15 @@ export default function Riscos() {
               width: 4,
               height: 36,
               borderRadius: 999,
-              bgcolor: CORES_SEVERIDADE[nivelSeveridade(r.probabilidade, r.impacto)],
+              bgcolor: faixaExposicao(r.exposicao).cor,
               flexShrink: 0,
             }}
           />
           <Box sx={{ minWidth: 0 }}>
             <Typography variant="body2" fontWeight={600} noWrap sx={{ maxWidth: 320 }}>
+              <Box component="span" sx={{ color: "primary.main", mr: 0.8 }}>
+                {r.indice}
+              </Box>
               {r.titulo}
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -84,11 +95,11 @@ export default function Riscos() {
         </Box>
       ),
     },
-    { chave: "categoria", rotulo: "Categoria", largura: 140, render: (r) => <ChipCategoria categoria={r.categoria} /> },
+    { chave: "categoria", rotulo: "Categoria", largura: 170, render: (r) => <ChipArea area={r.area_afetada} /> },
     {
       chave: "severidade",
-      rotulo: "Severidade",
-      largura: 160,
+      rotulo: "Exposição",
+      largura: 170,
       render: (r) => <ChipSeveridade probabilidade={r.probabilidade} impacto={r.impacto} />,
     },
     { chave: "urgencia", rotulo: "Urgência", largura: 140, render: (r) => <ChipUrgencia urgencia={r.urgencia} /> },
@@ -109,7 +120,7 @@ export default function Riscos() {
             Riscos
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Visão consolidada de todos os projetos, ordenada por severidade.
+            Visão consolidada de todos os projetos, ordenada por exposição (impacto × probabilidade).
           </Typography>
         </Box>
         <Button
@@ -126,7 +137,7 @@ export default function Riscos() {
         colunas={colunas}
         linhas={riscosFiltrados}
         carregando={carregando}
-        textoBusca={(r) => `${r.titulo} ${nomeProjeto(r.id_projeto)} ${rotulo(CATEGORIAS, r.categoria)}`}
+        textoBusca={(r) => `${r.indice} ${r.titulo} ${nomeProjeto(r.id_projeto)} ${rotulo(AREAS_AFETADAS, r.area_afetada)}`}
         placeholderBusca="Buscar risco por título, projeto ou categoria"
         filtrosExtras={
           <>

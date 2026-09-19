@@ -3,9 +3,10 @@
 
 RISCO_VALIDO = {
     "titulo": "Indisponibilidade do fornecedor de nuvem",
-    "categoria": "externo",
-    "probabilidade": "media",
-    "impacto": "alto",
+    "area_afetada": "fornecedores",
+    "descricao_impacto": "Sistema fora do ar para os clientes até o fornecedor restabelecer o serviço.",
+    "probabilidade": 3,
+    "impacto": 4,
     "orcamento_impacto": "alto",
     "urgencia": "media",
     "fase_projeto": "execucao",
