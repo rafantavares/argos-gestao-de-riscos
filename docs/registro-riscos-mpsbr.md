@@ -3,9 +3,35 @@
 A orientadora sugeriu alinhar o cadastro de riscos, além do PMBOK, ao processo
 de **Gerência de Riscos (GRI)** do MR-MPS-SW (MPS.BR), que é o modelo de
 qualidade de software auditado nas empresas certificadas. O registro passou a
-ter os mesmos atributos usados na prática dela. (Conferir o nível e os
-resultados esperados do GRI no Guia Geral MPS.BR de Software antes de citar no
-texto do TCC.)
+ter os mesmos atributos usados na prática dela.
+
+## Base normativa (conferida no Guia Geral MPS de Software:2016, seção 9.5.3)
+
+Processo **Gerência de Riscos (GRI)**, nível **C – Definido** do MR-MPS-SW.
+Propósito: "identificar, analisar, tratar, monitorar e reduzir continuamente os
+riscos em nível organizacional e de projeto". Resultados esperados e onde o
+sistema os atende:
+
+| Resultado | Texto (resumido) | No sistema |
+|---|---|---|
+| GRI 1 | Escopo da gerência de riscos determinado | Riscos cadastrados por projeto |
+| GRI 2 | Origens, categorias e parâmetros de análise definidos | Áreas afetadas, escalas 1–5 e faixas de exposição |
+| GRI 3 | Estratégias de gerência de riscos definidas e implementadas | Ciclo de vida do risco e recomendação de plano |
+| GRI 4 | Riscos identificados e documentados, com contexto, condições e consequências | Registro completo, descrição do impacto |
+| GRI 5 | Riscos priorizados, estimados e classificados conforme categorias e parâmetros | Exposição (impacto × probabilidade) e ordenação por criticidade |
+| GRI 6 | Planos de mitigação desenvolvidos | Campo mitigação e sugestão por IA |
+| GRI 7 | Prioridade de recursos para o monitoramento determinada | Ordenação por exposição, matriz de risco 5×5 |
+| GRI 8 | Riscos avaliados e monitorados quanto a mudanças de situação | Status do risco e histórico |
+| GRI 9 | Ações executadas para corrigir/evitar o impacto | Contingência e gatilho; plano aceito |
+
+O processo Gerência de Projetos (GPR, nível G) também exige (GPR 6 e GPR 15)
+que os riscos sejam identificados com impacto, probabilidade e prioridade de
+tratamento, e monitorados em relação ao planejado.
+
+Ressalva: o texto acima é da edição 2016 do guia. Desde março de 2023 vale o
+Guia Geral MPS de Software:2023 (https://softex.br/download/guia-geral-mps-de-software2023/),
+que não pude ler; antes de citar a numeração exata dos resultados no TCC,
+confira nessa edição.
 
 ## Atributos do registro
 
