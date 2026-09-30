@@ -118,10 +118,11 @@ export default function EvolucaoExposicao({ risco, aoReavaliar }) {
       {pontos.length > 1 ? (
         <LineChart
           height={220}
+          margin={{ left: 60, right: 50, top: 20, bottom: 30 }}
           xAxis={[
             {
               data: pontos.map((p, i) =>
-                `${i === 0 ? "Inicial" : `Reav. ${i}`} · ${new Date(p.data).toLocaleDateString("pt-BR")}`
+                `${i === 0 ? "Inicial" : `Reav. ${i}`} (${new Date(p.data).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })})`
               ),
               scaleType: "point",
             },
@@ -132,6 +133,7 @@ export default function EvolucaoExposicao({ risco, aoReavaliar }) {
               data: pontos.map((p) => p.exposicao),
               label: "Exposição",
               color: "#2DD4BF",
+              showMark: true,
               valueFormatter: (valor) => `${valor} · ${faixaExposicao(valor).label}`,
             },
           ]}
