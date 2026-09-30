@@ -82,3 +82,6 @@ class Risco(Base):
     historico = relationship(
         "HistoricoRisco", back_populates="risco", order_by="HistoricoRisco.criado_em"
     )
+    reavaliacoes = relationship(
+        "ReavaliacaoRisco", back_populates="risco", order_by="ReavaliacaoRisco.criado_em"
+    )

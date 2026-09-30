@@ -4,7 +4,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.assistente import classificador, coerencia, sugestoes
+from app.assistente import classificador, coerencia, monitoramento, predicao, sugestoes
 from app.core.exposicao import nivel_exposicao, pontuacao_exposicao
 from app.core.security import exigir_perfil, obter_usuario_atual
 from app.database import obter_sessao
@@ -12,14 +12,17 @@ from app.models.enums import PerfilUsuario, StatusRisco
 from app.models.historico_risco import HistoricoRisco
 from app.models.projeto import Projeto
 from app.models.projeto_gerente import ProjetoGerente
+from app.models.reavaliacao_risco import ReavaliacaoRisco
 from app.models.risco import Risco
 from app.models.usuario import Usuario
 from app.schemas.risco import (
     AssistenteEntrada,
     AssistenteResposta,
+    EvolucaoExposicao,
     HistoricoRiscoResposta,
     RiscoCriar,
     RiscoPlanoAtualizar,
+    RiscoReavaliar,
     RiscoResposta,
     RiscoStatusAtualizar,
 )
@@ -131,6 +134,24 @@ def consultar_assistente(
     ]
     similares = classificador.encontrar_similares(dados.titulo, dados.descricao_impacto, existentes)
 
+    # Base histórica da organização: riscos de todos os projetos do mesmo admin.
+    projeto = sessao.get(Projeto, dados.id_projeto)
+    historico = [
+        dict(
+            indice=r.indice,
+            titulo=r.titulo,
+            descricao_impacto=r.descricao_impacto,
+            probabilidade=r.probabilidade,
+            impacto=r.impacto,
+            projeto=nome_projeto,
+        )
+        for r, nome_projeto in sessao.query(Risco, Projeto.nome)
+        .join(Projeto, Projeto.id == Risco.id_projeto)
+        .filter(Projeto.id_admin == projeto.id_admin)
+        .all()
+    ]
+    notas_sugeridas = predicao.sugerir_notas(dados.titulo, dados.descricao_impacto, historico)
+
     alertas = coerencia.auditar(
         dados.titulo, dados.descricao_impacto, dados.probabilidade, dados.impacto
     )
@@ -143,6 +164,7 @@ def consultar_assistente(
 
     return AssistenteResposta(
         area_sugerida=area_sugerida,
+        notas_sugeridas=notas_sugeridas,
         similares=similares,
         alertas_coerencia=alertas,
         sugestao_plano=sugestao_plano,
@@ -257,6 +279,74 @@ def atualizar_tratamento_risco(
     sessao.commit()
     sessao.refresh(risco)
     return risco
+
+
+@roteador.post(
+    "/{id_risco}/reavaliacao",
+    response_model=RiscoResposta,
+    dependencies=[Depends(exigir_perfil(PerfilUsuario.GERENTE))],
+)
+def reavaliar_risco(
+    id_risco: int,
+    dados: RiscoReavaliar,
+    sessao: Session = Depends(obter_sessao),
+    gerente: Usuario = Depends(obter_usuario_atual),
+):
+    """Recalcula a exposição conforme o andamento do projeto: o gerente revisa as
+    notas (e a fase atual) e a revisão entra na série de evolução do risco."""
+    risco = _obter_risco_do_gerente(id_risco, gerente, sessao)
+    if risco.status == StatusRisco.ENCERRADO:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Um risco encerrado não pode ser reavaliado",
+        )
+
+    fase_nova = dados.fase_projeto or risco.fase_projeto
+    sessao.add(
+        ReavaliacaoRisco(
+            id_risco=risco.id,
+            id_usuario=gerente.id,
+            probabilidade_anterior=risco.probabilidade,
+            impacto_anterior=risco.impacto,
+            fase_projeto_anterior=risco.fase_projeto,
+            probabilidade=dados.probabilidade,
+            impacto=dados.impacto,
+            fase_projeto=fase_nova,
+            justificativa=dados.justificativa,
+        )
+    )
+    risco.probabilidade = dados.probabilidade
+    risco.impacto = dados.impacto
+    risco.fase_projeto = fase_nova
+    sessao.commit()
+    sessao.refresh(risco)
+    return risco
+
+
+@roteador.get(
+    "/{id_risco}/evolucao",
+    response_model=EvolucaoExposicao,
+    dependencies=[Depends(exigir_perfil(PerfilUsuario.GERENTE))],
+)
+def obter_evolucao_exposicao(
+    id_risco: int,
+    sessao: Session = Depends(obter_sessao),
+    gerente: Usuario = Depends(obter_usuario_atual),
+):
+    risco = _obter_risco_do_gerente(id_risco, gerente, sessao)
+    reavaliacoes = (
+        sessao.query(ReavaliacaoRisco)
+        .filter(ReavaliacaoRisco.id_risco == id_risco)
+        .order_by(ReavaliacaoRisco.criado_em, ReavaliacaoRisco.id)
+        .all()
+    )
+    historico_status = (
+        sessao.query(HistoricoRisco)
+        .filter(HistoricoRisco.id_risco == id_risco)
+        .order_by(HistoricoRisco.criado_em, HistoricoRisco.id)
+        .all()
+    )
+    return monitoramento.montar_evolucao(risco, reavaliacoes, historico_status)
 
 
 @roteador.get(

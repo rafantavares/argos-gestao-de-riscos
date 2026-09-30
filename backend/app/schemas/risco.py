@@ -79,6 +79,40 @@ class RiscoStatusAtualizar(BaseModel):
     comentario: Optional[str] = Field(default=None, max_length=1000)
 
 
+class RiscoReavaliar(BaseModel):
+    """Revisão das notas conforme o andamento do projeto (GRI 8)."""
+
+    probabilidade: int = Field(ge=1, le=5)
+    impacto: int = Field(ge=1, le=5)
+    # Fase atual do projeto; se omitida, mantém a fase registrada no risco.
+    fase_projeto: Optional[FaseProjeto] = None
+    justificativa: str = Field(min_length=5, max_length=1000)
+
+
+class PontoEvolucao(BaseModel):
+    data: datetime
+    probabilidade: int
+    impacto: int
+    exposicao: int
+    avaliacao: str
+    fase_projeto: FaseProjeto
+    justificativa: Optional[str]
+
+
+class SugestaoReavaliacao(BaseModel):
+    probabilidade: int
+    impacto: int
+    motivo: str
+
+
+class EvolucaoExposicao(BaseModel):
+    pontos: List[PontoEvolucao]
+    tendencia: str  # "subindo" | "caindo" | "estavel"
+    dias_desde_ultima_avaliacao: int
+    reavaliacao_pendente: bool
+    sugestao: Optional[SugestaoReavaliacao]
+
+
 class HistoricoRiscoResposta(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -129,8 +163,25 @@ class SugestaoPlano(BaseModel):
     gatilho: str
 
 
+class ReferenciaNotas(BaseModel):
+    indice: str
+    titulo: str
+    projeto: str
+    probabilidade: int
+    impacto: int
+    similaridade: float
+
+
+class NotasSugeridas(BaseModel):
+    probabilidade: int
+    impacto: int
+    confianca: float
+    referencias: List[ReferenciaNotas]
+
+
 class AssistenteResposta(BaseModel):
     area_sugerida: Optional[AreaSugerida]
+    notas_sugeridas: Optional[NotasSugeridas] = None
     similares: List[RiscoSimilar]
     alertas_coerencia: List[AlertaCoerencia]
     sugestao_plano: Optional[SugestaoPlano]

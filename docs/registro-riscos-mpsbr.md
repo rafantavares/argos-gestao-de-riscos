@@ -21,7 +21,7 @@ sistema os atende:
 | GRI 5 | Riscos priorizados, estimados e classificados conforme categorias e parâmetros | Exposição (impacto × probabilidade) e ordenação por criticidade |
 | GRI 6 | Planos de mitigação desenvolvidos | Campo mitigação e sugestão por IA |
 | GRI 7 | Prioridade de recursos para o monitoramento determinada | Ordenação por exposição, matriz de risco 5×5 |
-| GRI 8 | Riscos avaliados e monitorados quanto a mudanças de situação | Status do risco e histórico |
+| GRI 8 | Riscos avaliados e monitorados quanto a mudanças de situação | Status do risco e histórico; reavaliações com a evolução da exposição |
 | GRI 9 | Ações executadas para corrigir/evitar o impacto | Contingência e gatilho; plano aceito |
 
 O processo Gerência de Projetos (GPR, nível G) também exige (GPR 6 e GPR 15)
@@ -63,8 +63,8 @@ de Decisão 89,0%, Random Forest 87,3%, KNN 80,7%.
 | Classificação inteligente + duplicados | **Implementado** | `app/assistente/classificador.py`: TF-IDF (n-gramas de caracteres) + regressão logística sugere a área afetada (com confiança); similaridade do cosseno contra os riscos do projeto avisa de possíveis duplicados. |
 | Auditoria de coerência (descrição × notas) | **Implementado** | `app/assistente/coerencia.py`: léxico de termos (ex.: "vazamento", "multa") exige impacto mínimo; termos triviais com nota alta e "já ocorreu" com probabilidade baixa também geram alerta, sempre citando os termos. |
 | Geração de mitigação e contingência | **Implementado (por modelos)** | `app/assistente/sugestoes.py`: rascunho de mitigação/contingência/gatilho por área e nível de exposição. Ao aceitar o plano do ML, a contingência vira o plano aceito e os campos vazios são pré-preenchidos; o gerente revisa. Não usa LLM. |
-| Análise preditiva de exposição (notas iniciais) | Parcial | O ML recomenda o *plano* a partir das notas; sugerir as notas a partir de histórico real de projetos exige dados que o sistema ainda não tem. Trabalho futuro. |
-| Recalcular exposição conforme o andamento do projeto | Trabalho futuro | Depende de dados de progresso do projeto. |
+| Análise preditiva de exposição (notas iniciais) | **Implementado** | `app/assistente/predicao.py`: a base histórica é o conjunto de riscos de todos os projetos do mesmo administrador (a organização). Para o texto digitado, busca os até 5 riscos mais parecidos (TF-IDF de n-gramas de caracteres + cosseno, similaridade ≥ 0,2) e sugere probabilidade e impacto pela média ponderada pela similaridade (k-NN). O painel mostra as notas previstas e os riscos de referência (índice, projeto, notas), com botão "Aplicar". A base cresce à medida que a organização registra riscos. |
+| Recalcular exposição conforme o andamento do projeto | **Implementado (reavaliação assistida)** | Tabela `reavaliacoes_riscos` e `POST /riscos/{id}/reavaliacao`: o gerente revisa as notas e a fase atual do projeto, com justificativa obrigatória; o risco é atualizado e a revisão entra na série. `GET /riscos/{id}/evolucao` (`app/assistente/monitoramento.py`) devolve a série da exposição (avaliação inicial + reavaliações), a tendência (subindo/caindo/estável), um aviso de reavaliação pendente (30 dias sem revisão, exceto riscos encerrados) e uma sugestão de recálculo quando o status mudou depois da última avaliação (ex.: mitigado → probabilidade −1). O recálculo *automático* a partir de dados de progresso (percentual concluído, velocidade da equipe) segue como trabalho futuro. |
 | Monitoramento ativo de gatilhos (ClickUp/GitLab) | Trabalho futuro | Exige integração com APIs externas. O campo `gatilho` já guarda o indicador a monitorar. |
 
 ## Como aparece na interface
@@ -74,7 +74,11 @@ de Decisão 89,0%, Random Forest 87,3%, KNN 80,7%.
   coerência com botão "Aplicar nota") e o botão "Sugerir com IA" preenche
   mitigação, contingência e gatilho.
 * **Detalhe do risco**: cartão "Registro do risco" editável
-  (`PATCH /riscos/{id}/tratamento`).
+  (`PATCH /riscos/{id}/tratamento`) e cartão "Evolução da exposição" (gráfico
+  da série, tendência, aviso de reavaliação pendente, sugestão de recálculo e
+  formulário de reavaliação).
+* **Novo risco**: o painel de IA também mostra as notas previstas pelo
+  histórico da organização.
 * **Matriz de risco** 5×5 colorida pelas faixas da exposição; CSVs com todos
   os atributos.
 
@@ -91,4 +95,9 @@ contingência do catálogo seguem com a escala de 3 níveis.
 `backend/tests/test_registro_riscos.py` (faixas de exposição, índice
 sequencial, validação 1–5, edição do tratamento, pré-preenchimento ao aceitar
 o plano, classificação, duplicados, coerência, sugestões e o endpoint do
-assistente). Suíte total: 162 testes.
+assistente). `backend/tests/test_monitoramento_riscos.py` (previsão das notas,
+série de evolução, tendência, reavaliação pendente, sugestão de recálculo e os
+endpoints de reavaliação). Suíte total: 174 testes.
+
+A tabela `reavaliacoes_riscos` é nova (não altera tabelas existentes), então é
+criada pelo `create_all()` no startup da API; não há script de migração.

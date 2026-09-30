@@ -39,6 +39,7 @@ import {
   rotulo,
 } from "../../constants";
 import BarraConfianca from "../../components/BarraConfianca";
+import EvolucaoExposicao from "../../components/EvolucaoExposicao";
 import { ChipArea, ChipSeveridade, ChipStatus } from "../../components/Badges";
 
 const CORES_NIVEL_TEXTO = { 1: "#4ADE80", 2: "#A3E635", 3: "#FBBF24", 4: "#FB923C", 5: "#F87171", baixa: "#4ADE80", baixo: "#4ADE80", media: "#FBBF24", medio: "#FBBF24", alta: "#F87171", alto: "#F87171" };
@@ -380,6 +381,8 @@ export default function Recomendacao() {
       )}
 
       {risco && !confirmacao && <RegistroRisco risco={risco} aoSalvar={setRisco} />}
+
+      {risco && !confirmacao && <EvolucaoExposicao risco={risco} aoReavaliar={setRisco} />}
 
       {risco && (
         <Paper sx={{ p: 3 }}>

@@ -360,10 +360,20 @@ function CampoTexto({ label, value, onChange, ajuda, obrigatorio = false, linhas
 
 // Painel do assistente de IA: sugestão de área, riscos parecidos e auditoria de
 // coerência entre a descrição do impacto e as notas.
-function PainelAssistente({ analise, carregando, aoUsarArea, aoAplicarNota }) {
+function PainelAssistente({ analise, carregando, notasAtuais, aoUsarArea, aoAplicarNota, aoAplicarNotas }) {
   if (!analise && !carregando) return null;
-  const { area_sugerida: areaSugerida, similares = [], alertas_coerencia: alertas = [] } = analise ?? {};
-  if (!carregando && !areaSugerida && similares.length === 0 && alertas.length === 0) return null;
+  const {
+    area_sugerida: areaSugerida,
+    notas_sugeridas: notasSugeridas,
+    similares = [],
+    alertas_coerencia: alertas = [],
+  } = analise ?? {};
+  // Só mostra a previsão enquanto as notas digitadas forem diferentes dela.
+  const mostrarNotas =
+    notasSugeridas &&
+    (Number(notasAtuais.probabilidade) !== notasSugeridas.probabilidade ||
+      Number(notasAtuais.impacto) !== notasSugeridas.impacto);
+  if (!carregando && !areaSugerida && !mostrarNotas && similares.length === 0 && alertas.length === 0) return null;
 
   return (
     <Paper
@@ -389,6 +399,24 @@ function PainelAssistente({ analise, carregando, aoUsarArea, aoAplicarNota }) {
             </Typography>
             <Button size="small" onClick={() => aoUsarArea(areaSugerida.area_afetada)}>
               Usar
+            </Button>
+          </Box>
+        )}
+        {mostrarNotas && (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+            <Typography variant="body2">
+              Notas previstas pelo histórico: <strong>probabilidade {notasSugeridas.probabilidade}</strong> ·{" "}
+              <strong>impacto {notasSugeridas.impacto}</strong>{" "}
+              <Typography component="span" variant="caption" color="text.secondary">
+                (com base em{" "}
+                {notasSugeridas.referencias
+                  .map((r) => `${r.indice} ${r.titulo} — ${r.projeto}, P${r.probabilidade}/I${r.impacto}`)
+                  .join("; ")}
+                )
+              </Typography>
+            </Typography>
+            <Button size="small" onClick={() => aoAplicarNotas(notasSugeridas)}>
+              Aplicar
             </Button>
           </Box>
         )}
@@ -581,7 +609,12 @@ function DialogoNovoRisco({ aberto, projetos, projetoInicial, aoFechar, aoCriar 
                 analise={analise}
                 carregando={analisando}
                 aoUsarArea={setAreaAfetada}
+                notasAtuais={{ probabilidade, impacto }}
                 aoAplicarNota={aplicarNota}
+                aoAplicarNotas={(notas) => {
+                  setProbabilidade(notas.probabilidade);
+                  setImpacto(notas.impacto);
+                }}
               />
             </Grid>
           </SecaoFormulario>
