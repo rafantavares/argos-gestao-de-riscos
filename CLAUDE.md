@@ -42,9 +42,8 @@ Responda ao Rafael em português, de forma objetiva.
 
 ## Estado atual (2026-09-30)
 
-- Fases 1–6 em produção. Fase 7 (previsão das notas iniciais + reavaliação /
-  evolução da exposição) commitada e testada por pytest, mas **ainda não
-  testada no navegador nem mesclada no `master`**.
+- Fases 1–7 em produção. A fase 7 (previsão das notas iniciais + reavaliação /
+  evolução da exposição) foi testada no navegador e publicada em 2026-09-30.
 - O projeto gratuito do Supabase pausa após 7 dias sem uso (erro
   `tenant/user ... not found`); é preciso restaurá-lo no painel antes de testar.
 - Pendências: conferir a numeração do GRI no Guia MPS 2023 (só a edição 2016
