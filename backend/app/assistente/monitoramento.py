@@ -1,5 +1,5 @@
-"""Evolução da exposição ao longo do projeto (MR-MPS-SW GRI 8: riscos avaliados e
-monitorados quanto a mudanças de situação).
+"""Evolução da exposição ao longo do projeto (MR-MPS-SW:2023, GPR 17/17+:
+riscos do projeto monitorados e comunicados às partes interessadas).
 
 A série começa na avaliação inicial (data do cadastro) e ganha um ponto a cada
 reavaliação registrada pelo gerente. Sobre ela o módulo calcula a tendência,

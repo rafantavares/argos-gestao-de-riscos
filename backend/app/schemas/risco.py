@@ -80,7 +80,7 @@ class RiscoStatusAtualizar(BaseModel):
 
 
 class RiscoReavaliar(BaseModel):
-    """Revisão das notas conforme o andamento do projeto (GRI 8)."""
+    """Revisão das notas conforme o andamento do projeto (MR-MPS-SW:2023, GPR 17)."""
 
     probabilidade: int = Field(ge=1, le=5)
     impacto: int = Field(ge=1, le=5)

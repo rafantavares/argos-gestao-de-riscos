@@ -37,7 +37,7 @@ Responda ao Rafael em português, de forma objetiva.
 
 - `docs/funcionalidades.md`: ciclo de vida do risco, ML, dashboards,
   governança do admin, suíte de testes.
-- `docs/registro-riscos-mpsbr.md`: registro no formato PMBOK / MR-MPS-SW (GRI),
+- `docs/registro-riscos-mpsbr.md`: registro no formato PMBOK / MR-MPS-SW:2023 (GPR 10/17, GPC 7; o antigo processo GRI não existe mais),
   escala 1–5, exposição, assistente de IA, previsão de notas e reavaliação.
 
 ## Estado atual (2026-09-30)
@@ -46,7 +46,6 @@ Responda ao Rafael em português, de forma objetiva.
   evolução da exposição) foi testada no navegador e publicada em 2026-09-30.
 - O projeto gratuito do Supabase pausa após 7 dias sem uso (erro
   `tenant/user ... not found`); é preciso restaurá-lo no painel antes de testar.
-- Pendências: conferir a numeração do GRI no Guia MPS 2023 (só a edição 2016
-  foi lida); roteiros de apresentação desatualizados; limpar riscos de teste no
+- Pendências: roteiros de apresentação desatualizados; limpar riscos de teste no
   banco antes da defesa; logo definitiva; monitoramento de gatilhos
   (ClickUp/GitLab) fica como trabalho futuro.

@@ -27,7 +27,7 @@ const TENDENCIAS = {
   estavel: { label: "Exposição estável", cor: "#8A93A6", icone: <TrendingFlatIcon fontSize="small" /> },
 };
 
-// Reavaliação do risco conforme o andamento do projeto (MR-MPS-SW GRI 8): o
+// Reavaliação do risco conforme o andamento do projeto (MR-MPS-SW:2023, GPR 17): o
 // gerente revisa as notas e a fase atual, e cada revisão vira um ponto da
 // série de evolução da exposição.
 export default function EvolucaoExposicao({ risco, aoReavaliar }) {

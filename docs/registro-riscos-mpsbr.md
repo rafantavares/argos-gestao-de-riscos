@@ -1,37 +1,47 @@
 # Registro de riscos no formato PMBOK / MR-MPS-SW (fase 6)
 
-A orientadora sugeriu alinhar o cadastro de riscos, além do PMBOK, ao processo
-de **Gerência de Riscos (GRI)** do MR-MPS-SW (MPS.BR), que é o modelo de
-qualidade de software auditado nas empresas certificadas. O registro passou a
+A orientadora sugeriu alinhar o cadastro de riscos, além do PMBOK, à gerência
+de riscos do MR-MPS-SW (MPS.BR), o modelo de qualidade de software auditado nas
+empresas certificadas. Na edição 2023 isso corresponde aos resultados GPR 10,
+10+, 17 e 17+ (Gerência de Projetos) e GPC 7 (Gerência de Processos). O registro passou a
 ter os mesmos atributos usados na prática dela.
 
-## Base normativa (conferida no Guia Geral MPS de Software:2016, seção 9.5.3)
+## Base normativa (Guia Geral MPS de Software:2023, vigente desde 1º/03/2023)
 
-Processo **Gerência de Riscos (GRI)**, nível **C – Definido** do MR-MPS-SW.
-Propósito: "identificar, analisar, tratar, monitorar e reduzir continuamente os
-riscos em nível organizacional e de projeto". Resultados esperados e onde o
-sistema os atende:
+**Atenção para o texto do TCC:** na edição 2023 **não existe mais o processo
+Gerência de Riscos (GRI)**. Ele saiu do modelo na reestruturação do Guia
+Geral:2020, que levou a gestão de riscos para dentro de outros processos (o
+histórico de versões do guia registra que a edição 2020 "incluiu no Processo de
+Gerência de Processos a gestão de riscos", p. 41). Hoje a gerência de riscos
+está distribuída em dois processos:
 
-| Resultado | Texto (resumido) | No sistema |
+| Resultado (2023) | Texto (resumido) | Página | No sistema |
+|---|---|---|---|
+| **GPR 10** (até nível E) | Riscos ou oportunidades do projeto identificados, com impacto, probabilidade de ocorrência e prioridade de tratamento determinados e documentados | p. 19 | Registro do risco (índice, área, descrição do impacto), notas 1–5, exposição com faixas e ordenação por criticidade; previsão das notas pelo histórico |
+| **GPR 10+** (a partir do D) | Tratamento dos riscos conforme a estratégia de riscos da organização. NOTA 1: tratamento inclui planos de **mitigação e contingência** | p. 19 | Campos mitigação/contingência/gatilho, sugestão por IA e plano de contingência recomendado pelo ML |
+| **GPR 17** (até nível E) | Riscos ou oportunidades monitorados e resultados comunicados às partes interessadas | p. 20 | Status e histórico do risco; reavaliações com a evolução da exposição, tendência e aviso de reavaliação pendente; dashboards e exportação CSV |
+| **GPR 17+** (a partir do D) | Monitoramento em relação às estratégias definidas | p. 20 | Sugestão de recálculo quando o risco muda de situação (ex.: mitigado) |
+| **GPC 7** (a partir do nível E) | Estratégias de gerência de riscos com **parâmetros, categorias** e atividades; riscos organizacionais identificados, analisados, priorizados, tratados, documentados, monitorados e comunicados. NOTA 1: análise = priorização, impacto e probabilidade | p. 36 | Parâmetros e categorias padronizados para toda a organização (10 áreas afetadas, escalas 1–5, faixas de exposição), catálogo de planos mantido pelo admin, visão cross-projeto do admin |
+
+Processos: Gerência de Projetos – GPR (seção 9.1.1, p. 18; implementação a
+partir do nível G) e Gerência de Processos – GPC (seção 9.2.6, p. 35).
+Referência: SOFTEX. *MPS.BR – Guia Geral MPS de Software:2023*. Março/2023.
+
+### Edição 2016 (histórico)
+
+Na edição 2016 (seção 9.5.3) havia o processo próprio **Gerência de Riscos
+(GRI)**, nível C, com propósito "identificar, analisar, tratar, monitorar e
+reduzir continuamente os riscos em nível organizacional e de projeto" e nove
+resultados (GRI 1–9). A correspondência abaixo só serve para comparar as
+edições; **no texto do TCC, citar a edição 2023 (GPR/GPC)**.
+
+| Resultado 2016 | Texto (resumido) | Equivalente em 2023 |
 |---|---|---|
-| GRI 1 | Escopo da gerência de riscos determinado | Riscos cadastrados por projeto |
-| GRI 2 | Origens, categorias e parâmetros de análise definidos | Áreas afetadas, escalas 1–5 e faixas de exposição |
-| GRI 3 | Estratégias de gerência de riscos definidas e implementadas | Ciclo de vida do risco e recomendação de plano |
-| GRI 4 | Riscos identificados e documentados, com contexto, condições e consequências | Registro completo, descrição do impacto |
-| GRI 5 | Riscos priorizados, estimados e classificados conforme categorias e parâmetros | Exposição (impacto × probabilidade) e ordenação por criticidade |
-| GRI 6 | Planos de mitigação desenvolvidos | Campo mitigação e sugestão por IA |
-| GRI 7 | Prioridade de recursos para o monitoramento determinada | Ordenação por exposição, matriz de risco 5×5 |
-| GRI 8 | Riscos avaliados e monitorados quanto a mudanças de situação | Status do risco e histórico; reavaliações com a evolução da exposição |
-| GRI 9 | Ações executadas para corrigir/evitar o impacto | Contingência e gatilho; plano aceito |
-
-O processo Gerência de Projetos (GPR, nível G) também exige (GPR 6 e GPR 15)
-que os riscos sejam identificados com impacto, probabilidade e prioridade de
-tratamento, e monitorados em relação ao planejado.
-
-Ressalva: o texto acima é da edição 2016 do guia. Desde março de 2023 vale o
-Guia Geral MPS de Software:2023 (https://softex.br/download/guia-geral-mps-de-software2023/),
-que não pude ler; antes de citar a numeração exata dos resultados no TCC,
-confira nessa edição.
+| GRI 1–3 | Escopo, origens/categorias/parâmetros e estratégias definidos | GPC 7 |
+| GRI 4–5 | Riscos identificados, documentados, priorizados e classificados | GPR 10 |
+| GRI 6 | Planos de mitigação desenvolvidos | GPR 10+ |
+| GRI 7–8 | Recursos para monitoramento priorizados; riscos monitorados | GPR 17 / 17+ |
+| GRI 9 | Ações executadas para corrigir/evitar o impacto | GPR 10+ / GPR 18 |
 
 ## Atributos do registro
 
