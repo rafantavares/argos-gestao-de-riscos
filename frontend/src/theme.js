@@ -1,6 +1,6 @@
 import { createTheme } from "@mui/material/styles";
 
-// Identidade visual do Escopilot. Ver docs/identidade-visual.md para a
+// Identidade visual do Argos. Ver docs/identidade-visual.md para a
 // paleta completa, tipografia e onde cada token é usado no código.
 const theme = createTheme({
   palette: {

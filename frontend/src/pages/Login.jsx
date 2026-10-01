@@ -76,7 +76,7 @@ export default function Login() {
         }}
       >
         <Box className="surgir">
-          <Logo size={34} fontSize={24} />
+          <Logo size={44} fontSize={26} />
         </Box>
 
         <Box

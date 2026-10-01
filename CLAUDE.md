@@ -1,4 +1,4 @@
-# Escopilot — Sistema de Gestão de Riscos com Análise Preditiva (TCC)
+# Argos — Sistema de Gestão de Riscos com Análise Preditiva (TCC)
 
 TCC de Rafael Nunes Tavares (ULBRA Palmas, Engenharia de Software), orientadora
 Prof. Fernanda Gomes. Título: "Sistema Web de Gestão de Riscos com Análise
@@ -6,6 +6,9 @@ Preditiva para Apoio à Tomada de Decisão em Projetos de Tecnologia da
 Informação". Metodologia: Design Science Research (Peffers et al., 2007).
 Referências-base: PMI (2021), Carvalho & Rabechini (2009), Pressman & Maxim
 (2016). O uso do Claude Code deve constar no apêndice de uso de IA do artigo.
+
+Nome do sistema: **Argos** (antes "Escopilot"; identidade em
+`docs/identidade-visual.md`).
 
 Responda ao Rafael em português, de forma objetiva.
 

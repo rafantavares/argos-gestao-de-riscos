@@ -1,11 +1,45 @@
-// Marca provisória do Escopilot (bússola + ponto de predição). Isolada aqui
-// para ser fácil de trocar quando a arte final da logo estiver pronta.
-export default function LogoMark({ size = 28 }) {
+// Marca do Argos: a letra A protegendo um olho vigilante (Argos Panoptes, o
+// gigante de cem olhos que nunca dormia) e a estrela violeta que, no sistema,
+// sinaliza inteligência artificial. Vetorizada a partir da arte final; as
+// mesmas formas estão em public/favicon.svg e docs/argos-logo.svg.
+export const CORES_MARCA = { ciano: "#2DD4BF", violeta: "#A78BFA", fundo: "#0B0E14" };
+
+export function FormasMarca({ estrela = true }) {
+  const { ciano, violeta, fundo } = CORES_MARCA;
   return (
-    <svg width={size} height={size} viewBox="0 0 56 56" fill="none" aria-hidden="true">
-      <circle cx="28" cy="28" r="21" stroke="#2DD4BF" strokeWidth="3" />
-      <path d="M28 28 L39 15 L32 30 L28 28 L17 35 L28 28 Z" fill="#2DD4BF" />
-      <circle cx="39" cy="15" r="4" fill="#A78BFA" />
+    <>
+      {/* Parte superior do A, recortada em volta do olho */}
+      <path
+        d="M610 372 Q626.5 352 643 372 L772 589 Q738 574 707 563 L674 527 L626.5 452 L579 527 L546 563 Q515 574 481 589 Z"
+        fill={ciano}
+      />
+      {/* Pernas do A */}
+      <path d="M470 612 Q497 602 527 600 L527 618 Q526 628 519 640 L476 709 L411 709 Z" fill={ciano} />
+      <path d="M783 612 Q756 602 726 600 L726 618 Q727 628 734 640 L777 709 L842 709 Z" fill={ciano} />
+      {/* Olho */}
+      <path
+        d="M546 607 Q626.5 513 707 607 Q626.5 701 546 607 Z"
+        fill="none"
+        stroke={ciano}
+        strokeWidth="16"
+        strokeLinejoin="miter"
+      />
+      <circle cx="626.5" cy="607.5" r="33" fill={violeta} />
+      <circle cx="626.5" cy="607.5" r="13.5" fill={fundo} />
+      {estrela && (
+        <path
+          d="M731 338 Q736 373 771 378 Q736 383 731 418 Q726 383 691 378 Q726 373 731 338 Z"
+          fill={violeta}
+        />
+      )}
+    </>
+  );
+}
+
+export default function LogoMark({ size = 28, estrela = true }) {
+  return (
+    <svg width={size} height={size} viewBox="405 305 440 440" aria-hidden="true">
+      <FormasMarca estrela={estrela} />
     </svg>
   );
 }
@@ -19,10 +53,11 @@ export function Logo({ size = 28, fontSize = 20, color = "#E6E9F0" }) {
           fontFamily: "'Space Grotesk', sans-serif",
           fontWeight: 600,
           fontSize,
+          letterSpacing: "0.12em",
           color,
         }}
       >
-        Escopilot
+        ARGOS
       </span>
     </div>
   );
