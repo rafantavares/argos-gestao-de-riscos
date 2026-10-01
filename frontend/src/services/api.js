@@ -75,6 +75,12 @@ export const riscos = {
   listarTodosAdmin: () => api.get("/riscos/admin/todos").then((r) => r.data),
 };
 
+// --- chat do assistente de IA ---
+export const chat = {
+  conversar: (idProjeto, mensagens) =>
+    api.post("/chat", { id_projeto: idProjeto, mensagens }).then((r) => r.data),
+};
+
 // --- recomendacoes ---
 export const recomendacoes = {
   gerar: (idRisco) => api.post(`/recomendacoes/gerar/${idRisco}`).then((r) => r.data),

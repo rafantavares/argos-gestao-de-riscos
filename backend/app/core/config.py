@@ -9,6 +9,9 @@ class Configuracoes(BaseSettings):
     jwt_chave_secreta: str
     jwt_algoritmo: str = "HS256"
     jwt_expiracao_minutos: int = 60
+    # Chat do assistente (Google Gemini). Sem chave, o chat responde 503.
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-flash-latest"
 
 
 configuracoes = Configuracoes()

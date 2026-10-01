@@ -39,6 +39,7 @@ Responda ao Rafael em português, de forma objetiva.
   governança do admin, suíte de testes.
 - `docs/registro-riscos-mpsbr.md`: registro no formato PMBOK / MR-MPS-SW:2023 (GPR 10/17, GPC 7; o antigo processo GRI não existe mais),
   escala 1–5, exposição, assistente de IA, previsão de notas e reavaliação.
+- `docs/assistente-chat.md`: chat com IA (Gemini) na barra lateral do gerente.
 
 ## Estado atual (2026-09-30)
 

@@ -22,11 +22,13 @@ import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import SpaceDashboardOutlinedIcon from "@mui/icons-material/SpaceDashboardOutlined";
 import MemoryIcon from "@mui/icons-material/Memory";
+import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { ml as servicoMl } from "../services/api";
 import { ALGORITMOS, NOMES_ALGORITMOS, VERSAO_SISTEMA, iniciais } from "../constants";
 import { Logo } from "./Logo";
+import ChatAssistente, { LARGURA_CHAT } from "./ChatAssistente";
 
 const LARGURA_MENU = 248;
 
@@ -97,6 +99,7 @@ export default function AppLayout({ children }) {
   const navigate = useNavigate();
   const localizacao = useLocation();
   const [metricas, setMetricas] = useState(null);
+  const [chatAberto, setChatAberto] = useState(false);
 
   useEffect(() => {
     servicoMl.metricas().then(setMetricas).catch(() => setMetricas(null));
@@ -178,6 +181,16 @@ export default function AppLayout({ children }) {
               </ListItemButton>
             </Tooltip>
           ))}
+          {!ehAdmin && (
+            <Tooltip title="Converse com a IA: descreva um problema e receba sugestões de registro e tratamento do risco" placement="right" arrow enterDelay={500}>
+              <ListItemButton selected={chatAberto} onClick={() => setChatAberto((aberto) => !aberto)} sx={{ mb: 0.5 }}>
+                <ListItemIcon>
+                  <ForumOutlinedIcon sx={{ color: "secondary.main" }} />
+                </ListItemIcon>
+                <ListItemText primary="Assistente IA" primaryTypographyProps={{ fontSize: 14, fontWeight: 500 }} />
+              </ListItemButton>
+            </Tooltip>
+          )}
         </List>
 
         {/* Informações do sistema */}
@@ -208,10 +221,15 @@ export default function AppLayout({ children }) {
         </Box>
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 3, minWidth: 0 }}>
+      <Box
+        component="main"
+        sx={{ flexGrow: 1, p: 3, minWidth: 0, mr: { md: chatAberto ? `${LARGURA_CHAT}px` : 0 }, transition: "margin 0.2s" }}
+      >
         <Toolbar />
         {children}
       </Box>
+
+      {!ehAdmin && <ChatAssistente aberto={chatAberto} aoFechar={() => setChatAberto(false)} />}
     </Box>
   );
 }
