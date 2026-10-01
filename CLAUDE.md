@@ -20,7 +20,8 @@ Responda ao Rafael em português, de forma objetiva.
   têm migração pontual em `backend/migracoes/*.sql` / `app/core/migrar_fase*.py`.
 - `frontend/`: React + Vite + MUI (tema escuro, identidade em
   `docs/identidade-visual.md`), gráficos com `@mui/x-charts`.
-- Produção: frontend no Vercel (https://gestao-risco.vercel.app) e API no
+- Produção: frontend no Vercel (https://argos-ti.vercel.app; o antigo
+  https://gestao-risco.vercel.app continua ativo) e API no
   Render (https://gestao-risco-api.onrender.com, acordar com `/health`); ambos
   redeployam a cada push no `master`. Segredos ficam nas variáveis de ambiente
   do Render e no `backend/.env` local (não versionado).

@@ -11,11 +11,15 @@ from app.routers import auth, chat, ml, planos, projetos, recomendacoes, relator
 app = FastAPI(title="Sistema de Gestão de Riscos com Análise Preditiva")
 
 _origens_padrao = "http://localhost:5173,http://localhost:3000"
-_origens = os.getenv("CORS_ORIGINS", _origens_padrao).split(",")
+# Endereços públicos do frontend (Vercel), aceitos sempre, além dos que vierem
+# em CORS_ORIGINS. Não são segredo: são os links do site.
+ORIGENS_PUBLICAS = ["https://argos-ti.vercel.app", "https://gestao-risco.vercel.app"]
+_origens = {o.strip() for o in os.getenv("CORS_ORIGINS", _origens_padrao).split(",") if o.strip()}
+_origens.update(ORIGENS_PUBLICAS)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o.strip() for o in _origens],
+    allow_origins=sorted(_origens),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
