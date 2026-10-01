@@ -14,5 +14,5 @@ services:
       - key: JWT_EXPIRACAO_MINUTOS
         value: 60
       - key: CORS_ORIGINS
-        value: https://gestao-risco.vercel.app,http://localhost:5173
+        value: https://argos-ti.vercel.app,https://gestao-risco.vercel.app,http://localhost:5173
     rootDir: backend
