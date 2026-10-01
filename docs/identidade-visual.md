@@ -1,13 +1,16 @@
-# Identidade visual — Escopilot
+# Identidade visual — Argos
 
 Referência da identidade visual da plataforma, pra não precisar redescobrir
 decisões nem redesenhar do zero quando for mexer em algo relacionado a marca.
 
 ## Nome
 
-**Escopilot** — combinação de "escopo" (de projeto/risco) com "pilot"
-(copiloto de decisão), com o eco proposital de "copilot" remetendo a um
-assistente de IA guiando a decisão.
+**Argos** (definido em 2026-10-01; antes, provisoriamente, "Escopilot") —
+referência a Argos Panoptes, o gigante da mitologia grega com cem olhos que
+nunca dormia por inteiro: sempre havia olhos abertos vigiando. É a metáfora do
+monitoramento contínuo dos riscos (MR-MPS-SW:2023, GPR 17) e da antecipação de
+problemas pela análise preditiva. Usado como nome próprio, não como sigla.
+Na interface o nome aparece em maiúsculas ("ARGOS"), em Space Grotesk.
 
 ## Paleta de cores
 
@@ -39,15 +42,22 @@ evita confundir "isso é uma ação do sistema" com "esse risco é grave".
 
 ## Logo
 
-Marca provisória: bússola (círculo + agulha) em `#2DD4BF`, com um ponto em
-`#A78BFA` na ponta representando a predição da IA. **O Rafael vai mandar uma
-logo definitiva depois** — quando isso acontecer, trocar:
+Letra **A** protegendo um **olho vigilante** (Argos), com uma **estrela de
+quatro pontas** violeta no canto superior direito. A estrela é o mesmo símbolo
+que a interface usa para as funções de IA, e o violeta é a cor da IA no tema.
 
-- `frontend/src/components/Logo.jsx` (mark SVG usado no app)
-- `frontend/public/favicon.svg` (ícone da aba do navegador)
+- Arte original gerada por IA de imagem (ChatGPT) a partir de um prompt com o
+  conceito do TCC, e **vetorizada à mão** em SVG a partir das medidas da
+  imagem. Cores ajustadas para os tokens do tema: A e contorno do olho em
+  `#2DD4BF`, íris e estrela em `#A78BFA`, pupila no fundo `#0B0E14`.
+- `docs/argos-logo.svg` — logo completa (marca + nome), para documentos e slides.
+- `frontend/src/components/Logo.jsx` — `FormasMarca` (as formas), `LogoMark`
+  (ícone) e `Logo` (ícone + "ARGOS"), usados na barra superior e no login.
+- `frontend/public/favicon.svg` — só o A com o olho (sem a estrela, para ficar
+  legível a 16–32 px), sobre um quadrado arredondado escuro.
 
-O resto do sistema (cores, tipografia) não depende do desenho da marca e não
-precisa mudar.
+As formas estão no mesmo sistema de coordenadas nos três arquivos; se mudar o
+desenho em um, replicar nos outros.
 
 ## Onde cada coisa vive no código
 

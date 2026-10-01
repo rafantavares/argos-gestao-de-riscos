@@ -1,4 +1,4 @@
-# Funcionalidades avançadas — Escopilot
+# Funcionalidades avançadas — Argos
 
 Documenta as 4 frentes de expansão funcional do sistema (além do MVP
 inicial), pensadas para aprofundar a avaliação técnica do TCC II (DSR).

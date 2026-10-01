@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="254 254 746 746">
+  <!-- Logo do Argos (marca + nome). Fundo escuro do tema; o nome usa Space Grotesk. -->
+  <rect x="254" y="254" width="746" height="746" fill="#0B0E14"/>
+  <path d="M610 372 Q626.5 352 643 372 L772 589 Q738 574 707 563 L674 527 L626.5 452 L579 527 L546 563 Q515 574 481 589 Z" fill="#2DD4BF"/>
+  <path d="M470 612 Q497 602 527 600 L527 618 Q526 628 519 640 L476 709 L411 709 Z" fill="#2DD4BF"/>
+  <path d="M783 612 Q756 602 726 600 L726 618 Q727 628 734 640 L777 709 L842 709 Z" fill="#2DD4BF"/>
+  <path d="M546 607 Q626.5 513 707 607 Q626.5 701 546 607 Z" fill="none" stroke="#2DD4BF" stroke-width="16" stroke-linejoin="miter"/>
+  <circle cx="626.5" cy="607.5" r="33" fill="#A78BFA"/>
+  <circle cx="626.5" cy="607.5" r="13.5" fill="#0B0E14"/>
+  <path d="M731 338 Q736 373 771 378 Q736 383 731 418 Q726 383 691 378 Q726 373 731 338 Z" fill="#A78BFA"/>
+  <text x="626.5" y="862" text-anchor="middle" font-family="'Space Grotesk', 'Segoe UI', Arial, sans-serif" font-weight="600" font-size="104" letter-spacing="22" fill="#2DD4BF">ARGOS</text>
+</svg>
