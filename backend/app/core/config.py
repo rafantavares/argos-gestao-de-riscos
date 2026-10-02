@@ -12,6 +12,8 @@ class Configuracoes(BaseSettings):
     # Chat do assistente (Google Gemini). Sem chave, o chat responde 503.
     gemini_api_key: str = ""
     gemini_model: str = "gemini-flash-latest"
+    # Usados em ordem quando o modelo principal está sobrecarregado ou no limite.
+    gemini_modelos_reserva: str = "gemini-2.5-flash,gemini-flash-lite-latest"
 
 
 configuracoes = Configuracoes()

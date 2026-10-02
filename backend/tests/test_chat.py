@@ -90,3 +90,76 @@ def test_instrucoes_sem_riscos_registrados(projeto):
     assert projeto.nome in instrucoes
     assert "nenhum risco registrado ainda" in instrucoes
     assert "Muito Grave até 25" in instrucoes
+
+
+# ---------- plano B entre modelos (provedor simulado) ----------
+
+
+class _ClienteFalso:
+    """Imita genai.Client: cada modelo responde ou falha conforme `roteiro`."""
+
+    def __init__(self, roteiro):
+        self.roteiro = roteiro
+        self.chamados = []
+        self.models = self
+
+    def generate_content(self, model, contents, config):
+        from types import SimpleNamespace
+
+        self.chamados.append(model)
+        resultado = self.roteiro[model]
+        if isinstance(resultado, Exception):
+            raise resultado
+        return SimpleNamespace(text=resultado)
+
+
+def _erro(codigo):
+    from google.genai import errors
+
+    classe = errors.ServerError if codigo >= 500 else errors.ClientError
+    return classe(codigo, {"error": {"code": codigo, "message": "simulado"}})
+
+
+@pytest.fixture
+def modelos(monkeypatch):
+    monkeypatch.setattr(configuracoes, "gemini_api_key", "chave-de-teste")
+    monkeypatch.setattr(configuracoes, "gemini_model", "principal")
+    monkeypatch.setattr(configuracoes, "gemini_modelos_reserva", "reserva1, reserva2")
+
+    def instalar(roteiro):
+        cliente = _ClienteFalso(roteiro)
+        monkeypatch.setattr(llm, "_cliente", lambda: cliente)
+        return cliente
+
+    return instalar
+
+
+def test_usa_o_modelo_principal_quando_ele_responde(modelos):
+    cliente = modelos({"principal": "ok"})
+    assert llm.responder("x", PERGUNTA) == "ok"
+    assert cliente.chamados == ["principal"]
+
+
+def test_modelo_sobrecarregado_passa_para_o_reserva(modelos):
+    cliente = modelos({"principal": _erro(503), "reserva1": _erro(429), "reserva2": "resposta"})
+    assert llm.responder("x", PERGUNTA) == "resposta"
+    assert cliente.chamados == ["principal", "reserva1", "reserva2"]
+
+
+def test_todos_os_modelos_sobrecarregados(modelos):
+    modelos({"principal": _erro(503), "reserva1": _erro(503), "reserva2": _erro(503)})
+    with pytest.raises(llm.FalhaNoProvedor, match="sobrecarregado"):
+        llm.responder("x", PERGUNTA)
+
+
+def test_erro_que_nao_e_de_disponibilidade_nao_troca_de_modelo(modelos):
+    cliente = modelos({"principal": _erro(400), "reserva1": "nao deveria chegar aqui"})
+    with pytest.raises(llm.FalhaNoProvedor, match="400"):
+        llm.responder("x", PERGUNTA)
+    assert cliente.chamados == ["principal"]
+
+
+def test_lista_de_modelos_sem_repetidos(monkeypatch):
+    monkeypatch.setattr(configuracoes, "gemini_model", "a")
+    monkeypatch.setattr(configuracoes, "gemini_modelos_reserva", "b, a, ,c")
+    assert llm.modelos_em_ordem() == ["a", "b", "c"]

@@ -33,13 +33,15 @@ function TextoFormatado({ texto }) {
   return texto.split("\n").map((linha, i) => {
     const item = /^\s*[-*•]\s+/.test(linha);
     const conteudo = linha.replace(/^\s*[-*•]\s+/, "");
-    const partes = conteudo.split(/(\*\*[^*]+\*\*)/g).map((parte, j) =>
-      parte.startsWith("**") && parte.endsWith("**") ? (
-        <strong key={j}>{parte.slice(2, -2)}</strong>
-      ) : (
-        <Fragment key={j}>{parte}</Fragment>
-      )
-    );
+    const partes = conteudo.split(/(\*\*[^*]+\*\*|\*[^*\s][^*]*\*)/g).map((parte, j) => {
+      if (parte.length > 4 && parte.startsWith("**") && parte.endsWith("**")) {
+        return <strong key={j}>{parte.slice(2, -2)}</strong>;
+      }
+      if (parte.length > 2 && parte.startsWith("*") && parte.endsWith("*")) {
+        return <em key={j}>{parte.slice(1, -1)}</em>;
+      }
+      return <Fragment key={j}>{parte}</Fragment>;
+    });
     if (!linha.trim()) return <Box key={i} sx={{ height: 8 }} />;
     return (
       <Typography key={i} variant="body2" component="div" sx={{ pl: item ? 1.5 : 0, textIndent: item ? -10 : 0 }}>
