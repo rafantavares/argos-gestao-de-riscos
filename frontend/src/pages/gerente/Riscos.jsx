@@ -152,21 +152,26 @@ function BarraFiltros({ filtros, alterar, limpar, projetos, total, visiveis }) {
 
   return (
     <Paper sx={{ p: 2, mb: 2.5 }}>
-      <Grid container spacing={1.5}>
-        <Grid item xs={12} md={6} lg={4}>
-          <TextField
-            {...campo("busca")}
-            placeholder="Buscar por título, índice (ex.: R03) ou descrição"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3} lg={2}>
+      <TextField
+        {...campo("busca")}
+        placeholder="Buscar por título, índice (ex.: R03) ou descrição"
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon fontSize="small" />
+            </InputAdornment>
+          ),
+        }}
+      />
+      <Box
+        sx={{
+          display: "grid",
+          gap: 1.5,
+          mt: 2,
+          gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)", lg: "repeat(6, 1fr)" },
+        }}
+      >
+        <Box>
           <TextField
             select
             label="Ordenar por"
@@ -185,8 +190,8 @@ function BarraFiltros({ filtros, alterar, limpar, projetos, total, visiveis }) {
               </MenuItem>
             ))}
           </TextField>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3} lg={2}>
+        </Box>
+        <Box>
           <TextField select label="Projeto" {...campo("projeto")}>
             <MenuItem value="">Todos os projetos</MenuItem>
             {projetos.map((p) => (
@@ -195,8 +200,8 @@ function BarraFiltros({ filtros, alterar, limpar, projetos, total, visiveis }) {
               </MenuItem>
             ))}
           </TextField>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3} lg={2}>
+        </Box>
+        <Box>
           <TextField select label="Gravidade" {...campo("gravidade")}>
             <MenuItem value="">Todas</MenuItem>
             {FAIXAS_EXPOSICAO.map((f) => (
@@ -209,8 +214,8 @@ function BarraFiltros({ filtros, alterar, limpar, projetos, total, visiveis }) {
               </MenuItem>
             ))}
           </TextField>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3} lg={2}>
+        </Box>
+        <Box>
           <TextField select label="Status" {...campo("status")}>
             <MenuItem value="">Todos</MenuItem>
             <MenuItem value="ativos">Ativos (sem encerrados)</MenuItem>
@@ -220,8 +225,8 @@ function BarraFiltros({ filtros, alterar, limpar, projetos, total, visiveis }) {
               </MenuItem>
             ))}
           </TextField>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3} lg={2}>
+        </Box>
+        <Box>
           <TextField select label="Área afetada" {...campo("area")}>
             <MenuItem value="">Todas</MenuItem>
             {AREAS_AFETADAS.map((a) => (
@@ -230,8 +235,8 @@ function BarraFiltros({ filtros, alterar, limpar, projetos, total, visiveis }) {
               </MenuItem>
             ))}
           </TextField>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3} lg={2}>
+        </Box>
+        <Box>
           <TextField select label="Recomendação" {...campo("recomendacao")}>
             <MenuItem value="">Todas</MenuItem>
             {SITUACOES_RECOMENDACAO.map((s) => (
@@ -240,16 +245,16 @@ function BarraFiltros({ filtros, alterar, limpar, projetos, total, visiveis }) {
               </MenuItem>
             ))}
           </TextField>
-        </Grid>
-        <Grid item xs={12} md={3} lg={2} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ flexGrow: 1, whiteSpace: "nowrap" }}>
-            {visiveis === total ? `${total} riscos` : `${visiveis} de ${total} riscos`}
-          </Typography>
-          <Button size="small" onClick={limpar} disabled={!alterado}>
-            Limpar{ativos > 0 ? ` (${ativos})` : ""}
-          </Button>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
+      <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 1.5, mt: 1.5 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
+          {visiveis === total ? `${total} riscos` : `${visiveis} de ${total} riscos`}
+        </Typography>
+        <Button size="small" onClick={limpar} disabled={!alterado}>
+          Limpar{ativos > 0 ? ` (${ativos})` : ""}
+        </Button>
+      </Box>
     </Paper>
   );
 }
