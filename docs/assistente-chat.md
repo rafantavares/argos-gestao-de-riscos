@@ -5,11 +5,14 @@ que o gerente descreve um problema e a IA sugere como registrar e tratar o risco
 
 ## Como funciona
 
-* **Frontend** (`frontend/src/components/ChatAssistente.jsx`): item "Assistente
-  IA" na barra lateral do gerente abre um painel à direita (fica montado no
-  layout, então a conversa continua ao trocar de página). Seleção do projeto,
-  sugestões de pergunta, "Nova conversa" e aviso de que as sugestões são geradas
-  por IA e devem ser revisadas.
+* **Frontend** (`frontend/src/pages/gerente/Assistente.jsx`, rota
+  `/gerente/assistente`): página própria "Assistente IA" na barra lateral do
+  gerente, no mesmo padrão das outras (título, seletor de projeto e "Nova
+  conversa"). A conversa ocupa a área principal numa coluna de leitura, com
+  sugestões de pergunta, Enter para enviar e aviso de que as sugestões são
+  geradas por IA. A conversa fica no `sessionStorage` (uma por projeto), então
+  não se perde ao trocar de página. (A primeira versão era um painel lateral
+  sobreposto; virou página em 2026-10-01 a pedido do Rafael.)
 * **Backend** (`POST /chat`, `app/routers/chat.py`): recebe a conversa inteira
   (o servidor não guarda histórico) e responde com a sugestão. Exige gerente
   vinculado ao projeto.

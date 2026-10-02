@@ -10,6 +10,7 @@ import ProjetosAdmin from "./pages/admin/Projetos";
 import RiscosAdmin from "./pages/admin/Riscos";
 import GerenteDashboard from "./pages/gerente/Dashboard";
 import ProjetosGerente from "./pages/gerente/Projetos";
+import Assistente from "./pages/gerente/Assistente";
 import Recomendacao from "./pages/gerente/Recomendacao";
 import Riscos from "./pages/gerente/Riscos";
 
@@ -104,6 +105,15 @@ export default function App() {
         element={
           <PaginaProtegida perfil="gerente">
             <Recomendacao />
+          </PaginaProtegida>
+        }
+      />
+
+      <Route
+        path="/gerente/assistente"
+        element={
+          <PaginaProtegida perfil="gerente">
+            <Assistente />
           </PaginaProtegida>
         }
       />
