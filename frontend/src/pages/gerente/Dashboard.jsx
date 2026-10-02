@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import {
   Box,
   Button,
+  Chip,
+  Collapse,
   Grid,
   IconButton,
   InputAdornment,
@@ -26,6 +28,8 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PendingActionsIcon from "@mui/icons-material/PendingActions";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
   projetos as servicoProjetos,
   recomendacoes as servicoRecomendacoes,
@@ -39,12 +43,26 @@ import { ChipCategoria, ChipSeveridade, ChipStatus, ChipUrgencia } from "../../c
 import { CATEGORIAS, CORES_CATEGORIA, CORES_SEVERIDADE, nivelSeveridade, pontuacaoSeveridade } from "../../constants";
 import { tendenciaSemanal } from "../../utils/tendencias";
 
+// Preferência do gerente de esconder a lista de ações (fica no navegador).
+const CHAVE_ACOES_VISIVEIS = "argos_acoes_visiveis";
+const ACOES_INICIAIS = 3;
+
+function lerAcoesVisiveis() {
+  try {
+    return localStorage.getItem(CHAVE_ACOES_VISIVEIS) !== "nao";
+  } catch {
+    return true;
+  }
+}
+
 export default function Dashboard() {
   const [riscos, setRiscos] = useState([]);
   const [meusProjetos, setMeusProjetos] = useState([]);
   const [recomendacoes, setRecomendacoes] = useState([]);
   const [respondendo, setRespondendo] = useState(null);
   const [filtroProjeto, setFiltroProjeto] = useState("");
+  const [acoesVisiveis, setAcoesVisiveis] = useState(lerAcoesVisiveis);
+  const [todasAcoes, setTodasAcoes] = useState(false);
   const navigate = useNavigate();
 
   async function carregar() {
@@ -283,18 +301,41 @@ export default function Dashboard() {
       </Grid>
 
       <Paper sx={{ p: 2 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: acoesVisiveis ? 1.5 : 0 }}>
           <ShieldOutlinedIcon sx={{ color: "secondary.main" }} />
-          <Box>
-            <Typography variant="subtitle1" fontWeight={600}>
-              Próximas ações recomendadas
-            </Typography>
+          <Box sx={{ flexGrow: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Typography variant="subtitle1" fontWeight={600}>
+                Próximas ações recomendadas
+              </Typography>
+              {acoesPendentes.length > 0 && (
+                <Chip size="small" label={acoesPendentes.length} color="secondary" variant="outlined" />
+              )}
+            </Box>
             <Typography variant="caption" color="text.secondary">
               Planos de contingência sugeridos pelo modelo que aguardam sua decisão
             </Typography>
           </Box>
+          <Button
+            size="small"
+            color="inherit"
+            endIcon={acoesVisiveis ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            onClick={() => {
+              const novo = !acoesVisiveis;
+              setAcoesVisiveis(novo);
+              try {
+                localStorage.setItem(CHAVE_ACOES_VISIVEIS, novo ? "sim" : "nao");
+              } catch {
+                // sem localStorage: a preferência só não é lembrada
+              }
+            }}
+            sx={{ color: "text.secondary", flexShrink: 0 }}
+          >
+            {acoesVisiveis ? "Esconder" : "Mostrar"}
+          </Button>
         </Box>
 
+        <Collapse in={acoesVisiveis} unmountOnExit>
         {acoesPendentes.length === 0 ? (
           <EstadoVazio
             compacto
@@ -303,7 +344,7 @@ export default function Dashboard() {
           />
         ) : (
           <Stack spacing={1.5}>
-            {acoesPendentes.map((rec) => {
+            {(todasAcoes ? acoesPendentes : acoesPendentes.slice(0, ACOES_INICIAIS)).map((rec) => {
               const risco = riscoPorId.get(rec.id_risco);
               const ocupado = respondendo === rec.id;
               return (
@@ -368,8 +409,14 @@ export default function Dashboard() {
                 </Box>
               );
             })}
+            {acoesPendentes.length > ACOES_INICIAIS && (
+              <Button size="small" onClick={() => setTodasAcoes((todas) => !todas)} sx={{ alignSelf: "center" }}>
+                {todasAcoes ? "Mostrar menos" : `Mostrar todas (${acoesPendentes.length})`}
+              </Button>
+            )}
           </Stack>
         )}
+        </Collapse>
       </Paper>
     </Box>
   );
