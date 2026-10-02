@@ -24,7 +24,8 @@ import AddIcon from "@mui/icons-material/Add";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DownloadIcon from "@mui/icons-material/Download";
-import FilterListIcon from "@mui/icons-material/FilterList";
+import SearchIcon from "@mui/icons-material/Search";
+import SortIcon from "@mui/icons-material/Sort";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import {
@@ -35,6 +36,7 @@ import {
 import {
   AREAS_AFETADAS,
   CATEGORIAS,
+  FAIXAS_EXPOSICAO,
   FASES_PROJETO,
   IMPACTOS,
   ORCAMENTOS_IMPACTO,
@@ -68,11 +70,196 @@ const COLUNAS_CSV = [
   { rotulo: "Status", valor: (r) => rotulo(STATUS_RISCO, r.status) },
 ];
 
+// ---------- filtros e ordenação da lista ----------
+
+const ORDENACOES = [
+  { value: "exposicao_desc", label: "Maior exposição" },
+  { value: "exposicao_asc", label: "Menor exposição" },
+  { value: "recentes", label: "Mais recentes" },
+  { value: "antigos", label: "Mais antigos" },
+  { value: "atualizados", label: "Atualizados recentemente" },
+  { value: "urgencia", label: "Maior urgência" },
+  { value: "indice", label: "Índice (R01, R02...)" },
+  { value: "titulo", label: "Título (A–Z)" },
+];
+
+const SITUACOES_RECOMENDACAO = [
+  { value: "pendente", label: "Aguardando decisão" },
+  { value: "aceita", label: "Plano aceito" },
+  { value: "rejeitada", label: "Plano rejeitado" },
+  { value: "sem", label: "Sem recomendação" },
+];
+
+const PESO_URGENCIA = { alta: 3, media: 2, baixa: 1 };
+
+const FILTROS_PADRAO = {
+  busca: "",
+  ordenacao: "exposicao_desc",
+  projeto: "",
+  gravidade: "",
+  status: "ativos",
+  area: "",
+  recomendacao: "",
+};
+
+// Os filtros ficam na sessão do navegador: ao abrir um risco e voltar, a lista
+// continua como estava.
+const CHAVE_FILTROS = "argos_filtros_riscos";
+
+function lerFiltros() {
+  try {
+    return { ...FILTROS_PADRAO, ...JSON.parse(sessionStorage.getItem(CHAVE_FILTROS) ?? "{}") };
+  } catch {
+    return FILTROS_PADRAO;
+  }
+}
+
+function normalizar(texto) {
+  return (texto ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+}
+
+function situacaoRecomendacao(rec) {
+  if (!rec) return "sem";
+  if (rec.aceita === null) return "pendente";
+  return rec.aceita ? "aceita" : "rejeitada";
+}
+
+const COMPARADORES = {
+  exposicao_desc: (a, b) => b.exposicao - a.exposicao,
+  exposicao_asc: (a, b) => a.exposicao - b.exposicao,
+  recentes: (a, b) => new Date(b.criado_em) - new Date(a.criado_em),
+  antigos: (a, b) => new Date(a.criado_em) - new Date(b.criado_em),
+  atualizados: (a, b) => new Date(b.atualizado_em) - new Date(a.atualizado_em),
+  urgencia: (a, b) => (PESO_URGENCIA[b.urgencia] ?? 0) - (PESO_URGENCIA[a.urgencia] ?? 0) || b.exposicao - a.exposicao,
+  indice: (a, b) => a.indice.localeCompare(b.indice, "pt-BR", { numeric: true }),
+  titulo: (a, b) => a.titulo.localeCompare(b.titulo, "pt-BR"),
+};
+
+function BarraFiltros({ filtros, alterar, limpar, projetos, total, visiveis }) {
+  const campo = (nome) => ({
+    value: filtros[nome],
+    onChange: (e) => alterar(nome, e.target.value),
+    size: "small",
+    fullWidth: true,
+    // Mostra "Todos"/"Todas" em vez de deixar o campo vazio.
+    SelectProps: { displayEmpty: true },
+    InputLabelProps: { shrink: true },
+  });
+  const ativos = Object.keys(FILTROS_PADRAO).filter(
+    (k) => k !== "ordenacao" && filtros[k] !== FILTROS_PADRAO[k]
+  ).length;
+  const alterado = ativos > 0 || filtros.ordenacao !== FILTROS_PADRAO.ordenacao;
+
+  return (
+    <Paper sx={{ p: 2, mb: 2.5 }}>
+      <Grid container spacing={1.5}>
+        <Grid item xs={12} md={6} lg={4}>
+          <TextField
+            {...campo("busca")}
+            placeholder="Buscar por título, índice (ex.: R03) ou descrição"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3} lg={2}>
+          <TextField
+            select
+            label="Ordenar por"
+            {...campo("ordenacao")}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SortIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+          >
+            {ORDENACOES.map((o) => (
+              <MenuItem key={o.value} value={o.value}>
+                {o.label}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3} lg={2}>
+          <TextField select label="Projeto" {...campo("projeto")}>
+            <MenuItem value="">Todos os projetos</MenuItem>
+            {projetos.map((p) => (
+              <MenuItem key={p.id} value={p.id}>
+                {p.nome}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3} lg={2}>
+          <TextField select label="Gravidade" {...campo("gravidade")}>
+            <MenuItem value="">Todas</MenuItem>
+            {FAIXAS_EXPOSICAO.map((f) => (
+              <MenuItem key={f.label} value={f.label}>
+                <Box
+                  component="span"
+                  sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: f.cor, mr: 1, display: "inline-block" }}
+                />
+                {f.label}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3} lg={2}>
+          <TextField select label="Status" {...campo("status")}>
+            <MenuItem value="">Todos</MenuItem>
+            <MenuItem value="ativos">Ativos (sem encerrados)</MenuItem>
+            {STATUS_RISCO.map((s) => (
+              <MenuItem key={s.value} value={s.value}>
+                {s.label}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3} lg={2}>
+          <TextField select label="Área afetada" {...campo("area")}>
+            <MenuItem value="">Todas</MenuItem>
+            {AREAS_AFETADAS.map((a) => (
+              <MenuItem key={a.value} value={a.value}>
+                {a.label}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3} lg={2}>
+          <TextField select label="Recomendação" {...campo("recomendacao")}>
+            <MenuItem value="">Todas</MenuItem>
+            {SITUACOES_RECOMENDACAO.map((s) => (
+              <MenuItem key={s.value} value={s.value}>
+                {s.label}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Grid>
+        <Grid item xs={12} md={3} lg={2} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ flexGrow: 1, whiteSpace: "nowrap" }}>
+            {visiveis === total ? `${total} riscos` : `${visiveis} de ${total} riscos`}
+          </Typography>
+          <Button size="small" onClick={limpar} disabled={!alterado}>
+            Limpar{ativos > 0 ? ` (${ativos})` : ""}
+          </Button>
+        </Grid>
+      </Grid>
+    </Paper>
+  );
+}
+
 export default function Riscos() {
   const [riscos, setRiscos] = useState([]);
   const [meusProjetos, setMeusProjetos] = useState([]);
   const [recomendacoes, setRecomendacoes] = useState([]);
-  const [filtroProjeto, setFiltroProjeto] = useState("");
+  const [filtros, setFiltros] = useState(lerFiltros);
+  const filtroProjeto = filtros.projeto;
   const [carregando, setCarregando] = useState(true);
   const [dialogoAberto, setDialogoAberto] = useState(false);
   const navigate = useNavigate();
@@ -105,14 +292,39 @@ export default function Riscos() {
 
   const projetoPorId = useMemo(() => new Map(meusProjetos.map((p) => [p.id, p])), [meusProjetos]);
 
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(CHAVE_FILTROS, JSON.stringify(filtros));
+    } catch {
+      // sem sessionStorage: os filtros só não são lembrados
+    }
+  }, [filtros]);
+
+  function alterarFiltro(nome, valor) {
+    setFiltros((atuais) => ({ ...atuais, [nome]: valor }));
+  }
+
   const riscosFiltrados = useMemo(() => {
-    const lista = filtroProjeto ? riscos.filter((r) => r.id_projeto === filtroProjeto) : riscos;
-    return [...lista].sort(
-      (a, b) =>
-        pontuacaoSeveridade(b.probabilidade, b.impacto) - pontuacaoSeveridade(a.probabilidade, a.impacto) ||
-        new Date(b.criado_em) - new Date(a.criado_em)
-    );
-  }, [riscos, filtroProjeto]);
+    const termo = normalizar(filtros.busca.trim());
+    const lista = riscos.filter((r) => {
+      if (filtros.projeto && r.id_projeto !== filtros.projeto) return false;
+      if (filtros.gravidade && r.avaliacao_exposicao !== filtros.gravidade) return false;
+      if (filtros.status === "ativos" && r.status === "encerrado") return false;
+      if (filtros.status && filtros.status !== "ativos" && r.status !== filtros.status) return false;
+      if (filtros.area && r.area_afetada !== filtros.area) return false;
+      if (
+        filtros.recomendacao &&
+        situacaoRecomendacao(ultimaRecomendacaoPorRisco.get(r.id)) !== filtros.recomendacao
+      ) {
+        return false;
+      }
+      if (termo && !normalizar(`${r.indice} ${r.titulo} ${r.descricao_impacto}`).includes(termo)) return false;
+      return true;
+    });
+    const comparar = COMPARADORES[filtros.ordenacao] ?? COMPARADORES.exposicao_desc;
+    // Desempate estável: mais recente primeiro.
+    return lista.sort((a, b) => comparar(a, b) || new Date(b.criado_em) - new Date(a.criado_em));
+  }, [riscos, filtros, ultimaRecomendacaoPorRisco]);
 
   return (
     <Box>
@@ -124,32 +336,10 @@ export default function Riscos() {
             Riscos
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Ordenados por exposição (impacto × probabilidade). Clique em um risco para ver a recomendação do modelo.
+            Clique em um risco para ver a recomendação do modelo, o registro e a evolução da exposição.
           </Typography>
         </Box>
         <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
-          <TextField
-            select
-            size="small"
-            label="Projeto"
-            value={filtroProjeto}
-            onChange={(e) => setFiltroProjeto(e.target.value)}
-            sx={{ minWidth: 200 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <FilterListIcon fontSize="small" />
-                </InputAdornment>
-              ),
-            }}
-          >
-            <MenuItem value="">Todos os projetos</MenuItem>
-            {meusProjetos.map((p) => (
-              <MenuItem key={p.id} value={p.id}>
-                {p.nome}
-              </MenuItem>
-            ))}
-          </TextField>
           <Button
             variant="outlined"
             startIcon={<DownloadIcon />}
@@ -169,6 +359,15 @@ export default function Riscos() {
         </Box>
       </Box>
 
+      <BarraFiltros
+        filtros={filtros}
+        alterar={alterarFiltro}
+        limpar={() => setFiltros(FILTROS_PADRAO)}
+        projetos={meusProjetos}
+        total={riscos.length}
+        visiveis={riscosFiltrados.length}
+      />
+
       {!carregando && meusProjetos.length === 0 && (
         <Alert severity="info" sx={{ mb: 2 }}>
           Você ainda não está vinculado a nenhum projeto. Peça a um admin para te vincular antes de
@@ -179,13 +378,23 @@ export default function Riscos() {
       {!carregando && riscosFiltrados.length === 0 ? (
         <Paper>
           <EstadoVazio
-            titulo={filtroProjeto ? "Nenhum risco neste projeto" : "Nenhum risco cadastrado ainda"}
-            descricao="Registre o primeiro risco do projeto para receber uma recomendação de plano de contingência."
+            titulo={riscos.length > 0 ? "Nenhum risco com esses filtros" : "Nenhum risco cadastrado ainda"}
+            descricao={
+              riscos.length > 0
+                ? "Ajuste ou limpe os filtros para ver os outros riscos."
+                : "Registre o primeiro risco do projeto para receber uma recomendação de plano de contingência."
+            }
             acao={
-              meusProjetos.length > 0 && (
-                <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogoAberto(true)}>
-                  Cadastrar risco
+              riscos.length > 0 ? (
+                <Button variant="outlined" onClick={() => setFiltros(FILTROS_PADRAO)}>
+                  Limpar filtros
                 </Button>
+              ) : (
+                meusProjetos.length > 0 && (
+                  <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogoAberto(true)}>
+                    Cadastrar risco
+                  </Button>
+                )
               )
             }
           />
