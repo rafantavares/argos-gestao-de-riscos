@@ -29,7 +29,7 @@ Responda ao Rafael em português, de forma objetiva.
 ## Rodar e testar
 
 - Testes: `cd backend && python -m pytest` (SQLite em memória, não usa rede
-  nem o Supabase; ML simulado nos testes de recomendação). 174 testes.
+  nem o Supabase; ML e Gemini simulados). 187 testes.
 - Backend local: `cd backend && uvicorn app.main:app --reload --port 8000`
   (precisa de `DATABASE_URL` no `.env`). Frontend: `cd frontend && npm run dev`
   (porta 5173 — o CORS local espera exatamente essa porta).
@@ -45,12 +45,14 @@ Responda ao Rafael em português, de forma objetiva.
   escala 1–5, exposição, assistente de IA, previsão de notas e reavaliação.
 - `docs/assistente-chat.md`: chat com IA (Gemini) na barra lateral do gerente.
 
-## Estado atual (2026-09-30)
+## Estado atual (2026-10-01)
 
-- Fases 1–7 em produção. A fase 7 (previsão das notas iniciais + reavaliação /
+- Fases 1–8 em produção. Fase 8 = chat com IA (Google Gemini, com plano B
+  entre modelos; `docs/assistente-chat.md`), com a `GEMINI_API_KEY` no Render.
+  A fase 7 (previsão das notas iniciais + reavaliação /
   evolução da exposição) foi testada no navegador e publicada em 2026-09-30.
 - O projeto gratuito do Supabase pausa após 7 dias sem uso (erro
   `tenant/user ... not found`); é preciso restaurá-lo no painel antes de testar.
 - Pendências: roteiros de apresentação desatualizados; limpar riscos de teste no
-  banco antes da defesa; logo definitiva; monitoramento de gatilhos
+  banco antes da defesa; monitoramento de gatilhos
   (ClickUp/GitLab) fica como trabalho futuro.
