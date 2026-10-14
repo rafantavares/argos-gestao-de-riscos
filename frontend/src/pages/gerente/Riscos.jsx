@@ -35,7 +35,10 @@ import SearchIcon from "@mui/icons-material/Search";
 import SortIcon from "@mui/icons-material/Sort";
 import GridViewIcon from "@mui/icons-material/GridView";
 import TableRowsIcon from "@mui/icons-material/TableRows";
-import { useAviso } from "../../contexts/FeedbackContext";
+import { useAviso, useConfirmacao } from "../../contexts/FeedbackContext";
+import ViewKanbanOutlinedIcon from "@mui/icons-material/ViewKanbanOutlined";
+import MiniMatriz from "../../components/MiniMatriz";
+import QuadroRiscos from "../../components/QuadroRiscos";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import {
@@ -296,6 +299,7 @@ export default function Riscos() {
     }
   });
   const avisar = useAviso();
+  const confirmar = useConfirmacao();
   const filtroProjeto = filtros.projeto;
   const [carregando, setCarregando] = useState(true);
   const [dialogoAberto, setDialogoAberto] = useState(false);
@@ -352,19 +356,44 @@ export default function Riscos() {
     }
   }, [filtros]);
 
+  // Arrastar no quadro muda o status (com o mesmo histórico da tela do risco).
+  async function mudarStatus(risco, statusNovo) {
+    if (
+      statusNovo === "encerrado" &&
+      !(await confirmar({
+        titulo: `Encerrar ${risco.indice}?`,
+        mensagem: "Encerrado é o estado final: o status não poderá mais ser alterado nem o risco reavaliado.",
+        confirmar: "Encerrar",
+        perigo: true,
+      }))
+    ) {
+      return;
+    }
+    try {
+      const atualizado = await servicoRiscos.atualizarStatus(risco.id, statusNovo, "Movido no quadro de riscos");
+      setRiscos((atuais) => atuais.map((r) => (r.id === atualizado.id ? atualizado : r)));
+      avisar(`${risco.indice} → ${rotulo(STATUS_RISCO, statusNovo)}`);
+    } catch (e) {
+      const detalhe = e.response?.data?.detail;
+      avisar(typeof detalhe === "string" ? detalhe : "Não foi possível mudar o status.", "error");
+    }
+  }
+
   function alterarFiltro(nome, valor) {
     setFiltros((atuais) => ({ ...atuais, [nome]: valor }));
   }
 
   const riscosFiltrados = useMemo(() => {
     const termo = normalizar(filtros.busca.trim());
+    // No quadro, cada coluna já é um status: o filtro de status só vale para "Arquivados".
+    const status = vista === "quadro" && filtros.status !== "arquivados" ? "" : filtros.status;
     const lista = riscos.filter((r) => {
-      if ((filtros.status === "arquivados") !== Boolean(r.arquivado)) return false;
+      if ((status === "arquivados") !== Boolean(r.arquivado)) return false;
       if (filtros.projeto && r.id_projeto !== filtros.projeto) return false;
       if (filtros.gravidade && r.avaliacao_exposicao !== filtros.gravidade) return false;
-      if (filtros.status === "ativos" && r.status === "encerrado") return false;
-      if (filtros.status === "reavaliar" && !precisaReavaliar(r)) return false;
-      if (filtros.status && !["ativos", "reavaliar", "arquivados"].includes(filtros.status) && r.status !== filtros.status) {
+      if (status === "ativos" && r.status === "encerrado") return false;
+      if (status === "reavaliar" && !precisaReavaliar(r)) return false;
+      if (status && !["ativos", "reavaliar", "arquivados"].includes(status) && r.status !== status) {
         return false;
       }
       if (filtros.area && r.area_afetada !== filtros.area) return false;
@@ -381,7 +410,7 @@ export default function Riscos() {
     const comparar = COMPARADORES[filtros.ordenacao] ?? COMPARADORES.exposicao_desc;
     // Desempate estável: mais recente primeiro.
     return lista.sort((a, b) => comparar(a, b) || new Date(b.criado_em) - new Date(a.criado_em));
-  }, [riscos, filtros, ultimaRecomendacaoPorRisco]);
+  }, [riscos, filtros, ultimaRecomendacaoPorRisco, vista]);
 
   return (
     <Box>
@@ -414,6 +443,11 @@ export default function Riscos() {
             <ToggleButton value="cartoes" aria-label="Ver em cartões">
               <Tooltip title="Cartões">
                 <GridViewIcon fontSize="small" />
+              </Tooltip>
+            </ToggleButton>
+            <ToggleButton value="quadro" aria-label="Ver em quadro">
+              <Tooltip title="Quadro (arraste para mudar o status)">
+                <ViewKanbanOutlinedIcon fontSize="small" />
               </Tooltip>
             </ToggleButton>
             <ToggleButton value="tabela" aria-label="Ver em tabela">
@@ -481,6 +515,13 @@ export default function Riscos() {
             }
           />
         </Paper>
+      ) : vista === "quadro" ? (
+        <QuadroRiscos
+          riscos={riscosFiltrados}
+          projetoPorId={projetoPorId}
+          aoAbrir={(risco) => navigate(`/gerente/riscos/${risco.id}/recomendacao`)}
+          aoMudarStatus={mudarStatus}
+        />
       ) : vista === "tabela" ? (
         <TabelaRiscos
           riscos={riscosFiltrados}
@@ -613,8 +654,9 @@ function CartaoRisco({ risco, projeto, recomendacao, aoAbrir }) {
             {projeto?.nome ?? "—"} · {new Date(risco.criado_em).toLocaleDateString("pt-BR")}
           </Typography>
         </Box>
-        <Stack spacing={0.5} alignItems="flex-end">
+        <Stack spacing={0.75} alignItems="flex-end">
           <ChipStatus status={risco.status} />
+          <MiniMatriz probabilidade={risco.probabilidade} impacto={risco.impacto} />
           {precisaReavaliar(risco) && (
             <Tooltip title="Sem reavaliação há 30 dias ou mais (monitoramento contínuo, GPR 17)">
               <Chip

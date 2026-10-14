@@ -12,6 +12,8 @@ import {
   MenuItem,
   Paper,
   Stack,
+  Tab,
+  Tabs,
   TextField,
   Typography,
 } from "@mui/material";
@@ -44,6 +46,7 @@ import {
 import BarraConfianca from "../../components/BarraConfianca";
 import EvolucaoExposicao from "../../components/EvolucaoExposicao";
 import AnexosRisco from "../../components/AnexosRisco";
+import FichaRisco from "../../components/FichaRisco";
 import { useAviso, useConfirmacao } from "../../contexts/FeedbackContext";
 import { ChipArea, ChipSeveridade, ChipStatus } from "../../components/Badges";
 
@@ -102,6 +105,7 @@ export default function Recomendacao() {
   const [processando, setProcessando] = useState(false);
   const [confirmacao, setConfirmacao] = useState(null); // { aceita: bool }
   const [erro, setErro] = useState("");
+  const [aba, setAba] = useState("plano");
   const avisar = useAviso();
   const confirmar = useConfirmacao();
   // Evita gerar duas recomendações quando o efeito roda duas vezes (StrictMode em dev).
@@ -251,26 +255,22 @@ export default function Recomendacao() {
       <Button startIcon={<ArrowBackIcon />} size="small" onClick={() => navigate("/gerente/riscos")} sx={{ mb: 1 }}>
         Voltar para riscos
       </Button>
-      <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
-        <Typography variant="h5" fontWeight={600} sx={{ mb: 0.5, flexGrow: 1 }}>
-          Recomendação de plano de contingência
-        </Typography>
-        {risco && (
-          <Button
-            size="small"
-            color={risco.arquivado ? "primary" : "inherit"}
-            startIcon={risco.arquivado ? <UnarchiveOutlinedIcon /> : <ArchiveOutlinedIcon />}
-            onClick={alternarArquivo}
-            sx={{ color: risco.arquivado ? undefined : "text.secondary" }}
-          >
-            {risco.arquivado ? "Restaurar" : "Arquivar"}
-          </Button>
-        )}
-      </Box>
+      {risco && <FichaRisco risco={risco} aoArquivar={alternarArquivo} />}
+
       {risco && (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          {risco.indice} — {risco.titulo}
-        </Typography>
+        <Tabs
+          value={aba}
+          onChange={(_, nova) => setAba(nova)}
+          variant="scrollable"
+          allowScrollButtonsMobile
+          sx={{ mb: 2, borderBottom: 1, borderColor: "divider" }}
+        >
+          <Tab value="plano" label="Plano recomendado" />
+          <Tab value="registro" label="Registro" />
+          <Tab value="evolucao" label="Evolução" />
+          <Tab value="evidencias" label="Evidências" />
+          <Tab value="historico" label="Histórico" />
+        </Tabs>
       )}
 
       {erro && (
@@ -305,7 +305,10 @@ export default function Recomendacao() {
                 : "O status do risco foi mantido. Você pode gerar uma nova recomendação a qualquer momento."}
             </Typography>
             <Stack direction="row" spacing={1.5} justifyContent="center" sx={{ mt: 2 }}>
-              <Button variant="contained" startIcon={<EditNoteIcon />} onClick={() => setConfirmacao(null)}>
+              <Button variant="contained" startIcon={<EditNoteIcon />} onClick={() => {
+                setConfirmacao(null);
+                setAba("registro");
+              }}>
                 Revisar registro do risco
               </Button>
               <Button variant="outlined" onClick={() => navigate("/gerente/riscos")}>
@@ -316,7 +319,7 @@ export default function Recomendacao() {
         </Grow>
       )}
 
-      {recomendacao && !confirmacao && (
+      {aba === "plano" && recomendacao && !confirmacao && (
         <Fade in>
           <Box>
             {/* Plano recomendado em destaque */}
@@ -447,13 +450,13 @@ export default function Recomendacao() {
         </Fade>
       )}
 
-      {risco && !confirmacao && <RegistroRisco risco={risco} aoSalvar={setRisco} />}
+      {aba === "registro" && risco && !confirmacao && <RegistroRisco risco={risco} aoSalvar={setRisco} />}
 
-      {risco && !confirmacao && <EvolucaoExposicao risco={risco} aoReavaliar={setRisco} />}
+      {aba === "evolucao" && risco && !confirmacao && <EvolucaoExposicao risco={risco} aoReavaliar={setRisco} />}
 
-      {risco && !confirmacao && <AnexosRisco idRisco={risco.id} />}
+      {aba === "evidencias" && risco && !confirmacao && <AnexosRisco idRisco={risco.id} />}
 
-      {risco && (
+      {aba === "historico" && risco && (
         <Paper sx={{ p: 3 }}>
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
             <Typography variant="subtitle1" fontWeight={600}>
