@@ -73,3 +73,20 @@ repetidos).
 Ao adicionar o SDK foi preciso subir `pydantic` para 2.13.5 e, nos testes,
 `httpx` para 0.28.1 (exigência do `google-genai`); a suíte inteira continua
 passando.
+
+## Histórico de conversas (fase 10, 2026-10-14)
+
+* Tabelas `conversas_chat` e `mensagens_chat` (`app/models/conversa_chat.py`);
+  cada mensagem da IA guarda o **modelo que respondeu** (auditoria do plano B).
+* `POST /chat` cria a conversa na primeira mensagem (título = começo da
+  pergunta) ou continua a de `id_conversa`, e salva pergunta e resposta.
+  `GET /chat/conversas?id_projeto=`, `GET/PATCH/DELETE /chat/conversas/{id}`.
+  Cada gerente só vê as próprias conversas.
+* **Rastreabilidade:** `riscos.id_conversa_origem` (migração fase 10) guarda de
+  qual conversa nasceu o risco criado por "Preencher novo risco com esta
+  sugestão". A conversa lista os riscos criados; a ficha do risco tem o link
+  "Criado a partir de uma conversa com o Assistente IA". Excluir a conversa
+  mantém o risco e só remove o vínculo.
+* Tela: coluna de conversas à esquerda (abrir, renomear, excluir, nova).
+* Trabalho futuro: política de retenção (apagar conversas após X meses).
+* Testes: `tests/test_historico_chat.py` (6).

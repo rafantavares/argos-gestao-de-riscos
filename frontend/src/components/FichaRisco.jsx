@@ -1,5 +1,7 @@
 import { Box, Button, Paper, Typography } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
+import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
 import UnarchiveOutlinedIcon from "@mui/icons-material/UnarchiveOutlined";
 import { FASES_PROJETO, IMPACTOS, PROBABILIDADES, faixaExposicao, precisaReavaliar, rotulo } from "../constants";
 import { ChipArea, ChipStatus, ChipUrgencia } from "./Badges";
@@ -21,6 +23,7 @@ function Dado({ rotulo: nome, children }) {
 // Cabeçalho do detalhe do risco: a "ficha" com a exposição em destaque e os
 // dados principais do registro.
 export default function FichaRisco({ risco, aoArquivar }) {
+  const navigate = useNavigate();
   const faixa = faixaExposicao(risco.exposicao);
   const ultimaAvaliacao = new Date(risco.ultima_avaliacao_em ?? risco.criado_em);
   return (
@@ -85,6 +88,17 @@ export default function FichaRisco({ risco, aoArquivar }) {
             <Dado rotulo="Fase">{rotulo(FASES_PROJETO, risco.fase_projeto)}</Dado>
             <Dado rotulo="Última avaliação">{ultimaAvaliacao.toLocaleDateString("pt-BR")}</Dado>
           </Box>
+          {risco.id_conversa_origem && (
+            <Button
+              size="small"
+              color="secondary"
+              startIcon={<ForumOutlinedIcon />}
+              onClick={() => navigate("/gerente/assistente", { state: { idConversa: risco.id_conversa_origem } })}
+              sx={{ mt: 1.5, px: 1, textTransform: "none" }}
+            >
+              Criado a partir de uma conversa com o Assistente IA
+            </Button>
+          )}
         </Box>
 
         <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>

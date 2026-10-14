@@ -12,7 +12,7 @@ PERGUNTA = [{"papel": "usuario", "texto": "O fornecedor do servidor está atrasa
 def llm_simulado(monkeypatch):
     chamadas = []
 
-    def responder(instrucoes, mensagens, formato_json=False):
+    def responder(instrucoes, mensagens, formato_json=False, detalhes=None):
         chamadas.append({"instrucoes": instrucoes, "mensagens": mensagens})
         return "Sugestão de risco: atraso do fornecedor."
 
@@ -74,7 +74,7 @@ def test_sem_chave_de_api_o_chat_fica_indisponivel(cliente, cabecalho_gerente, p
 
 
 def test_falha_do_provedor_vira_502(cliente, cabecalho_gerente, projeto_com_gerente, monkeypatch):
-    def falhar(instrucoes, mensagens, formato_json=False):
+    def falhar(instrucoes, mensagens, formato_json=False, detalhes=None):
         raise llm.FalhaNoProvedor("Limite de uso da IA atingido.")
 
     monkeypatch.setattr(llm, "responder", falhar)
@@ -186,7 +186,7 @@ def test_rascunho_descarta_area_invalida_e_texto_quebrado():
 def test_endpoint_de_rascunho(cliente, cabecalho_gerente, projeto_com_gerente, monkeypatch):
     pedidos = []
 
-    def responder(instrucoes, mensagens, formato_json=False):
+    def responder(instrucoes, mensagens, formato_json=False, detalhes=None):
         pedidos.append((instrucoes, mensagens, formato_json))
         return '{"titulo": "Atraso do fornecedor", "area_afetada": "fornecedores", "probabilidade": 3, "impacto": 4}'
 

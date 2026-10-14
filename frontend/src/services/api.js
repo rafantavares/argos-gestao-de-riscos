@@ -88,8 +88,15 @@ export const riscos = {
 
 // --- chat do assistente de IA ---
 export const chat = {
-  conversar: (idProjeto, mensagens) =>
-    api.post("/chat", { id_projeto: idProjeto, mensagens }).then((r) => r.data),
+  conversar: (idProjeto, mensagens, idConversa) =>
+    api
+      .post("/chat", { id_projeto: idProjeto, mensagens, id_conversa: idConversa ?? undefined })
+      .then((r) => r.data),
+  conversas: (idProjeto) => api.get("/chat/conversas", { params: { id_projeto: idProjeto } }).then((r) => r.data),
+  conversa: (idConversa) => api.get(`/chat/conversas/${idConversa}`).then((r) => r.data),
+  renomearConversa: (idConversa, titulo) =>
+    api.patch(`/chat/conversas/${idConversa}`, { titulo }).then((r) => r.data),
+  excluirConversa: (idConversa) => api.delete(`/chat/conversas/${idConversa}`),
   rascunho: (idProjeto, mensagens) =>
     api.post("/chat/rascunho", { id_projeto: idProjeto, mensagens }).then((r) => r.data),
 };

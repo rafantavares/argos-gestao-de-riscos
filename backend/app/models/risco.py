@@ -72,6 +72,8 @@ class Risco(Base):
     )
     # Arquivado = some das listas, painéis, ML e assistente (sem apagar o histórico).
     arquivado = Column(Boolean, nullable=False, default=False, server_default="false")
+    # Conversa do Assistente IA que originou o risco (rastreabilidade da sugestão).
+    id_conversa_origem = Column(Integer, ForeignKey("conversas_chat.id"), nullable=True)
     id_projeto = Column(Integer, ForeignKey("projetos.id"), nullable=False)
     id_gerente = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     criado_em = Column(DateTime(timezone=True), server_default=func.now())

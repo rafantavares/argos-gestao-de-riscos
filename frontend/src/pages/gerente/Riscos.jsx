@@ -970,6 +970,8 @@ function DialogoNovoRisco({ aberto, projetos, projetoInicial, rascunho, aoFechar
         contingencia: contingencia || null,
         gatilho: gatilho || null,
         id_projeto: idProjeto,
+        // Vindo do Assistente IA: guarda de qual conversa nasceu o risco.
+        id_conversa_origem: rascunho?.id_conversa_origem ?? null,
       });
     } catch (e) {
       const detalhe = e.response?.data?.detail;

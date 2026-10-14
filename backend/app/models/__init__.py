@@ -6,6 +6,7 @@ from app.models.risco import Risco
 from app.models.historico_risco import HistoricoRisco
 from app.models.reavaliacao_risco import ReavaliacaoRisco
 from app.models.anexo_risco import AnexoRisco
+from app.models.conversa_chat import ConversaChat, MensagemChat
 from app.models.plano_contingencia import PlanoContingencia
 from app.models.recomendacao import Recomendacao
 from app.models.metrica_treinamento import MetricaTreinamento
@@ -18,6 +19,8 @@ __all__ = [
     "HistoricoRisco",
     "ReavaliacaoRisco",
     "AnexoRisco",
+    "ConversaChat",
+    "MensagemChat",
     "PlanoContingencia",
     "Recomendacao",
     "MetricaTreinamento",

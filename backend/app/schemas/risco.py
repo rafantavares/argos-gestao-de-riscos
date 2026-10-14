@@ -32,6 +32,8 @@ class RiscoBase(BaseModel):
 
 class RiscoCriar(RiscoBase):
     id_projeto: int
+    # Conversa do Assistente IA de onde veio a sugestão (opcional).
+    id_conversa_origem: Optional[int] = None
     # Grupo PMBOK; se omitido, é derivado da área afetada.
     categoria: Optional[CategoriaRisco] = None
 
@@ -52,6 +54,7 @@ class RiscoResposta(RiscoBase):
     id_gerente: int
     status: StatusRisco
     arquivado: bool = False
+    id_conversa_origem: Optional[int] = None
     criado_em: datetime
     atualizado_em: datetime
     ultima_avaliacao_em: Optional[datetime] = None

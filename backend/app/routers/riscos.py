@@ -56,6 +56,18 @@ def _proximo_indice(id_projeto: int, sessao: Session) -> str:
     return f"R{(max(numeros) if numeros else 0) + 1:02d}"
 
 
+def _conversa_valida(id_conversa, id_projeto: int, gerente: Usuario, sessao: Session):
+    """Só vincula a conversa se ela for do gerente e do mesmo projeto."""
+    if not id_conversa:
+        return None
+    from app.models.conversa_chat import ConversaChat
+
+    conversa = sessao.get(ConversaChat, id_conversa)
+    if conversa and conversa.id_gerente == gerente.id and conversa.id_projeto == id_projeto:
+        return conversa.id
+    return None
+
+
 def _obter_risco_do_gerente(id_risco: int, gerente: Usuario, sessao: Session) -> Risco:
     risco = (
         sessao.query(Risco)
@@ -96,6 +108,7 @@ def cadastrar_risco(
         fase_projeto=dados.fase_projeto,
         id_projeto=dados.id_projeto,
         id_gerente=gerente.id,
+        id_conversa_origem=_conversa_valida(dados.id_conversa_origem, dados.id_projeto, gerente, sessao),
     )
     sessao.add(novo_risco)
     sessao.commit()

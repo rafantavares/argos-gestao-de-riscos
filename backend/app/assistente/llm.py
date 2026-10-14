@@ -50,9 +50,12 @@ def modelos_em_ordem() -> List[str]:
     return list(dict.fromkeys(ordem))  # sem repetidos, mantendo a ordem
 
 
-def responder(instrucoes: str, mensagens: List[dict], formato_json: bool = False) -> str:
+def responder(
+    instrucoes: str, mensagens: List[dict], formato_json: bool = False, detalhes: dict = None
+) -> str:
     """`mensagens`: dicts com `papel` ("usuario" | "assistente") e `texto`,
-    em ordem cronológica, terminando numa mensagem do usuário."""
+    em ordem cronológica, terminando numa mensagem do usuário. Se `detalhes` for
+    passado, recebe o nome do modelo que respondeu em detalhes["modelo"]."""
     if not configuracoes.gemini_api_key:
         raise AssistenteIndisponivel(
             "O assistente de IA não está configurado: defina GEMINI_API_KEY no servidor."
@@ -95,6 +98,8 @@ def responder(instrucoes: str, mensagens: List[dict], formato_json: bool = False
 
         texto = (resposta.text or "").strip()
         if texto:
+            if detalhes is not None:
+                detalhes["modelo"] = modelo
             return texto
         log.warning("Modelo %s devolveu resposta vazia; tentando o próximo.", modelo)
 

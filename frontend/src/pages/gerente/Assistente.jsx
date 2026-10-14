@@ -1,11 +1,12 @@
 import { Fragment, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Alert,
   Box,
   Button,
   Chip,
   CircularProgress,
+  Divider,
   IconButton,
   MenuItem,
   Paper,
@@ -13,11 +14,14 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import PostAddIcon from "@mui/icons-material/PostAdd";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import SendIcon from "@mui/icons-material/Send";
 import { chat as servicoChat, projetos as servicoProjetos } from "../../services/api";
+import { useAviso, useConfirmacao } from "../../contexts/FeedbackContext";
 
 const SUGESTOES = [
   "Um desenvolvedor-chave pode sair da equipe no meio do projeto.",
@@ -25,26 +29,6 @@ const SUGESTOES = [
   "O servidor de homologação vive caindo e a equipe perde horas esperando.",
   "Quais são os riscos mais críticos deste projeto?",
 ];
-
-// A conversa fica na sessão do navegador (uma por projeto), para não se perder
-// ao trocar de página. O servidor não guarda histórico.
-const CHAVE_SESSAO = "argos_chat_";
-
-function lerConversa(idProjeto) {
-  try {
-    return JSON.parse(sessionStorage.getItem(CHAVE_SESSAO + idProjeto)) ?? [];
-  } catch {
-    return [];
-  }
-}
-
-function guardarConversa(idProjeto, mensagens) {
-  try {
-    sessionStorage.setItem(CHAVE_SESSAO + idProjeto, JSON.stringify(mensagens));
-  } catch {
-    // Sem sessionStorage (modo privado etc.): a conversa só não sobrevive à navegação.
-  }
-}
 
 // Formatação mínima das respostas: **negrito**, *itálico* e listas com "- ".
 function TextoFormatado({ texto }) {
@@ -124,58 +108,84 @@ function Mensagem({ mensagem, acao }) {
 
 // Chat com o assistente de IA (modelo de linguagem com o contexto do projeto):
 // o gerente descreve o problema e recebe sugestões de registro e tratamento do
-// risco. Nada é gravado; o cadastro continua no formulário "Novo risco".
+// risco. As conversas ficam salvas por projeto (histórico à esquerda) e um
+// risco criado a partir de uma sugestão guarda a conversa de origem.
 export default function Assistente() {
+  const localizacao = useLocation();
+  const navigate = useNavigate();
+  const avisar = useAviso();
+  const confirmar = useConfirmacao();
   const [projetos, setProjetos] = useState([]);
   const [idProjeto, setIdProjeto] = useState("");
+  const [conversas, setConversas] = useState([]);
+  const [idConversa, setIdConversa] = useState(null);
+  const [riscosCriados, setRiscosCriados] = useState([]);
   const [mensagens, setMensagens] = useState([]);
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
-  const [erro, setErro] = useState("");
   const [gerandoRascunho, setGerandoRascunho] = useState(false);
+  const [renomeando, setRenomeando] = useState(null); // { id, titulo }
+  const [erro, setErro] = useState("");
   const fimRef = useRef(null);
-  const navigate = useNavigate();
-
-  // Leva a sugestão para o formulário "Novo risco", já preenchido, para revisão.
-  async function preencherNovoRisco() {
-    setGerandoRascunho(true);
-    setErro("");
-    try {
-      const rascunho = await servicoChat.rascunho(idProjeto, mensagens);
-      navigate("/gerente/riscos", { state: { rascunho: { ...rascunho, id_projeto: idProjeto } } });
-    } catch (e) {
-      const detalhe = e.response?.data?.detail;
-      setErro(typeof detalhe === "string" ? detalhe : "Não foi possível montar o rascunho do risco.");
-      setGerandoRascunho(false);
-    }
-  }
+  const conversaPedida = localizacao.state?.idConversa;
 
   useEffect(() => {
     servicoProjetos
       .meus()
-      .then((lista) => {
+      .then(async (lista) => {
         setProjetos(lista);
-        if (lista.length > 0) {
-          setIdProjeto(lista[0].id);
-          setMensagens(lerConversa(lista[0].id));
+        // Vindo do detalhe de um risco: abre a conversa de origem no projeto certo.
+        if (conversaPedida) {
+          try {
+            const conversa = await servicoChat.conversa(conversaPedida);
+            setIdProjeto(conversa.id_projeto);
+            abrirDetalhe(conversa);
+            return;
+          } catch {
+            avisar("Essa conversa não existe mais.", "warning");
+          }
         }
+        if (lista.length > 0) setIdProjeto(lista[0].id);
       })
       .catch(() => setErro("Não foi possível carregar seus projetos."));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!idProjeto) return;
+    servicoChat.conversas(idProjeto).then(setConversas).catch(() => setConversas([]));
+  }, [idProjeto]);
 
   useEffect(() => {
     fimRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [mensagens, enviando]);
 
-  function atualizarConversa(novas) {
-    setMensagens(novas);
-    guardarConversa(idProjeto, novas);
+  function abrirDetalhe(conversa) {
+    setIdConversa(conversa.id);
+    setMensagens(conversa.mensagens.map(({ papel, texto: t, modelo }) => ({ papel, texto: t, modelo })));
+    setRiscosCriados(conversa.riscos_criados ?? []);
+    setErro("");
+  }
+
+  async function abrirConversa(id) {
+    if (enviando || id === idConversa) return;
+    try {
+      abrirDetalhe(await servicoChat.conversa(id));
+    } catch {
+      avisar("Não foi possível abrir a conversa.", "error");
+    }
+  }
+
+  function novaConversa() {
+    setIdConversa(null);
+    setMensagens([]);
+    setRiscosCriados([]);
+    setErro("");
   }
 
   function trocarProjeto(id) {
     setIdProjeto(id);
-    setMensagens(lerConversa(id));
-    setErro("");
+    novaConversa();
   }
 
   async function enviar(conteudo) {
@@ -187,8 +197,11 @@ export default function Assistente() {
     setErro("");
     setEnviando(true);
     try {
-      const { resposta } = await servicoChat.conversar(idProjeto, conversa);
-      atualizarConversa([...conversa, { papel: "assistente", texto: resposta }]);
+      const historico = conversa.map(({ papel, texto: t }) => ({ papel, texto: t })).slice(-40);
+      const resposta = await servicoChat.conversar(idProjeto, historico, idConversa);
+      setMensagens([...conversa, { papel: "assistente", texto: resposta.resposta }]);
+      if (!idConversa) setIdConversa(resposta.id_conversa);
+      servicoChat.conversas(idProjeto).then(setConversas).catch(() => {});
     } catch (e) {
       const detalhe = e.response?.data?.detail;
       setErro(typeof detalhe === "string" ? detalhe : "Não foi possível falar com o assistente.");
@@ -197,6 +210,53 @@ export default function Assistente() {
       setTexto(pergunta);
     } finally {
       setEnviando(false);
+    }
+  }
+
+  // Leva a sugestão para o formulário "Novo risco", já preenchido, para revisão.
+  async function preencherNovoRisco() {
+    setGerandoRascunho(true);
+    setErro("");
+    try {
+      const historico = mensagens.map(({ papel, texto: t }) => ({ papel, texto: t })).slice(-40);
+      const rascunho = await servicoChat.rascunho(idProjeto, historico);
+      navigate("/gerente/riscos", {
+        state: { rascunho: { ...rascunho, id_projeto: idProjeto, id_conversa_origem: idConversa } },
+      });
+    } catch (e) {
+      const detalhe = e.response?.data?.detail;
+      setErro(typeof detalhe === "string" ? detalhe : "Não foi possível montar o rascunho do risco.");
+      setGerandoRascunho(false);
+    }
+  }
+
+  async function salvarNome() {
+    const { id, titulo } = renomeando;
+    setRenomeando(null);
+    if (!titulo.trim()) return;
+    try {
+      const atualizada = await servicoChat.renomearConversa(id, titulo.trim());
+      setConversas((atuais) => atuais.map((c) => (c.id === id ? { ...c, titulo: atualizada.titulo } : c)));
+    } catch {
+      avisar("Não foi possível renomear a conversa.", "error");
+    }
+  }
+
+  async function excluirConversa(conversa) {
+    const ok = await confirmar({
+      titulo: "Excluir a conversa?",
+      mensagem: `"${conversa.titulo}" e todas as mensagens serão apagadas. Os riscos criados a partir dela continuam registrados.`,
+      confirmar: "Excluir",
+      perigo: true,
+    });
+    if (!ok) return;
+    try {
+      await servicoChat.excluirConversa(conversa.id);
+      setConversas((atuais) => atuais.filter((c) => c.id !== conversa.id));
+      if (conversa.id === idConversa) novaConversa();
+      avisar("Conversa excluída.");
+    } catch {
+      avisar("Não foi possível excluir a conversa.", "error");
     }
   }
 
@@ -233,132 +293,243 @@ export default function Assistente() {
             </MenuItem>
           ))}
         </TextField>
-        <Button
-          variant="outlined"
-          startIcon={<RestartAltIcon />}
-          onClick={() => {
-            atualizarConversa([]);
-            setErro("");
-          }}
-          disabled={mensagens.length === 0 || enviando}
-          sx={{ height: 40 }}
-        >
-          Nova conversa
-        </Button>
       </Box>
 
-      <Paper sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", px: { xs: 2, md: 4 }, py: 3 }}>
-          <Box sx={{ maxWidth: 860, mx: "auto" }}>
-            {mensagens.length === 0 ? (
-              <Box sx={{ textAlign: "center", py: { xs: 2, md: 6 } }}>
-                <Box
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: 2,
-                    mx: "auto",
-                    mb: 2,
-                    display: "grid",
-                    placeItems: "center",
-                    bgcolor: "rgba(167, 139, 250, 0.15)",
-                    color: "secondary.main",
-                  }}
-                >
-                  <AutoAwesomeIcon />
+      <Box sx={{ flex: 1, minHeight: 0, display: "flex", gap: 2, flexDirection: { xs: "column", md: "row" } }}>
+        {/* Histórico de conversas do projeto */}
+        <Paper
+          sx={{
+            width: { md: 270 },
+            flexShrink: 0,
+            display: "flex",
+            flexDirection: "column",
+            maxHeight: { xs: 220, md: "none" },
+            overflow: "hidden",
+          }}
+        >
+          <Box sx={{ p: 1.5 }}>
+            <Button fullWidth variant="outlined" startIcon={<AddIcon />} onClick={novaConversa} disabled={enviando}>
+              Nova conversa
+            </Button>
+          </Box>
+          <Divider />
+          <Box sx={{ flex: 1, overflowY: "auto", p: 1 }}>
+            {conversas.length === 0 ? (
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block", p: 1.5, textAlign: "center" }}>
+                As conversas deste projeto aparecem aqui.
+              </Typography>
+            ) : (
+              conversas.map((c) => {
+                const ativa = c.id === idConversa;
+                return (
+                  <Box
+                    key={c.id}
+                    onClick={() => abrirConversa(c.id)}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                      px: 1.25,
+                      py: 0.9,
+                      mb: 0.5,
+                      borderRadius: 1.5,
+                      cursor: "pointer",
+                      bgcolor: ativa ? "rgba(45, 212, 191, 0.12)" : "transparent",
+                      "&:hover": { bgcolor: ativa ? "rgba(45, 212, 191, 0.16)" : "rgba(255,255,255,0.04)" },
+                      "&:hover .acoes": { opacity: 1 },
+                    }}
+                  >
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      {renomeando?.id === c.id ? (
+                        <TextField
+                          size="small"
+                          variant="standard"
+                          autoFocus
+                          fullWidth
+                          value={renomeando.titulo}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => setRenomeando({ id: c.id, titulo: e.target.value })}
+                          onBlur={salvarNome}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") salvarNome();
+                            if (e.key === "Escape") setRenomeando(null);
+                          }}
+                          inputProps={{ maxLength: 120 }}
+                        />
+                      ) : (
+                        <Typography variant="body2" noWrap fontWeight={ativa ? 600 : 400}>
+                          {c.titulo}
+                        </Typography>
+                      )}
+                      <Typography variant="caption" color="text.secondary">
+                        {new Date(c.atualizado_em ?? c.criado_em).toLocaleString("pt-BR", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </Typography>
+                    </Box>
+                    <Box className="acoes" sx={{ display: "flex", opacity: ativa ? 1 : 0, transition: "opacity 0.15s" }}>
+                      <IconButton
+                        size="small"
+                        aria-label="Renomear"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setRenomeando({ id: c.id, titulo: c.titulo });
+                        }}
+                      >
+                        <EditOutlinedIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        aria-label="Excluir"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          excluirConversa(c);
+                        }}
+                      >
+                        <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </Box>
+                  </Box>
+                );
+              })
+            )}
+          </Box>
+        </Paper>
+
+        {/* Conversa aberta */}
+        <Paper sx={{ flex: 1, minHeight: 0, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          {riscosCriados.length > 0 && (
+            <Box sx={{ px: { xs: 2, md: 4 }, py: 1, borderBottom: 1, borderColor: "divider", display: "flex", gap: 1, alignItems: "center", flexWrap: "wrap" }}>
+              <Typography variant="caption" color="text.secondary">
+                Riscos criados a partir desta conversa:
+              </Typography>
+              {riscosCriados.map((r) => (
+                <Chip
+                  key={r.id}
+                  size="small"
+                  variant="outlined"
+                  color="primary"
+                  label={`${r.indice} · ${r.titulo}`}
+                  onClick={() => navigate(`/gerente/riscos/${r.id}/recomendacao`)}
+                />
+              ))}
+            </Box>
+          )}
+          <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", px: { xs: 2, md: 4 }, py: 3 }}>
+            <Box sx={{ maxWidth: 860, mx: "auto" }}>
+              {mensagens.length === 0 ? (
+                <Box sx={{ textAlign: "center", py: { xs: 2, md: 6 } }}>
+                  <Box
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 2,
+                      mx: "auto",
+                      mb: 2,
+                      display: "grid",
+                      placeItems: "center",
+                      bgcolor: "rgba(167, 139, 250, 0.15)",
+                      color: "secondary.main",
+                    }}
+                  >
+                    <AutoAwesomeIcon />
+                  </Box>
+                  <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
+                    Como posso ajudar com os riscos do projeto?
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 560, mx: "auto", mb: 3 }}>
+                    O assistente sugere a área afetada, as notas de impacto e probabilidade, a exposição, a mitigação, a
+                    contingência e o gatilho, considerando os riscos que já estão registrados no projeto.
+                  </Typography>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, justifyContent: "center" }}>
+                    {SUGESTOES.map((sugestao) => (
+                      <Chip
+                        key={sugestao}
+                        label={sugestao}
+                        variant="outlined"
+                        onClick={() => enviar(sugestao)}
+                        disabled={!idProjeto}
+                        sx={{ height: "auto", py: 0.75, maxWidth: 400, "& .MuiChip-label": { whiteSpace: "normal" } }}
+                      />
+                    ))}
+                  </Box>
                 </Box>
-                <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
-                  Como posso ajudar com os riscos do projeto?
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 560, mx: "auto", mb: 3 }}>
-                  O assistente sugere a área afetada, as notas de impacto e probabilidade, a exposição, a mitigação, a
-                  contingência e o gatilho, considerando os riscos que já estão registrados no projeto.
-                </Typography>
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, justifyContent: "center" }}>
-                  {SUGESTOES.map((sugestao) => (
-                    <Chip
-                      key={sugestao}
-                      label={sugestao}
-                      variant="outlined"
-                      onClick={() => enviar(sugestao)}
-                      disabled={!idProjeto}
-                      sx={{ height: "auto", py: 0.75, maxWidth: 400, "& .MuiChip-label": { whiteSpace: "normal" } }}
+              ) : (
+                <Stack spacing={3}>
+                  {mensagens.map((mensagem, i) => (
+                    <Mensagem
+                      key={i}
+                      mensagem={mensagem}
+                      acao={
+                        mensagem.papel === "assistente" &&
+                        i === mensagens.length - 1 && (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="secondary"
+                            startIcon={gerandoRascunho ? <CircularProgress size={14} color="inherit" /> : <PostAddIcon />}
+                            onClick={preencherNovoRisco}
+                            disabled={gerandoRascunho || enviando}
+                            sx={{ mt: 1.5 }}
+                          >
+                            {gerandoRascunho ? "Montando o rascunho..." : "Preencher novo risco com esta sugestão"}
+                          </Button>
+                        )
+                      }
                     />
                   ))}
-                </Box>
-              </Box>
-            ) : (
-              <Stack spacing={3}>
-                {mensagens.map((mensagem, i) => (
-                  <Mensagem
-                    key={i}
-                    mensagem={mensagem}
-                    acao={
-                      mensagem.papel === "assistente" &&
-                      i === mensagens.length - 1 && (
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          color="secondary"
-                          startIcon={gerandoRascunho ? <CircularProgress size={14} color="inherit" /> : <PostAddIcon />}
-                          onClick={preencherNovoRisco}
-                          disabled={gerandoRascunho || enviando}
-                          sx={{ mt: 1.5 }}
-                        >
-                          {gerandoRascunho ? "Montando o rascunho..." : "Preencher novo risco com esta sugestão"}
-                        </Button>
-                      )
-                    }
-                  />
-                ))}
-                {enviando && (
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, color: "text.secondary", pl: 0.5 }}>
-                    <CircularProgress size={16} color="secondary" />
-                    <Typography variant="body2">Analisando o projeto...</Typography>
-                  </Box>
-                )}
-              </Stack>
-            )}
-            <div ref={fimRef} />
-          </Box>
-        </Box>
-
-        <Box sx={{ borderTop: 1, borderColor: "divider", px: { xs: 2, md: 4 }, pt: 2, pb: 1.5 }}>
-          <Box sx={{ maxWidth: 860, mx: "auto" }}>
-            {erro && (
-              <Alert severity="error" sx={{ mb: 1.5 }}>
-                {erro}
-              </Alert>
-            )}
-            <Box sx={{ display: "flex", gap: 1, alignItems: "flex-end" }}>
-              <TextField
-                fullWidth
-                multiline
-                maxRows={6}
-                placeholder={idProjeto ? "Descreva o problema ou faça uma pergunta..." : "Selecione um projeto"}
-                value={texto}
-                onChange={(e) => setTexto(e.target.value)}
-                onKeyDown={aoTeclar}
-                disabled={!idProjeto || enviando}
-                inputProps={{ maxLength: 4000 }}
-              />
-              <IconButton
-                color="primary"
-                onClick={() => enviar()}
-                disabled={!texto.trim() || !idProjeto || enviando}
-                aria-label="Enviar"
-                sx={{ mb: 0.5 }}
-              >
-                <SendIcon />
-              </IconButton>
+                  {enviando && (
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, color: "text.secondary", pl: 0.5 }}>
+                      <CircularProgress size={16} color="secondary" />
+                      <Typography variant="body2">Analisando o projeto...</Typography>
+                    </Box>
+                  )}
+                </Stack>
+              )}
+              <div ref={fimRef} />
             </Box>
-            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
-              Enter envia · Shift+Enter quebra a linha · Sugestões geradas por IA (Google Gemini) podem conter erros:
-              revise antes de registrar o risco.
-            </Typography>
           </Box>
-        </Box>
-      </Paper>
+
+          <Box sx={{ borderTop: 1, borderColor: "divider", px: { xs: 2, md: 4 }, pt: 2, pb: 1.5 }}>
+            <Box sx={{ maxWidth: 860, mx: "auto" }}>
+              {erro && (
+                <Alert severity="error" sx={{ mb: 1.5 }}>
+                  {erro}
+                </Alert>
+              )}
+              <Box sx={{ display: "flex", gap: 1, alignItems: "flex-end" }}>
+                <TextField
+                  fullWidth
+                  multiline
+                  maxRows={6}
+                  placeholder={idProjeto ? "Descreva o problema ou faça uma pergunta..." : "Selecione um projeto"}
+                  value={texto}
+                  onChange={(e) => setTexto(e.target.value)}
+                  onKeyDown={aoTeclar}
+                  disabled={!idProjeto || enviando}
+                  inputProps={{ maxLength: 4000 }}
+                />
+                <IconButton
+                  color="primary"
+                  onClick={() => enviar()}
+                  disabled={!texto.trim() || !idProjeto || enviando}
+                  aria-label="Enviar"
+                  sx={{ mb: 0.5 }}
+                >
+                  <SendIcon />
+                </IconButton>
+              </Box>
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
+                Enter envia · Shift+Enter quebra a linha · As conversas ficam salvas no histórico · Sugestões geradas por
+                IA (Google Gemini) podem conter erros: revise antes de registrar o risco.
+              </Typography>
+            </Box>
+          </Box>
+        </Paper>
+      </Box>
     </Box>
   );
 }
