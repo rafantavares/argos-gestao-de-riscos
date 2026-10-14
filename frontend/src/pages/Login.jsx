@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import {
   Alert,
@@ -17,6 +17,9 @@ import { useAuth } from "../contexts/AuthContext";
 import { Logo } from "../components/Logo";
 import IlustracaoRede from "../components/IlustracaoRede";
 import { VERSAO_SISTEMA } from "../constants";
+import { api } from "../services/api";
+
+const TENTATIVAS_LOGIN = 10; // ~1 min no total, o tempo de o servidor acordar
 
 const DIFERENCIAIS = [
   "Recomendação de planos de contingência por aprendizado de máquina",
@@ -31,6 +34,13 @@ export default function Login() {
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [aguardando, setAguardando] = useState("");
+
+  // O servidor gratuito (Render) dorme após 15 min sem uso e leva até ~1 min
+  // para acordar: já o chamamos ao abrir a tela, enquanto o usuário digita.
+  useEffect(() => {
+    api.get("/health", { timeout: 90000 }).catch(() => {});
+  }, []);
 
   if (!carregando && usuario) {
     return <Navigate to="/" replace />;
@@ -41,10 +51,31 @@ export default function Login() {
     setErro("");
     setEnviando(true);
     try {
-      await entrar(email, senha);
-    } catch {
-      setErro("Email ou senha incorretos.");
+      for (let tentativa = 1; tentativa <= TENTATIVAS_LOGIN; tentativa += 1) {
+        try {
+          await entrar(email, senha);
+          return;
+        } catch (e) {
+          const codigo = e.response?.status;
+          if (codigo === 401) {
+            setErro("Email ou senha incorretos.");
+            return;
+          }
+          if (codigo && codigo < 500) {
+            setErro("Não foi possível entrar. Confira o email e a senha.");
+            return;
+          }
+          // Sem resposta ou erro 5xx: o servidor está acordando ou reiniciando.
+          if (tentativa === TENTATIVAS_LOGIN) {
+            setErro("O servidor não respondeu. Tente de novo em alguns instantes.");
+            return;
+          }
+          setAguardando(`O servidor está iniciando, aguarde… (tentativa ${tentativa + 1} de ${TENTATIVAS_LOGIN})`);
+          await new Promise((esperar) => setTimeout(esperar, 6000));
+        }
+      }
     } finally {
+      setAguardando("");
       setEnviando(false);
     }
   }
@@ -150,6 +181,7 @@ export default function Login() {
             onSubmit={aoEnviar}
             sx={{ display: "flex", flexDirection: "column", gap: 2.2 }}
           >
+            {aguardando && <Alert severity="info">{aguardando}</Alert>}
             {erro && <Alert severity="error">{erro}</Alert>}
             <TextField
               label="Email"
