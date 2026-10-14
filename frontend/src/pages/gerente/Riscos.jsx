@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Alert,
   Box,
@@ -268,6 +268,17 @@ export default function Riscos() {
   const [carregando, setCarregando] = useState(true);
   const [dialogoAberto, setDialogoAberto] = useState(false);
   const navigate = useNavigate();
+  const localizacao = useLocation();
+  const [rascunho, setRascunho] = useState(null);
+
+  // Vindo do Assistente IA: abre o "Novo risco" pré-preenchido com a sugestão.
+  useEffect(() => {
+    if (localizacao.state?.rascunho) {
+      setRascunho(localizacao.state.rascunho);
+      setDialogoAberto(true);
+      navigate(localizacao.pathname, { replace: true, state: null });
+    }
+  }, [localizacao.state, localizacao.pathname, navigate]);
 
   async function carregar() {
     setCarregando(true);
@@ -422,8 +433,12 @@ export default function Riscos() {
       <DialogoNovoRisco
         aberto={dialogoAberto}
         projetos={meusProjetos}
-        projetoInicial={filtroProjeto}
-        aoFechar={() => setDialogoAberto(false)}
+        projetoInicial={rascunho?.id_projeto || filtroProjeto}
+        rascunho={rascunho}
+        aoFechar={() => {
+          setDialogoAberto(false);
+          setRascunho(null);
+        }}
         aoCriar={async (dados) => {
           const risco = await servicoRiscos.criar(dados);
           setDialogoAberto(false);
@@ -666,7 +681,7 @@ function PainelAssistente({ analise, carregando, notasAtuais, aoUsarArea, aoApli
 
 const ATRASO_ASSISTENTE_MS = 600;
 
-function DialogoNovoRisco({ aberto, projetos, projetoInicial, aoFechar, aoCriar }) {
+function DialogoNovoRisco({ aberto, projetos, projetoInicial, rascunho, aoFechar, aoCriar }) {
   const [titulo, setTitulo] = useState("");
   const [descricaoImpacto, setDescricaoImpacto] = useState("");
   const [areaAfetada, setAreaAfetada] = useState("");
@@ -689,8 +704,18 @@ function DialogoNovoRisco({ aberto, projetos, projetoInicial, aoFechar, aoCriar 
       setIdProjeto(projetoInicial || (projetos.length === 1 ? projetos[0].id : ""));
       setErro("");
       setAnalise(null);
+      if (rascunho) {
+        setTitulo(rascunho.titulo || "");
+        setDescricaoImpacto(rascunho.descricao_impacto || "");
+        setAreaAfetada(rascunho.area_afetada || "");
+        setProbabilidade(rascunho.probabilidade || "");
+        setImpacto(rascunho.impacto || "");
+        setMitigacao(rascunho.mitigacao || "");
+        setContingencia(rascunho.contingencia || "");
+        setGatilho(rascunho.gatilho || "");
+      }
     }
-  }, [aberto, projetoInicial, projetos]);
+  }, [aberto, projetoInicial, projetos, rascunho]);
 
   // Consulta o assistente enquanto o gerente digita (com pequena espera para
   // não chamar a API a cada tecla).

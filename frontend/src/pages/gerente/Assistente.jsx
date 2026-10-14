@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Alert,
   Box,
@@ -13,6 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import PostAddIcon from "@mui/icons-material/PostAdd";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import SendIcon from "@mui/icons-material/Send";
 import { chat as servicoChat, projetos as servicoProjetos } from "../../services/api";
@@ -73,7 +75,7 @@ function TextoFormatado({ texto }) {
   });
 }
 
-function Mensagem({ mensagem }) {
+function Mensagem({ mensagem, acao }) {
   const doUsuario = mensagem.papel === "usuario";
   if (doUsuario) {
     return (
@@ -114,6 +116,7 @@ function Mensagem({ mensagem }) {
       </Box>
       <Box sx={{ minWidth: 0, flex: 1, wordBreak: "break-word", pt: 0.5 }}>
         <TextoFormatado texto={mensagem.texto} />
+        {acao}
       </Box>
     </Box>
   );
@@ -129,7 +132,23 @@ export default function Assistente() {
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
+  const [gerandoRascunho, setGerandoRascunho] = useState(false);
   const fimRef = useRef(null);
+  const navigate = useNavigate();
+
+  // Leva a sugestão para o formulário "Novo risco", já preenchido, para revisão.
+  async function preencherNovoRisco() {
+    setGerandoRascunho(true);
+    setErro("");
+    try {
+      const rascunho = await servicoChat.rascunho(idProjeto, mensagens);
+      navigate("/gerente/riscos", { state: { rascunho: { ...rascunho, id_projeto: idProjeto } } });
+    } catch (e) {
+      const detalhe = e.response?.data?.detail;
+      setErro(typeof detalhe === "string" ? detalhe : "Não foi possível montar o rascunho do risco.");
+      setGerandoRascunho(false);
+    }
+  }
 
   useEffect(() => {
     servicoProjetos
@@ -271,7 +290,26 @@ export default function Assistente() {
             ) : (
               <Stack spacing={3}>
                 {mensagens.map((mensagem, i) => (
-                  <Mensagem key={i} mensagem={mensagem} />
+                  <Mensagem
+                    key={i}
+                    mensagem={mensagem}
+                    acao={
+                      mensagem.papel === "assistente" &&
+                      i === mensagens.length - 1 && (
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="secondary"
+                          startIcon={gerandoRascunho ? <CircularProgress size={14} color="inherit" /> : <PostAddIcon />}
+                          onClick={preencherNovoRisco}
+                          disabled={gerandoRascunho || enviando}
+                          sx={{ mt: 1.5 }}
+                        >
+                          {gerandoRascunho ? "Montando o rascunho..." : "Preencher novo risco com esta sugestão"}
+                        </Button>
+                      )
+                    }
+                  />
                 ))}
                 {enviando && (
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, color: "text.secondary", pl: 0.5 }}>

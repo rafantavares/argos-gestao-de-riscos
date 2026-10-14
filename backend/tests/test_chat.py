@@ -12,7 +12,7 @@ PERGUNTA = [{"papel": "usuario", "texto": "O fornecedor do servidor está atrasa
 def llm_simulado(monkeypatch):
     chamadas = []
 
-    def responder(instrucoes, mensagens):
+    def responder(instrucoes, mensagens, formato_json=False):
         chamadas.append({"instrucoes": instrucoes, "mensagens": mensagens})
         return "Sugestão de risco: atraso do fornecedor."
 
@@ -74,7 +74,7 @@ def test_sem_chave_de_api_o_chat_fica_indisponivel(cliente, cabecalho_gerente, p
 
 
 def test_falha_do_provedor_vira_502(cliente, cabecalho_gerente, projeto_com_gerente, monkeypatch):
-    def falhar(instrucoes, mensagens):
+    def falhar(instrucoes, mensagens, formato_json=False):
         raise llm.FalhaNoProvedor("Limite de uso da IA atingido.")
 
     monkeypatch.setattr(llm, "responder", falhar)
@@ -163,3 +163,39 @@ def test_lista_de_modelos_sem_repetidos(monkeypatch):
     monkeypatch.setattr(configuracoes, "gemini_model", "a")
     monkeypatch.setattr(configuracoes, "gemini_modelos_reserva", "b, a, ,c")
     assert llm.modelos_em_ordem() == ["a", "b", "c"]
+
+
+# ---------- rascunho de risco a partir da conversa ----------
+
+
+def test_rascunho_interpreta_e_valida_os_campos():
+    texto = (
+        '```json\n{"titulo": "Saida de dev", "area_afetada": "equipe", '
+        '"probabilidade": 9, "impacto": "4", "gatilho": "aviso previo"}\n```'
+    )
+    r = chat.interpretar_rascunho(texto)
+    assert r["titulo"] == "Saida de dev" and r["area_afetada"] == "equipe"
+    assert r["probabilidade"] == 5 and r["impacto"] == 4 and r["mitigacao"] == ""
+
+
+def test_rascunho_descarta_area_invalida_e_texto_quebrado():
+    assert chat.interpretar_rascunho('{"area_afetada": "marte"}')["area_afetada"] is None
+    assert chat.interpretar_rascunho("sem json aqui")["titulo"] == ""
+
+
+def test_endpoint_de_rascunho(cliente, cabecalho_gerente, projeto_com_gerente, monkeypatch):
+    pedidos = []
+
+    def responder(instrucoes, mensagens, formato_json=False):
+        pedidos.append((instrucoes, mensagens, formato_json))
+        return '{"titulo": "Atraso do fornecedor", "area_afetada": "fornecedores", "probabilidade": 3, "impacto": 4}'
+
+    monkeypatch.setattr(llm, "responder", responder)
+    conversa = [*PERGUNTA, {"papel": "assistente", "texto": "Sugestão..."}]
+    resposta = cliente.post(
+        "/chat/rascunho", headers=cabecalho_gerente, json={"id_projeto": projeto_com_gerente.id, "mensagens": conversa}
+    )
+    assert resposta.status_code == 200
+    assert resposta.json()["area_afetada"] == "fornecedores"
+    instrucoes, mensagens, formato_json = pedidos[0]
+    assert formato_json and "JSON" in instrucoes and mensagens[-1]["papel"] == "usuario"

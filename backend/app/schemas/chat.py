@@ -1,5 +1,5 @@
 """Schemas Pydantic do chat com o assistente de IA."""
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -17,3 +17,16 @@ class ChatEntrada(BaseModel):
 
 class ChatResposta(BaseModel):
     resposta: str
+
+
+class RascunhoRisco(BaseModel):
+    """Campos do "Novo risco" extraídos da conversa; o gerente revisa antes de salvar."""
+
+    titulo: str = ""
+    area_afetada: Optional[str] = None
+    descricao_impacto: str = ""
+    probabilidade: Optional[int] = None
+    impacto: Optional[int] = None
+    mitigacao: str = ""
+    contingencia: str = ""
+    gatilho: str = ""

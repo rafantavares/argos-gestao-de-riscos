@@ -103,3 +103,51 @@ def montar_instrucoes(projeto, riscos: List, planos: List) -> str:
             + ("\n".join(linhas_planos) if linhas_planos else "- catálogo vazio"),
         ]
     )
+
+
+TAREFA_RASCUNHO = """TAREFA AGORA: com base na conversa, devolva SOMENTE um objeto JSON (sem texto
+fora dele) com o risco que foi discutido por último, nas chaves: "titulo",
+"area_afetada" (exatamente um destes valores: {areas}), "descricao_impacto",
+"probabilidade" (inteiro 1-5), "impacto" (inteiro 1-5), "mitigacao",
+"contingencia", "gatilho". Use string vazia no que não foi discutido."""
+
+PEDIDO_RASCUNHO = "Gere o JSON do risco discutido para eu revisar no formulário Novo risco."
+
+
+def instrucoes_rascunho(base: str) -> str:
+    areas = ", ".join(a.value for a in AreaAfetada)
+    return f"{base}\n\n{TAREFA_RASCUNHO.format(areas=areas)}"
+
+
+def interpretar_rascunho(texto: str) -> dict:
+    """Converte a resposta do modelo em campos válidos (descarta o que vier fora do padrão)."""
+    import json
+
+    inicio, fim = texto.find("{"), texto.rfind("}")
+    try:
+        dados = json.loads(texto[inicio : fim + 1]) if inicio >= 0 else {}
+    except ValueError:
+        dados = {}
+    if isinstance(dados, list):
+        dados = dados[0] if dados and isinstance(dados[0], dict) else {}
+
+    def nota(valor):
+        try:
+            return min(5, max(1, int(valor)))
+        except (TypeError, ValueError):
+            return None
+
+    def texto_de(chave, limite):
+        return str(dados.get(chave) or "").strip()[:limite]
+
+    area = str(dados.get("area_afetada") or "").strip()
+    return {
+        "titulo": texto_de("titulo", 200),
+        "area_afetada": area if area in {a.value for a in AreaAfetada} else None,
+        "descricao_impacto": texto_de("descricao_impacto", 2000),
+        "probabilidade": nota(dados.get("probabilidade")),
+        "impacto": nota(dados.get("impacto")),
+        "mitigacao": texto_de("mitigacao", 2000),
+        "contingencia": texto_de("contingencia", 2000),
+        "gatilho": texto_de("gatilho", 1000),
+    }

@@ -79,6 +79,8 @@ export const riscos = {
 export const chat = {
   conversar: (idProjeto, mensagens) =>
     api.post("/chat", { id_projeto: idProjeto, mensagens }).then((r) => r.data),
+  rascunho: (idProjeto, mensagens) =>
+    api.post("/chat/rascunho", { id_projeto: idProjeto, mensagens }).then((r) => r.data),
 };
 
 // --- recomendacoes ---

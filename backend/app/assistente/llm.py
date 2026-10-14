@@ -50,7 +50,7 @@ def modelos_em_ordem() -> List[str]:
     return list(dict.fromkeys(ordem))  # sem repetidos, mantendo a ordem
 
 
-def responder(instrucoes: str, mensagens: List[dict]) -> str:
+def responder(instrucoes: str, mensagens: List[dict], formato_json: bool = False) -> str:
     """`mensagens`: dicts com `papel` ("usuario" | "assistente") e `texto`,
     em ordem cronológica, terminando numa mensagem do usuário."""
     if not configuracoes.gemini_api_key:
@@ -71,6 +71,7 @@ def responder(instrucoes: str, mensagens: List[dict]) -> str:
         system_instruction=instrucoes,
         temperature=0.4,
         max_output_tokens=2048,
+        response_mime_type="application/json" if formato_json else None,
         # Sem ferramentas: desliga a chamada automática de funções do SDK.
         automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
     )
