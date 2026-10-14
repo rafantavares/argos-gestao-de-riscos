@@ -23,6 +23,7 @@ import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import SpaceDashboardOutlinedIcon from "@mui/icons-material/SpaceDashboardOutlined";
 import MemoryIcon from "@mui/icons-material/Memory";
 import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { ml as servicoMl, riscos as servicoRiscos } from "../services/api";
@@ -91,6 +92,13 @@ const ITENS_GERENTE = [
   },
 ];
 
+const ITEM_AJUDA = {
+  rotulo: "Ajuda",
+  dica: "Escalas, exposição, ciclo de vida do risco e base normativa (PMBOK / MPS.BR)",
+  caminho: "/ajuda",
+  icone: <HelpOutlineIcon />,
+};
+
 function algoritmoAtivo(metricas) {
   if (!metricas) return null;
   const candidatos = ALGORITMOS.filter((a) => metricas[a]);
@@ -121,7 +129,7 @@ export default function AppLayout({ children }) {
   }, [usuario.perfil, localizacao.pathname]);
 
   const ehAdmin = usuario.perfil === "admin";
-  const itens = ehAdmin ? ITENS_ADMIN : ITENS_GERENTE;
+  const itens = [...(ehAdmin ? ITENS_ADMIN : ITENS_GERENTE), ITEM_AJUDA];
   const cargo = ehAdmin ? "Administrador" : "Gerente de projetos";
   const ativo = algoritmoAtivo(metricas);
 

@@ -16,7 +16,14 @@ import {
   MenuItem,
   Paper,
   Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -26,6 +33,9 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DownloadIcon from "@mui/icons-material/Download";
 import SearchIcon from "@mui/icons-material/Search";
 import SortIcon from "@mui/icons-material/Sort";
+import GridViewIcon from "@mui/icons-material/GridView";
+import TableRowsIcon from "@mui/icons-material/TableRows";
+import { useAviso } from "../../contexts/FeedbackContext";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import {
@@ -222,6 +232,7 @@ function BarraFiltros({ filtros, alterar, limpar, projetos, total, visiveis }) {
             <MenuItem value="">Todos</MenuItem>
             <MenuItem value="ativos">Ativos (sem encerrados)</MenuItem>
             <MenuItem value="reavaliar">Reavaliação pendente</MenuItem>
+            <MenuItem value="arquivados">Arquivados</MenuItem>
             {STATUS_RISCO.map((s) => (
               <MenuItem key={s.value} value={s.value}>
                 {s.label}
@@ -277,6 +288,14 @@ export default function Riscos() {
   const [meusProjetos, setMeusProjetos] = useState([]);
   const [recomendacoes, setRecomendacoes] = useState([]);
   const [filtros, setFiltros] = useState(lerFiltros);
+  const [vista, setVista] = useState(() => {
+    try {
+      return localStorage.getItem("argos_vista_riscos") || "cartoes";
+    } catch {
+      return "cartoes";
+    }
+  });
+  const avisar = useAviso();
   const filtroProjeto = filtros.projeto;
   const [carregando, setCarregando] = useState(true);
   const [dialogoAberto, setDialogoAberto] = useState(false);
@@ -300,7 +319,7 @@ export default function Riscos() {
   async function carregar() {
     setCarregando(true);
     const [listaRiscos, listaProjetos, listaRecomendacoes] = await Promise.all([
-      servicoRiscos.listarMeus(),
+      servicoRiscos.listarMeus(true),
       servicoProjetos.meus(),
       servicoRecomendacoes.listarMinhas(),
     ]);
@@ -340,11 +359,12 @@ export default function Riscos() {
   const riscosFiltrados = useMemo(() => {
     const termo = normalizar(filtros.busca.trim());
     const lista = riscos.filter((r) => {
+      if ((filtros.status === "arquivados") !== Boolean(r.arquivado)) return false;
       if (filtros.projeto && r.id_projeto !== filtros.projeto) return false;
       if (filtros.gravidade && r.avaliacao_exposicao !== filtros.gravidade) return false;
       if (filtros.status === "ativos" && r.status === "encerrado") return false;
       if (filtros.status === "reavaliar" && !precisaReavaliar(r)) return false;
-      if (filtros.status && !["ativos", "reavaliar"].includes(filtros.status) && r.status !== filtros.status) {
+      if (filtros.status && !["ativos", "reavaliar", "arquivados"].includes(filtros.status) && r.status !== filtros.status) {
         return false;
       }
       if (filtros.area && r.area_afetada !== filtros.area) return false;
@@ -377,6 +397,31 @@ export default function Riscos() {
           </Typography>
         </Box>
         <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
+          <ToggleButtonGroup
+            size="small"
+            exclusive
+            value={vista}
+            onChange={(_, nova) => {
+              if (!nova) return;
+              setVista(nova);
+              try {
+                localStorage.setItem("argos_vista_riscos", nova);
+              } catch {
+                // sem localStorage: a preferência só não é lembrada
+              }
+            }}
+          >
+            <ToggleButton value="cartoes" aria-label="Ver em cartões">
+              <Tooltip title="Cartões">
+                <GridViewIcon fontSize="small" />
+              </Tooltip>
+            </ToggleButton>
+            <ToggleButton value="tabela" aria-label="Ver em tabela">
+              <Tooltip title="Tabela">
+                <TableRowsIcon fontSize="small" />
+              </Tooltip>
+            </ToggleButton>
+          </ToggleButtonGroup>
           <Button
             variant="outlined"
             startIcon={<DownloadIcon />}
@@ -401,7 +446,7 @@ export default function Riscos() {
         alterar={alterarFiltro}
         limpar={() => setFiltros(FILTROS_PADRAO)}
         projetos={meusProjetos}
-        total={riscos.length}
+        total={riscos.filter((r) => !r.arquivado).length}
         visiveis={riscosFiltrados.length}
       />
 
@@ -436,6 +481,13 @@ export default function Riscos() {
             }
           />
         </Paper>
+      ) : vista === "tabela" ? (
+        <TabelaRiscos
+          riscos={riscosFiltrados}
+          projetoPorId={projetoPorId}
+          recomendacaoPorRisco={ultimaRecomendacaoPorRisco}
+          aoAbrir={(risco) => navigate(`/gerente/riscos/${risco.id}/recomendacao`)}
+        />
       ) : (
         <Grid container spacing={2}>
           {riscosFiltrados.map((risco) => (
@@ -462,12 +514,71 @@ export default function Riscos() {
         }}
         aoCriar={async (dados) => {
           const risco = await servicoRiscos.criar(dados);
+          avisar(`Risco ${risco.indice} cadastrado.`);
           setDialogoAberto(false);
           carregar();
           navigate(`/gerente/riscos/${risco.id}/recomendacao`);
         }}
       />
     </Box>
+  );
+}
+
+// Visão compacta em tabela (mesma ordenação e filtros dos cartões).
+function TabelaRiscos({ riscos, projetoPorId, recomendacaoPorRisco, aoAbrir }) {
+  return (
+    <Paper sx={{ overflowX: "auto" }}>
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell>Índice</TableCell>
+            <TableCell>Risco</TableCell>
+            <TableCell>Projeto</TableCell>
+            <TableCell>Área</TableCell>
+            <TableCell>Exposição</TableCell>
+            <TableCell>Urgência</TableCell>
+            <TableCell>Status</TableCell>
+            <TableCell>Plano</TableCell>
+            <TableCell>Cadastro</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {riscos.map((risco) => {
+            const rec = recomendacaoPorRisco.get(risco.id);
+            return (
+              <TableRow key={risco.id} hover onClick={() => aoAbrir(risco)} sx={{ cursor: "pointer" }}>
+                <TableCell sx={{ color: "primary.main", fontWeight: 600 }}>{risco.indice}</TableCell>
+                <TableCell sx={{ maxWidth: 320 }}>
+                  <Typography variant="body2" fontWeight={600} noWrap>
+                    {risco.titulo}
+                  </Typography>
+                  {precisaReavaliar(risco) && (
+                    <Typography variant="caption" sx={{ color: "#FB923C", fontWeight: 600 }}>
+                      Reavaliar
+                    </Typography>
+                  )}
+                </TableCell>
+                <TableCell sx={{ whiteSpace: "nowrap" }}>{projetoPorId.get(risco.id_projeto)?.nome ?? "—"}</TableCell>
+                <TableCell>
+                  <ChipArea area={risco.area_afetada} />
+                </TableCell>
+                <TableCell>
+                  <ChipSeveridade probabilidade={risco.probabilidade} impacto={risco.impacto} />
+                </TableCell>
+                <TableCell>
+                  <ChipUrgencia urgencia={risco.urgencia} />
+                </TableCell>
+                <TableCell>
+                  <ChipStatus status={risco.status} />
+                </TableCell>
+                <TableCell>{rec ? <ChipAceite aceita={rec.aceita} /> : "—"}</TableCell>
+                <TableCell sx={{ whiteSpace: "nowrap" }}>{new Date(risco.criado_em).toLocaleDateString("pt-BR")}</TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </Paper>
   );
 }
 

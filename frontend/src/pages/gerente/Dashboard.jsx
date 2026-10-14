@@ -28,6 +28,9 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PendingActionsIcon from "@mui/icons-material/PendingActions";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import NotificationImportantOutlinedIcon from "@mui/icons-material/NotificationImportantOutlined";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { useAviso, useConfirmacao } from "../../contexts/FeedbackContext";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
@@ -40,7 +43,14 @@ import CartaoEstatistica from "../../components/CartaoEstatistica";
 import EstadoVazio from "../../components/EstadoVazio";
 import BarraConfianca from "../../components/BarraConfianca";
 import { ChipCategoria, ChipSeveridade, ChipStatus, ChipUrgencia } from "../../components/Badges";
-import { CATEGORIAS, CORES_CATEGORIA, CORES_SEVERIDADE, nivelSeveridade, pontuacaoSeveridade } from "../../constants";
+import {
+  CATEGORIAS,
+  CORES_CATEGORIA,
+  CORES_SEVERIDADE,
+  nivelSeveridade,
+  pontuacaoSeveridade,
+  precisaReavaliar,
+} from "../../constants";
 import { tendenciaSemanal } from "../../utils/tendencias";
 
 // Preferência do gerente de esconder a lista de ações (fica no navegador).
@@ -60,6 +70,8 @@ export default function Dashboard() {
   const [meusProjetos, setMeusProjetos] = useState([]);
   const [recomendacoes, setRecomendacoes] = useState([]);
   const [respondendo, setRespondendo] = useState(null);
+  const avisar = useAviso();
+  const confirmar = useConfirmacao();
   const [filtroProjeto, setFiltroProjeto] = useState("");
   const [acoesVisiveis, setAcoesVisiveis] = useState(lerAcoesVisiveis);
   const [todasAcoes, setTodasAcoes] = useState(false);
@@ -98,14 +110,45 @@ export default function Dashboard() {
     .filter((r) => r.aceita === null && riscoPorId.has(r.id_risco) && riscosDoFiltro.some((risco) => risco.id === r.id_risco))
     .sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
 
+  // Riscos que pedem ação agora, com o motivo de cada um.
+  const ultimaRecomendacao = new Map();
+  [...recomendacoes]
+    .sort((a, b) => new Date(a.criado_em) - new Date(b.criado_em))
+    .forEach((rec) => ultimaRecomendacao.set(rec.id_risco, rec));
+  const precisamAtencao = riscosAbertos
+    .map((risco) => {
+      const rec = ultimaRecomendacao.get(risco.id);
+      const motivos = [];
+      if (risco.exposicao >= 16 && rec?.aceita !== true) motivos.push({ texto: "Grave sem plano aceito", cor: "#F87171" });
+      if (precisaReavaliar(risco)) motivos.push({ texto: "Reavaliação pendente", cor: "#FB923C" });
+      if (rec && rec.aceita === null && Date.now() - new Date(rec.criado_em) > 7 * 86400000) {
+        motivos.push({ texto: "Recomendação parada há 7+ dias", cor: "#A78BFA" });
+      }
+      return { risco, motivos };
+    })
+    .filter((item) => item.motivos.length > 0)
+    .sort((a, b) => b.motivos.length - a.motivos.length || b.risco.exposicao - a.risco.exposicao);
+
   const contagemPorCategoria = CATEGORIAS.map((c) => riscosDoFiltro.filter((r) => r.categoria === c.value).length);
   const contagemAlta = riscosDoFiltro.filter((r) => nivelSeveridade(r.probabilidade, r.impacto) === "alto").length;
   const tendenciaRiscos = useMemo(() => tendenciaSemanal(riscosDoFiltro), [riscosDoFiltro]);
 
   async function responder(recomendacao, aceita) {
+    if (
+      !aceita &&
+      !(await confirmar({
+        titulo: "Rejeitar o plano recomendado?",
+        mensagem: "O status do risco é mantido e você poderá gerar uma nova recomendação depois.",
+        confirmar: "Rejeitar",
+        perigo: true,
+      }))
+    ) {
+      return;
+    }
     setRespondendo(recomendacao.id);
     try {
       await servicoRecomendacoes.responder(recomendacao.id, aceita);
+      avisar(aceita ? "Plano aceito." : "Recomendação rejeitada.", aceita ? "success" : "info");
       await carregar();
     } finally {
       setRespondendo(null);
@@ -299,6 +342,72 @@ export default function Dashboard() {
           </Paper>
         </Grid>
       </Grid>
+
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+          <NotificationImportantOutlinedIcon sx={{ color: "#FB923C" }} />
+          <Box sx={{ flexGrow: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Typography variant="subtitle1" fontWeight={600}>
+                Precisam de atenção
+              </Typography>
+              {precisamAtencao.length > 0 && (
+                <Chip size="small" label={precisamAtencao.length} sx={{ bgcolor: "rgba(251, 146, 60, 0.15)", color: "#FB923C" }} />
+              )}
+            </Box>
+            <Typography variant="caption" color="text.secondary">
+              Riscos graves sem plano aceito, sem reavaliação há 30 dias ou com recomendação parada
+            </Typography>
+          </Box>
+          {precisamAtencao.length > 5 && (
+            <Button size="small" onClick={() => navigate("/gerente/riscos")}>
+              Ver riscos
+            </Button>
+          )}
+        </Box>
+        {precisamAtencao.length === 0 ? (
+          <EstadoVazio compacto titulo="Tudo em dia" descricao="Nenhum risco pedindo ação agora." />
+        ) : (
+          <Stack spacing={1}>
+            {precisamAtencao.slice(0, 5).map(({ risco, motivos }) => (
+              <Box
+                key={risco.id}
+                onClick={() => navigate(`/gerente/riscos/${risco.id}/recomendacao`)}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  flexWrap: "wrap",
+                  px: 1.5,
+                  py: 1,
+                  borderRadius: 1.5,
+                  cursor: "pointer",
+                  border: "1px solid",
+                  borderColor: "divider",
+                  "&:hover": { borderColor: "primary.main" },
+                }}
+              >
+                <Typography variant="body2" fontWeight={600} sx={{ color: "primary.main" }}>
+                  {risco.indice}
+                </Typography>
+                <Typography variant="body2" sx={{ flex: "1 1 200px", minWidth: 0 }} noWrap>
+                  {risco.titulo}
+                </Typography>
+                <ChipSeveridade probabilidade={risco.probabilidade} impacto={risco.impacto} />
+                {motivos.map((m) => (
+                  <Chip
+                    key={m.texto}
+                    size="small"
+                    label={m.texto}
+                    sx={{ bgcolor: `${m.cor}22`, color: m.cor, fontWeight: 600 }}
+                  />
+                ))}
+                <ChevronRightIcon sx={{ color: "text.secondary" }} />
+              </Box>
+            ))}
+          </Stack>
+        )}
+      </Paper>
 
       <Paper sx={{ p: 2 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: acoesVisiveis ? 1.5 : 0 }}>

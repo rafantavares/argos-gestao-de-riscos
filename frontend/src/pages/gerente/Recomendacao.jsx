@@ -23,8 +23,11 @@ import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import ShieldIcon from "@mui/icons-material/Shield";
+import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
+import UnarchiveOutlinedIcon from "@mui/icons-material/UnarchiveOutlined";
 import { recomendacoes as servicoRecomendacoes, riscos as servicoRiscos } from "../../services/api";
 import {
+  AREAS_AFETADAS,
   CATEGORIAS,
   CORES_CATEGORIA,
   CORES_SEVERIDADE,
@@ -40,6 +43,8 @@ import {
 } from "../../constants";
 import BarraConfianca from "../../components/BarraConfianca";
 import EvolucaoExposicao from "../../components/EvolucaoExposicao";
+import AnexosRisco from "../../components/AnexosRisco";
+import { useAviso, useConfirmacao } from "../../contexts/FeedbackContext";
 import { ChipArea, ChipSeveridade, ChipStatus } from "../../components/Badges";
 
 const CORES_NIVEL_TEXTO = { 1: "#4ADE80", 2: "#A3E635", 3: "#FBBF24", 4: "#FB923C", 5: "#F87171", baixa: "#4ADE80", baixo: "#4ADE80", media: "#FBBF24", medio: "#FBBF24", alta: "#F87171", alto: "#F87171" };
@@ -97,6 +102,8 @@ export default function Recomendacao() {
   const [processando, setProcessando] = useState(false);
   const [confirmacao, setConfirmacao] = useState(null); // { aceita: bool }
   const [erro, setErro] = useState("");
+  const avisar = useAviso();
+  const confirmar = useConfirmacao();
   // Evita gerar duas recomendações quando o efeito roda duas vezes (StrictMode em dev).
   const carregandoRef = useRef(false);
 
@@ -135,12 +142,24 @@ export default function Recomendacao() {
   }, [idRisco]);
 
   async function responder(aceita) {
+    if (
+      !aceita &&
+      !(await confirmar({
+        titulo: "Rejeitar o plano recomendado?",
+        mensagem: "O status do risco é mantido e você poderá gerar uma nova recomendação depois.",
+        confirmar: "Rejeitar",
+        perigo: true,
+      }))
+    ) {
+      return;
+    }
     setProcessando(true);
     setErro("");
     try {
       const atualizada = await servicoRecomendacoes.responder(recomendacao.id, aceita);
       setRecomendacao(atualizada);
       setConfirmacao({ aceita });
+      avisar(aceita ? "Plano aceito." : "Recomendação rejeitada.", aceita ? "success" : "info");
       // O aceite muda o status do risco no backend (em_tratamento).
       const riscoAtualizado = await servicoRiscos.obter(idRisco);
       setRisco(riscoAtualizado);
@@ -165,17 +184,52 @@ export default function Recomendacao() {
   }
 
   async function atualizarStatus() {
+    if (
+      novoStatus === "encerrado" &&
+      !(await confirmar({
+        titulo: "Encerrar o risco?",
+        mensagem: "Encerrado é o estado final: o status não poderá mais ser alterado nem o risco reavaliado.",
+        confirmar: "Encerrar",
+        perigo: true,
+      }))
+    ) {
+      return;
+    }
     setAtualizandoStatus(true);
     setErro("");
     try {
       const atualizado = await servicoRiscos.atualizarStatus(idRisco, novoStatus, comentarioStatus || undefined);
       setRisco(atualizado);
       setComentarioStatus("");
+      avisar("Status atualizado.");
       await carregarHistorico();
     } catch (e) {
       setErro(e.response?.data?.detail ?? "Não foi possível atualizar o status.");
     } finally {
       setAtualizandoStatus(false);
+    }
+  }
+
+  async function alternarArquivo() {
+    const arquivar = !risco.arquivado;
+    if (
+      arquivar &&
+      !(await confirmar({
+        titulo: "Arquivar o risco?",
+        mensagem: "Ele sai das listas, dos painéis, do modelo e do assistente, mas nada é apagado. Dá para restaurar pelo filtro de status \"Arquivados\" na página Riscos.",
+        confirmar: "Arquivar",
+        perigo: true,
+      }))
+    ) {
+      return;
+    }
+    try {
+      await servicoRiscos.arquivar(risco.id, arquivar);
+      avisar(arquivar ? "Risco arquivado." : "Risco restaurado.");
+      if (arquivar) navigate("/gerente/riscos");
+      else setRisco({ ...risco, arquivado: false });
+    } catch {
+      avisar("Não foi possível arquivar o risco.", "error");
     }
   }
 
@@ -197,9 +251,22 @@ export default function Recomendacao() {
       <Button startIcon={<ArrowBackIcon />} size="small" onClick={() => navigate("/gerente/riscos")} sx={{ mb: 1 }}>
         Voltar para riscos
       </Button>
-      <Typography variant="h5" fontWeight={600} sx={{ mb: 0.5 }}>
-        Recomendação de plano de contingência
-      </Typography>
+      <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
+        <Typography variant="h5" fontWeight={600} sx={{ mb: 0.5, flexGrow: 1 }}>
+          Recomendação de plano de contingência
+        </Typography>
+        {risco && (
+          <Button
+            size="small"
+            color={risco.arquivado ? "primary" : "inherit"}
+            startIcon={risco.arquivado ? <UnarchiveOutlinedIcon /> : <ArchiveOutlinedIcon />}
+            onClick={alternarArquivo}
+            sx={{ color: risco.arquivado ? undefined : "text.secondary" }}
+          >
+            {risco.arquivado ? "Restaurar" : "Arquivar"}
+          </Button>
+        )}
+      </Box>
       {risco && (
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
           {risco.indice} — {risco.titulo}
@@ -384,6 +451,8 @@ export default function Recomendacao() {
 
       {risco && !confirmacao && <EvolucaoExposicao risco={risco} aoReavaliar={setRisco} />}
 
+      {risco && !confirmacao && <AnexosRisco idRisco={risco.id} />}
+
       {risco && (
         <Paper sx={{ p: 3 }}>
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
@@ -460,45 +529,50 @@ export default function Recomendacao() {
   );
 }
 
-// Registro do risco (formato MR-MPS-SW): identificação, avaliação e os campos de
-// tratamento, que o gerente revisa e refina (podem vir pré-preenchidos pela IA).
+// Registro do risco (formato MR-MPS-SW): identificação e tratamento, editáveis
+// pelo gerente (podem vir pré-preenchidos pela IA). As notas de impacto e
+// probabilidade mudam pela reavaliação, que guarda o histórico.
+const CAMPOS_REGISTRO = [
+  "titulo",
+  "area_afetada",
+  "urgencia",
+  "orcamento_impacto",
+  "descricao_impacto",
+  "mitigacao",
+  "contingencia",
+  "gatilho",
+];
+
+function valoresDoRisco(risco) {
+  return Object.fromEntries(CAMPOS_REGISTRO.map((campo) => [campo, risco[campo] ?? ""]));
+}
+
 function RegistroRisco({ risco, aoSalvar }) {
-  const [descricaoImpacto, setDescricaoImpacto] = useState(risco.descricao_impacto ?? "");
-  const [mitigacao, setMitigacao] = useState(risco.mitigacao ?? "");
-  const [contingencia, setContingencia] = useState(risco.contingencia ?? "");
-  const [gatilho, setGatilho] = useState(risco.gatilho ?? "");
+  const [valores, setValores] = useState(() => valoresDoRisco(risco));
   const [salvando, setSalvando] = useState(false);
-  const [mensagem, setMensagem] = useState(null); // { tipo, texto }
+  const avisar = useAviso();
 
   // Reflete o que o backend gravou (ex.: pré-preenchimento ao aceitar o plano).
   useEffect(() => {
-    setDescricaoImpacto(risco.descricao_impacto ?? "");
-    setMitigacao(risco.mitigacao ?? "");
-    setContingencia(risco.contingencia ?? "");
-    setGatilho(risco.gatilho ?? "");
-  }, [risco.descricao_impacto, risco.mitigacao, risco.contingencia, risco.gatilho]);
+    setValores(valoresDoRisco(risco));
+  }, [risco]);
 
-  const alterado =
-    descricaoImpacto !== (risco.descricao_impacto ?? "") ||
-    mitigacao !== (risco.mitigacao ?? "") ||
-    contingencia !== (risco.contingencia ?? "") ||
-    gatilho !== (risco.gatilho ?? "");
+  const alterado = CAMPOS_REGISTRO.some((campo) => valores[campo] !== (risco[campo] ?? ""));
+  const valido = valores.titulo.trim().length >= 3 && valores.descricao_impacto.trim().length >= 5;
+  const campo = (nome) => ({
+    value: valores[nome],
+    onChange: (e) => setValores((atuais) => ({ ...atuais, [nome]: e.target.value })),
+    fullWidth: true,
+  });
 
   async function salvar() {
     setSalvando(true);
-    setMensagem(null);
     try {
-      const atualizado = await servicoRiscos.atualizarTratamento(risco.id, {
-        descricao_impacto: descricaoImpacto,
-        mitigacao,
-        contingencia,
-        gatilho,
-      });
-      aoSalvar(atualizado);
-      setMensagem({ tipo: "success", texto: "Registro atualizado." });
+      aoSalvar(await servicoRiscos.atualizarTratamento(risco.id, valores));
+      avisar("Registro atualizado.");
     } catch (e) {
       const detalhe = e.response?.data?.detail;
-      setMensagem({ tipo: "error", texto: typeof detalhe === "string" ? detalhe : "Não foi possível salvar. Verifique os campos." });
+      avisar(typeof detalhe === "string" ? detalhe : "Não foi possível salvar. Verifique os campos.", "error");
     } finally {
       setSalvando(false);
     }
@@ -515,42 +589,45 @@ function RegistroRisco({ risco, aoSalvar }) {
         <ChipSeveridade probabilidade={risco.probabilidade} impacto={risco.impacto} />
       </Box>
       <Stack spacing={2}>
-        <TextField
-          label="Descrição do impacto"
-          value={descricaoImpacto}
-          onChange={(e) => setDescricaoImpacto(e.target.value)}
-          multiline
-          minRows={2}
-          fullWidth
-        />
-        <TextField
-          label="Mitigação (ação preventiva)"
-          value={mitigacao}
-          onChange={(e) => setMitigacao(e.target.value)}
-          multiline
-          minRows={2}
-          fullWidth
-        />
-        <TextField
-          label="Contingência (ação reativa)"
-          value={contingencia}
-          onChange={(e) => setContingencia(e.target.value)}
-          multiline
-          minRows={2}
-          fullWidth
-        />
+        <TextField label="Risco (título)" {...campo("titulo")} inputProps={{ maxLength: 200 }} />
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+          <TextField select label="Área afetada" {...campo("area_afetada")}>
+            {AREAS_AFETADAS.map((a) => (
+              <MenuItem key={a.value} value={a.value}>
+                {a.label}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField select label="Urgência" {...campo("urgencia")}>
+            {URGENCIAS.map((u) => (
+              <MenuItem key={u.value} value={u.value}>
+                {u.label}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField select label="Impacto no orçamento" {...campo("orcamento_impacto")}>
+            {ORCAMENTOS_IMPACTO.map((o) => (
+              <MenuItem key={o.value} value={o.value}>
+                {o.label}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Stack>
+        <TextField label="Descrição do impacto" {...campo("descricao_impacto")} multiline minRows={2} />
+        <TextField label="Mitigação (ação preventiva)" {...campo("mitigacao")} multiline minRows={2} />
+        <TextField label="Contingência (ação reativa)" {...campo("contingencia")} multiline minRows={2} />
         <TextField
           label="Gatilho"
-          value={gatilho}
-          onChange={(e) => setGatilho(e.target.value)}
+          {...campo("gatilho")}
           multiline
           minRows={2}
-          fullWidth
           helperText="Evento, sintoma ou indicador que avisa a hora de acionar a contingência."
         />
-        {mensagem && <Alert severity={mensagem.tipo}>{mensagem.texto}</Alert>}
+        <Typography variant="caption" color="text.secondary">
+          As notas de impacto e probabilidade mudam pela reavaliação (abaixo), que guarda o histórico da exposição.
+        </Typography>
         <Box>
-          <Button variant="contained" disabled={salvando || !alterado || descricaoImpacto.trim().length < 5} onClick={salvar}>
+          <Button variant="contained" disabled={salvando || !alterado || !valido} onClick={salvar}>
             {salvando ? "Salvando..." : "Salvar registro"}
           </Button>
         </Box>

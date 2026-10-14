@@ -29,7 +29,7 @@ Responda ao Rafael em português, de forma objetiva.
 ## Rodar e testar
 
 - Testes: `cd backend && python -m pytest` (SQLite em memória, não usa rede
-  nem o Supabase; ML e Gemini simulados). 190 testes.
+  nem o Supabase; ML e Gemini simulados). 196 testes.
 - Backend local: `cd backend && uvicorn app.main:app --reload --port 8000`
   (precisa de `DATABASE_URL` no `.env`). Frontend: `cd frontend && npm run dev`
   (porta 5173 — o CORS local espera exatamente essa porta).

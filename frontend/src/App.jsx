@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import AppLayout from "./components/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth } from "./contexts/AuthContext";
+import Ajuda from "./pages/Ajuda";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
 import Gerentes from "./pages/admin/Gerentes";
@@ -114,6 +115,15 @@ export default function App() {
         element={
           <PaginaProtegida perfil="gerente">
             <Assistente />
+          </PaginaProtegida>
+        }
+      />
+
+      <Route
+        path="/ajuda"
+        element={
+          <PaginaProtegida>
+            <Ajuda />
           </PaginaProtegida>
         }
       />

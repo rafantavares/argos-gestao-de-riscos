@@ -62,7 +62,18 @@ export const projetos = {
 // --- riscos ---
 export const riscos = {
   criar: (dados) => api.post("/riscos", dados).then((r) => r.data),
-  listarMeus: () => api.get("/riscos").then((r) => r.data),
+  listarMeus: (incluirArquivados = false) =>
+    api.get("/riscos", { params: incluirArquivados ? { incluir_arquivados: true } : {} }).then((r) => r.data),
+  arquivar: (id, arquivado) => api.patch(`/riscos/${id}/arquivo`, { arquivado }).then((r) => r.data),
+  anexos: (id) => api.get(`/riscos/${id}/anexos`).then((r) => r.data),
+  anexar: (id, arquivo) => {
+    const formulario = new FormData();
+    formulario.append("arquivo", arquivo);
+    return api.post(`/riscos/${id}/anexos`, formulario).then((r) => r.data);
+  },
+  baixarAnexo: (id, idAnexo) =>
+    api.get(`/riscos/${id}/anexos/${idAnexo}`, { responseType: "blob" }).then((r) => r.data),
+  excluirAnexo: (id, idAnexo) => api.delete(`/riscos/${id}/anexos/${idAnexo}`),
   obter: (id) => api.get(`/riscos/${id}`).then((r) => r.data),
   listarPorProjeto: (idProjeto) => api.get(`/riscos/projeto/${idProjeto}`).then((r) => r.data),
   atualizarStatus: (id, statusNovo, comentario) =>
