@@ -45,6 +45,7 @@ import {
   URGENCIAS,
   faixaExposicao,
   pontuacaoSeveridade,
+  precisaReavaliar,
   rotulo,
 } from "../../constants";
 import { ChipAceite, ChipArea, ChipSeveridade, ChipStatus, ChipUrgencia } from "../../components/Badges";
@@ -219,6 +220,7 @@ function BarraFiltros({ filtros, alterar, limpar, projetos, total, visiveis }) {
           <TextField select label="Status" {...campo("status")}>
             <MenuItem value="">Todos</MenuItem>
             <MenuItem value="ativos">Ativos (sem encerrados)</MenuItem>
+            <MenuItem value="reavaliar">Reavaliação pendente</MenuItem>
             {STATUS_RISCO.map((s) => (
               <MenuItem key={s.value} value={s.value}>
                 {s.label}
@@ -326,7 +328,10 @@ export default function Riscos() {
       if (filtros.projeto && r.id_projeto !== filtros.projeto) return false;
       if (filtros.gravidade && r.avaliacao_exposicao !== filtros.gravidade) return false;
       if (filtros.status === "ativos" && r.status === "encerrado") return false;
-      if (filtros.status && filtros.status !== "ativos" && r.status !== filtros.status) return false;
+      if (filtros.status === "reavaliar" && !precisaReavaliar(r)) return false;
+      if (filtros.status && !["ativos", "reavaliar"].includes(filtros.status) && r.status !== filtros.status) {
+        return false;
+      }
       if (filtros.area && r.area_afetada !== filtros.area) return false;
       if (
         filtros.recomendacao &&
@@ -481,7 +486,18 @@ function CartaoRisco({ risco, projeto, recomendacao, aoAbrir }) {
             {projeto?.nome ?? "—"} · {new Date(risco.criado_em).toLocaleDateString("pt-BR")}
           </Typography>
         </Box>
-        <ChipStatus status={risco.status} />
+        <Stack spacing={0.5} alignItems="flex-end">
+          <ChipStatus status={risco.status} />
+          {precisaReavaliar(risco) && (
+            <Tooltip title="Sem reavaliação há 30 dias ou mais (monitoramento contínuo, GPR 17)">
+              <Chip
+                size="small"
+                label="Reavaliar"
+                sx={{ bgcolor: "rgba(251, 146, 60, 0.15)", color: "#FB923C", fontWeight: 600 }}
+              />
+            </Tooltip>
+          )}
+        </Stack>
       </Box>
 
       <Stack direction="row" spacing={0.8} useFlexGap flexWrap="wrap">

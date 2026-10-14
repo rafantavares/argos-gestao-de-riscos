@@ -25,8 +25,8 @@ import MemoryIcon from "@mui/icons-material/Memory";
 import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { ml as servicoMl } from "../services/api";
-import { ALGORITMOS, NOMES_ALGORITMOS, VERSAO_SISTEMA, iniciais } from "../constants";
+import { ml as servicoMl, riscos as servicoRiscos } from "../services/api";
+import { ALGORITMOS, NOMES_ALGORITMOS, VERSAO_SISTEMA, iniciais, precisaReavaliar } from "../constants";
 import { Logo } from "./Logo";
 
 const LARGURA_MENU = 248;
@@ -105,9 +105,20 @@ export default function AppLayout({ children }) {
   const localizacao = useLocation();
   const [metricas, setMetricas] = useState(null);
 
+  const [pendentesReavaliacao, setPendentesReavaliacao] = useState(0);
+
   useEffect(() => {
     servicoMl.metricas().then(setMetricas).catch(() => setMetricas(null));
   }, []);
+
+  // Badge de riscos que precisam de reavaliação (atualiza ao trocar de página).
+  useEffect(() => {
+    if (usuario.perfil !== "gerente") return;
+    servicoRiscos
+      .listarMeus()
+      .then((lista) => setPendentesReavaliacao(lista.filter(precisaReavaliar).length))
+      .catch(() => setPendentesReavaliacao(0));
+  }, [usuario.perfil, localizacao.pathname]);
 
   const ehAdmin = usuario.perfil === "admin";
   const itens = ehAdmin ? ITENS_ADMIN : ITENS_GERENTE;
@@ -182,6 +193,27 @@ export default function AppLayout({ children }) {
               >
                 <ListItemIcon>{item.icone}</ListItemIcon>
                 <ListItemText primary={item.rotulo} primaryTypographyProps={{ fontSize: 14, fontWeight: 500 }} />
+                {item.caminho === "/gerente/riscos" && pendentesReavaliacao > 0 && (
+                  <Tooltip title={`${pendentesReavaliacao} risco(s) sem reavaliação há 30 dias ou mais`} placement="right">
+                    <Box
+                      component="span"
+                      sx={{
+                        minWidth: 22,
+                        height: 22,
+                        px: 0.75,
+                        borderRadius: 11,
+                        bgcolor: "#FB923C",
+                        color: "#0B0E14",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        display: "grid",
+                        placeItems: "center",
+                      }}
+                    >
+                      {pendentesReavaliacao}
+                    </Box>
+                  </Tooltip>
+                )}
               </ListItemButton>
             </Tooltip>
           ))}

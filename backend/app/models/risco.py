@@ -85,3 +85,8 @@ class Risco(Base):
     reavaliacoes = relationship(
         "ReavaliacaoRisco", back_populates="risco", order_by="ReavaliacaoRisco.criado_em"
     )
+
+    @property
+    def ultima_avaliacao_em(self):
+        """Data da última reavaliação (ou do cadastro, se nunca foi reavaliado)."""
+        return self.reavaliacoes[-1].criado_em if self.reavaliacoes else self.criado_em

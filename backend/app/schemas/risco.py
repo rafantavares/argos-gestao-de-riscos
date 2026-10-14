@@ -53,6 +53,7 @@ class RiscoResposta(RiscoBase):
     status: StatusRisco
     criado_em: datetime
     atualizado_em: datetime
+    ultima_avaliacao_em: Optional[datetime] = None
 
     @computed_field
     @property

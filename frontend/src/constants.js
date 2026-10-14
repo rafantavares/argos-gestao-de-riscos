@@ -193,3 +193,13 @@ export function iniciais(nome) {
     .map((parte) => parte[0].toUpperCase())
     .join("");
 }
+
+// Monitoramento contínuo (MR-MPS-SW:2023, GPR 17): risco ativo sem reavaliação
+// há 30 dias ou mais (mesma regra de backend/app/assistente/monitoramento.py).
+export const DIAS_PARA_REAVALIAR = 30;
+
+export function precisaReavaliar(risco) {
+  if (risco.status === "encerrado") return false;
+  const data = new Date(risco.ultima_avaliacao_em ?? risco.criado_em);
+  return (Date.now() - data.getTime()) / 86400000 >= DIAS_PARA_REAVALIAR;
+}
