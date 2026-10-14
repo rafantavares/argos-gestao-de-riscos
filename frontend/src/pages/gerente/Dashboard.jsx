@@ -209,7 +209,7 @@ export default function Dashboard() {
             {riscos.length === 0 ? (
               <EstadoVazio compacto titulo="Cadastre um risco para ver a matriz preenchida." />
             ) : (
-              <MatrizRisco riscos={riscosAbertos} aoClicarCelula={() => navigate("/gerente/riscos")} />
+              <MatrizRisco riscos={riscosAbertos} aoClicarCelula={(p, i) => navigate("/gerente/riscos", { state: { celula: `${p}-${i}` } })} />
             )}
           </Paper>
         </Grid>

@@ -101,6 +101,7 @@ const FILTROS_PADRAO = {
   status: "ativos",
   area: "",
   recomendacao: "",
+  celula: "", // "probabilidade-impacto", vindo do clique na matriz de risco
 };
 
 // Os filtros ficam na sessão do navegador: ao abrir um risco e voltar, a lista
@@ -250,6 +251,16 @@ function BarraFiltros({ filtros, alterar, limpar, projetos, total, visiveis }) {
         </Box>
       </Box>
       <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 1.5, mt: 1.5 }}>
+        {filtros.celula && (
+          <Chip
+            size="small"
+            color="primary"
+            variant="outlined"
+            label={`Matriz: probabilidade ${filtros.celula.split("-")[0]} × impacto ${filtros.celula.split("-")[1]}`}
+            onDelete={() => alterar("celula", "")}
+            sx={{ mr: "auto" }}
+          />
+        )}
           <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
           {visiveis === total ? `${total} riscos` : `${visiveis} de ${total} riscos`}
         </Typography>
@@ -275,6 +286,10 @@ export default function Riscos() {
 
   // Vindo do Assistente IA: abre o "Novo risco" pré-preenchido com a sugestão.
   useEffect(() => {
+    if (localizacao.state?.celula) {
+      setFiltros({ ...FILTROS_PADRAO, celula: localizacao.state.celula });
+      navigate(localizacao.pathname, { replace: true, state: null });
+    }
     if (localizacao.state?.rascunho) {
       setRascunho(localizacao.state.rascunho);
       setDialogoAberto(true);
@@ -333,6 +348,7 @@ export default function Riscos() {
         return false;
       }
       if (filtros.area && r.area_afetada !== filtros.area) return false;
+      if (filtros.celula && `${r.probabilidade}-${r.impacto}` !== filtros.celula) return false;
       if (
         filtros.recomendacao &&
         situacaoRecomendacao(ultimaRecomendacaoPorRisco.get(r.id)) !== filtros.recomendacao

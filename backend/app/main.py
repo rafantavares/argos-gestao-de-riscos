@@ -1,5 +1,6 @@
 """Ponto de entrada da API FastAPI."""
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,7 +9,20 @@ from app.core.seed import semear_planos_contingencia
 from app.database import Base, SessaoLocal, engine
 from app.routers import auth, chat, ml, planos, projetos, recomendacoes, relatorio, riscos
 
-app = FastAPI(title="Sistema de Gestão de Riscos com Análise Preditiva")
+
+@asynccontextmanager
+async def ciclo_de_vida(_app: FastAPI):
+    """Na subida da API: cria as tabelas que faltarem e semeia o catálogo de planos."""
+    Base.metadata.create_all(bind=engine)
+    sessao = SessaoLocal()
+    try:
+        semear_planos_contingencia(sessao)
+    finally:
+        sessao.close()
+    yield
+
+
+app = FastAPI(title="Sistema de Gestão de Riscos com Análise Preditiva", lifespan=ciclo_de_vida)
 
 _origens_padrao = "http://localhost:5173,http://localhost:3000"
 # Endereços públicos do frontend (Vercel), aceitos sempre, além dos que vierem
@@ -33,16 +47,6 @@ app.include_router(planos.roteador)
 app.include_router(ml.roteador)
 app.include_router(relatorio.roteador)
 app.include_router(chat.roteador)
-
-
-@app.on_event("startup")
-def preparar_banco() -> None:
-    Base.metadata.create_all(bind=engine)
-    sessao = SessaoLocal()
-    try:
-        semear_planos_contingencia(sessao)
-    finally:
-        sessao.close()
 
 
 @app.get("/")
