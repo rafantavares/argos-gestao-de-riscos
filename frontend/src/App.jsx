@@ -4,6 +4,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth } from "./contexts/AuthContext";
 import Ajuda from "./pages/Ajuda";
 import Login from "./pages/Login";
+import Perfil from "./pages/Perfil";
 import AdminDashboard from "./pages/admin/Dashboard";
 import Gerentes from "./pages/admin/Gerentes";
 import PlanosContingencia from "./pages/admin/PlanosContingencia";
@@ -124,6 +125,15 @@ export default function App() {
         element={
           <PaginaProtegida>
             <Ajuda />
+          </PaginaProtegida>
+        }
+      />
+
+      <Route
+        path="/perfil"
+        element={
+          <PaginaProtegida>
+            <Perfil />
           </PaginaProtegida>
         }
       />

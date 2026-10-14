@@ -40,6 +40,7 @@ import {
 } from "../../services/api";
 import MatrizRisco from "../../components/MatrizRisco";
 import CartaoEstatistica from "../../components/CartaoEstatistica";
+import PanoramaRisco from "../../components/PanoramaRisco";
 import EstadoVazio from "../../components/EstadoVazio";
 import BarraConfianca from "../../components/BarraConfianca";
 import { ChipCategoria, ChipSeveridade, ChipStatus, ChipUrgencia } from "../../components/Badges";
@@ -242,6 +243,8 @@ export default function Dashboard() {
           </Paper>
         </Grid>
       </Grid>
+
+      <PanoramaRisco riscos={riscosAbertos} />
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={12} md={5}>

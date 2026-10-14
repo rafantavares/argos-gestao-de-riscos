@@ -3,6 +3,7 @@ import {
   AppBar,
   Avatar,
   Box,
+  Button,
   Divider,
   Drawer,
   IconButton,
@@ -92,13 +93,6 @@ const ITENS_GERENTE = [
   },
 ];
 
-const ITEM_AJUDA = {
-  rotulo: "Ajuda",
-  dica: "Escalas, exposição, ciclo de vida do risco e base normativa (PMBOK / MPS.BR)",
-  caminho: "/ajuda",
-  icone: <HelpOutlineIcon />,
-};
-
 function algoritmoAtivo(metricas) {
   if (!metricas) return null;
   const candidatos = ALGORITMOS.filter((a) => metricas[a]);
@@ -129,7 +123,7 @@ export default function AppLayout({ children }) {
   }, [usuario.perfil, localizacao.pathname]);
 
   const ehAdmin = usuario.perfil === "admin";
-  const itens = [...(ehAdmin ? ITENS_ADMIN : ITENS_GERENTE), ITEM_AJUDA];
+  const itens = ehAdmin ? ITENS_ADMIN : ITENS_GERENTE;
   const cargo = ehAdmin ? "Administrador" : "Gerente de projetos";
   const ativo = algoritmoAtivo(metricas);
 
@@ -140,9 +134,39 @@ export default function AppLayout({ children }) {
           <Box sx={{ flexGrow: 1 }}>
             <Logo size={26} fontSize={18} />
           </Box>
-          <Typography variant="body2" color="text.secondary" sx={{ display: { xs: "none", sm: "block" } }}>
-            {usuario.nome}
-          </Typography>
+          <Button
+            variant={localizacao.pathname === "/ajuda" ? "contained" : "outlined"}
+            color="secondary"
+            size="small"
+            startIcon={<HelpOutlineIcon />}
+            onClick={() => navigate("/ajuda")}
+            sx={{ fontWeight: 700, borderWidth: 2, "&:hover": { borderWidth: 2 } }}
+          >
+            Ajuda
+          </Button>
+          <Tooltip title="Meu perfil">
+            <Button
+              color="inherit"
+              onClick={() => navigate("/perfil")}
+              sx={{ textTransform: "none", gap: 1, px: 1, color: "text.secondary" }}
+            >
+              <Avatar
+                sx={{
+                  width: 28,
+                  height: 28,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  bgcolor: ehAdmin ? "secondary.main" : "primary.main",
+                  color: "#0B0E14",
+                }}
+              >
+                {iniciais(usuario.nome)}
+              </Avatar>
+              <Box component="span" sx={{ display: { xs: "none", sm: "inline" }, fontSize: 14 }}>
+                {usuario.nome}
+              </Box>
+            </Button>
+          </Tooltip>
           <Tooltip title="Sair da conta">
             <IconButton color="inherit" onClick={sair} aria-label="Sair">
               <LogoutIcon />

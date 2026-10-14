@@ -1,4 +1,14 @@
 import { Chip } from "@mui/material";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import CropFreeIcon from "@mui/icons-material/CropFree";
+import DnsOutlinedIcon from "@mui/icons-material/DnsOutlined";
+import GavelIcon from "@mui/icons-material/Gavel";
+import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
+import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import ScheduleIcon from "@mui/icons-material/Schedule";
+import TouchAppOutlinedIcon from "@mui/icons-material/TouchAppOutlined";
+import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import {
   AREAS_AFETADAS,
   CATEGORIAS,
@@ -54,13 +64,33 @@ export function ChipSeveridade({ probabilidade, impacto, size = "small" }) {
   );
 }
 
+// Ícone de cada área afetada, usado nos chips, filtros e no panorama.
+export const ICONES_AREA = {
+  cronograma: ScheduleIcon,
+  custo: AttachMoneyIcon,
+  escopo: CropFreeIcon,
+  qualidade: VerifiedOutlinedIcon,
+  seguranca_informacao: LockOutlinedIcon,
+  infraestrutura: DnsOutlinedIcon,
+  usabilidade: TouchAppOutlinedIcon,
+  equipe: GroupsOutlinedIcon,
+  fornecedores: LocalShippingOutlinedIcon,
+  legal_regulatorio: GavelIcon,
+};
+
+export function IconeArea({ area, ...props }) {
+  const Icone = ICONES_AREA[area];
+  return Icone ? <Icone {...props} /> : null;
+}
+
 export function ChipArea({ area, size = "small" }) {
   return (
     <Chip
       size={size}
       variant="outlined"
+      icon={<IconeArea area={area} sx={{ fontSize: 16 }} />}
       label={rotulo(AREAS_AFETADAS, area)}
-      sx={{ fontWeight: 600, borderColor: "#3A4356" }}
+      sx={{ fontWeight: 600, borderColor: "#3A4356", "& .MuiChip-icon": { color: "text.secondary" } }}
     />
   );
 }
