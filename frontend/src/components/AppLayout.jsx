@@ -229,20 +229,31 @@ export default function AppLayout({ children }) {
 
         {/* Sobre o sistema (glossário, base normativa e informações do modelo) */}
         <Divider />
-        <Box sx={{ p: 1.5 }}>
-          <Button
-            fullWidth
-            variant={localizacao.pathname === "/sobre" ? "contained" : "outlined"}
-            color="secondary"
-            startIcon={<InfoOutlinedIcon />}
-            onClick={() => navigate("/sobre")}
-            sx={{ fontWeight: 700, borderWidth: 2, "&:hover": { borderWidth: 2 }, justifyContent: "flex-start", py: 1 }}
-          >
-            Sobre o Argos
-          </Button>
-          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1, textAlign: "center" }}>
-            Versão {VERSAO_SISTEMA}
-          </Typography>
+        <Box
+          component="button"
+          type="button"
+          onClick={() => navigate("/sobre")}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.75,
+            width: "100%",
+            px: 2,
+            py: 1.5,
+            border: 0,
+            bgcolor: "transparent",
+            cursor: "pointer",
+            font: "inherit",
+            fontSize: 12,
+            color: localizacao.pathname === "/sobre" ? "text.primary" : "text.secondary",
+            "&:hover": { color: "text.primary" },
+          }}
+        >
+          <InfoOutlinedIcon sx={{ fontSize: 15 }} />
+          <span>Sobre o Argos</span>
+          <Box component="span" sx={{ ml: "auto", opacity: 0.7 }}>
+            v{VERSAO_SISTEMA}
+          </Box>
         </Box>
       </Drawer>
 
