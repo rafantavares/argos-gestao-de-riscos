@@ -7,8 +7,8 @@ from typing import Optional
 import joblib
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import f1_score, make_scorer, precision_score, recall_score
-from sklearn.model_selection import GridSearchCV, StratifiedKFold, cross_validate
+from sklearn.metrics import confusion_matrix, f1_score, make_scorer, precision_score, recall_score
+from sklearn.model_selection import GridSearchCV, StratifiedKFold, cross_val_predict, cross_validate
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.tree import DecisionTreeClassifier
@@ -89,7 +89,18 @@ def avaliar_algoritmo(
         scoring=metricas_customizadas,
     )
 
+    # Matriz de confusão das previsões fora da amostra (cada exemplo previsto pela
+    # partição em que ficou de fora): linhas = classe real, colunas = prevista.
+    previsto = cross_val_predict(pipeline, features, alvo, cv=validador)
+    ordem = sorted(set(alvo))  # 0 = baixo, 1 = médio, 2 = alto
+    matriz = confusion_matrix(alvo, previsto, labels=ordem)
+    nomes = {0: "Baixo", 1: "Médio", 2: "Alto"}
+
     return {
+        "matriz_confusao": {
+            "classes": [nomes.get(int(c), str(c)) for c in ordem],
+            "valores": matriz.tolist(),
+        },
         "acuracia": float(resultados["test_accuracy"].mean()),
         "precisao": float(resultados["test_precision_macro"].mean()),
         "recall": float(resultados["test_recall_macro"].mean()),

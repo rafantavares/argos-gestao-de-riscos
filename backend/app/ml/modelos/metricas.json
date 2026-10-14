@@ -1,5 +1,29 @@
 {
   "knn": {
+    "matriz_confusao": {
+      "classes": [
+        "Baixo",
+        "Médio",
+        "Alto"
+      ],
+      "valores": [
+        [
+          154,
+          9,
+          0
+        ],
+        [
+          31,
+          41,
+          9
+        ],
+        [
+          3,
+          6,
+          47
+        ]
+      ]
+    },
     "acuracia": 0.8066666666666666,
     "precisao": 0.7921238553901093,
     "recall": 0.765324074074074,
@@ -12,6 +36,30 @@
     }
   },
   "arvore_decisao": {
+    "matriz_confusao": {
+      "classes": [
+        "Baixo",
+        "Médio",
+        "Alto"
+      ],
+      "valores": [
+        [
+          160,
+          2,
+          1
+        ],
+        [
+          15,
+          64,
+          2
+        ],
+        [
+          1,
+          12,
+          43
+        ]
+      ]
+    },
     "acuracia": 0.89,
     "precisao": 0.895399504033405,
     "recall": 0.8457244008714596,
@@ -32,6 +80,30 @@
     }
   },
   "random_forest": {
+    "matriz_confusao": {
+      "classes": [
+        "Baixo",
+        "Médio",
+        "Alto"
+      ],
+      "valores": [
+        [
+          156,
+          7,
+          0
+        ],
+        [
+          18,
+          55,
+          8
+        ],
+        [
+          0,
+          5,
+          51
+        ]
+      ]
+    },
     "acuracia": 0.8733333333333334,
     "precisao": 0.8687883515979491,
     "recall": 0.8481318082788671,

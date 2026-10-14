@@ -400,6 +400,25 @@ export default function Dashboard() {
         </Grid>
       </Grid>
 
+      {algoritmosDisponiveis.some((a) => metricas[a].matriz_confusao) && (
+        <Box sx={{ mb: 3 }}>
+          <SecaoGrafico
+            titulo="Matriz de confusão"
+            subtitulo="Previsões da validação cruzada: linhas = nível real, colunas = nível previsto. A diagonal são os acertos; erros entre Baixo e Alto são os mais graves."
+          >
+            <Grid container spacing={3}>
+              {algoritmosDisponiveis
+                .filter((a) => metricas[a].matriz_confusao)
+                .map((a) => (
+                  <Grid item xs={12} md={4} key={a}>
+                    <MatrizConfusao nome={NOMES_ALGORITMOS[a]} cor={CORES_ALGORITMOS[a]} dados={metricas[a].matriz_confusao} />
+                  </Grid>
+                ))}
+            </Grid>
+          </SecaoGrafico>
+        </Box>
+      )}
+
       <SecaoGrafico titulo="Últimas recomendações" subtitulo="Planos sugeridos pelo modelo e a decisão de cada gerente" semPadding>
         {ultimasRecomendacoes.length === 0 ? (
           <EstadoVazio compacto titulo="Nenhuma recomendação gerada ainda" />
@@ -454,6 +473,72 @@ export default function Dashboard() {
           </Table>
         )}
       </SecaoGrafico>
+    </Box>
+  );
+}
+
+function MatrizConfusao({ nome, cor, dados }) {
+  const { classes, valores } = dados;
+  const maximo = Math.max(...valores.flat(), 1);
+  const total = valores.flat().reduce((x, y) => x + y, 0);
+  const acertos = valores.reduce((soma, linha, i) => soma + linha[i], 0);
+  return (
+    <Box>
+      <Typography variant="subtitle2" sx={{ color: cor, fontWeight: 700, mb: 1 }}>
+        {nome} · {total ? ((acertos / total) * 100).toFixed(1) : "—"}% de acertos
+      </Typography>
+      <Box component="table" sx={{ borderCollapse: "separate", borderSpacing: 4, width: "100%" }}>
+        <thead>
+          <tr>
+            <Box component="th" sx={{ fontSize: 11, color: "text.secondary", textAlign: "left" }}>
+              Real \ Previsto
+            </Box>
+            {classes.map((c) => (
+              <Box component="th" key={c} sx={{ fontSize: 12, color: "text.secondary", fontWeight: 600 }}>
+                {c}
+              </Box>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {valores.map((linha, i) => (
+            <tr key={classes[i]}>
+              <Box component="th" sx={{ fontSize: 12, color: "text.secondary", fontWeight: 600, textAlign: "left" }}>
+                {classes[i]}
+              </Box>
+              {linha.map((valor, j) => {
+                const acerto = i === j;
+                const grave = Math.abs(i - j) > 1;
+                const intensidade = valor / maximo;
+                const fundo = acerto
+                  ? `rgba(45, 212, 191, ${0.12 + intensidade * 0.6})`
+                  : valor === 0
+                    ? "transparent"
+                    : grave
+                      ? `rgba(248, 113, 113, ${0.25 + intensidade * 0.6})`
+                      : `rgba(251, 191, 36, ${0.15 + intensidade * 0.6})`;
+                return (
+                  <Box
+                    component="td"
+                    key={j}
+                    sx={{
+                      textAlign: "center",
+                      py: 1.2,
+                      borderRadius: 1,
+                      fontWeight: acerto ? 700 : 500,
+                      bgcolor: fundo,
+                      border: "1px solid",
+                      borderColor: "divider",
+                    }}
+                  >
+                    {valor}
+                  </Box>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </Box>
     </Box>
   );
 }
