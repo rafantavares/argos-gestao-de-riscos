@@ -1,5 +1,20 @@
+import { useEffect, useState } from "react";
 import { Box, Chip, Grid, Paper, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
-import { AREAS_AFETADAS, CATEGORIAS, FAIXAS_EXPOSICAO, IMPACTOS, PROBABILIDADES, STATUS_RISCO, rotulo } from "../constants";
+import MemoryIcon from "@mui/icons-material/Memory";
+import { ml as servicoMl } from "../services/api";
+import {
+  ALGORITMOS,
+  AREAS_AFETADAS,
+  CATEGORIAS,
+  CORES_ALGORITMOS,
+  FAIXAS_EXPOSICAO,
+  IMPACTOS,
+  NOMES_ALGORITMOS,
+  PROBABILIDADES,
+  STATUS_RISCO,
+  VERSAO_SISTEMA,
+  rotulo,
+} from "../constants";
 
 function Secao({ titulo, children }) {
   return (
@@ -42,17 +57,73 @@ const NORMATIVO = [
   ["GPC 7", "Estratégia da organização com parâmetros e categorias de risco", "Áreas afetadas, escalas e faixas únicas, catálogo de planos"],
 ];
 
-// Glossário e regras do sistema: escalas, exposição, ciclo de vida e a base
+// Sobre o Argos: informações do sistema e do modelo, glossário e regras: escalas, exposição, ciclo de vida e a base
 // normativa (PMBOK / MR-MPS-SW:2023).
-export default function Ajuda() {
+function InformacoesSistema() {
+  const [metricas, setMetricas] = useState(null);
+  useEffect(() => {
+    servicoMl.metricas().then(setMetricas).catch(() => setMetricas(null));
+  }, []);
+  const algoritmos = metricas ? ALGORITMOS.filter((a) => metricas[a]) : [];
+  const ativo = algoritmos.reduce((melhor, a) => (!melhor || metricas[a].acuracia > metricas[melhor].acuracia ? a : melhor), null);
+  const pct = (v) => (v != null ? `${(v * 100).toFixed(1)}%` : "—");
+  return (
+    <Secao titulo="Informações do sistema">
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2, flexWrap: "wrap" }}>
+        <MemoryIcon sx={{ color: "secondary.main" }} />
+        <Typography variant="body2">
+          Modelo em uso: <strong>{ativo ? NOMES_ALGORITMOS[ativo] : "não treinado"}</strong>
+          {ativo ? ` · acurácia ${pct(metricas[ativo].acuracia)} · F1 ${pct(metricas[ativo].f1)}` : ""}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ ml: { sm: "auto" } }}>
+          Versão {VERSAO_SISTEMA}
+          {metricas?._dataset ? ` · ${metricas._dataset.n_exemplos} exemplos de treino` : ""}
+          {metricas?.[ativo]?.n_divisoes ? ` · validação cruzada em ${metricas[ativo].n_divisoes} partes` : ""}
+        </Typography>
+      </Box>
+      {algoritmos.length > 0 && (
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>Algoritmo</TableCell>
+              <TableCell align="right">Acurácia</TableCell>
+              <TableCell align="right">Precisão</TableCell>
+              <TableCell align="right">Recall</TableCell>
+              <TableCell align="right">F1</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {algoritmos.map((a) => (
+              <TableRow key={a}>
+                <TableCell sx={{ color: CORES_ALGORITMOS[a], fontWeight: a === ativo ? 700 : 500 }}>
+                  {NOMES_ALGORITMOS[a]}
+                  {a === ativo ? " (em uso)" : ""}
+                </TableCell>
+                <TableCell align="right">{pct(metricas[a].acuracia)}</TableCell>
+                <TableCell align="right">{pct(metricas[a].precisao)}</TableCell>
+                <TableCell align="right">{pct(metricas[a].recall)}</TableCell>
+                <TableCell align="right">{pct(metricas[a].f1)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+    </Secao>
+  );
+}
+
+export default function Sobre() {
   return (
     <Box sx={{ maxWidth: 1000 }}>
       <Typography variant="h5" fontWeight={600}>
-        Ajuda
+        Sobre o Argos
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Como o Argos avalia, trata e monitora os riscos, e onde cada parte se apoia no PMBOK e no MR-MPS-SW:2023.
+        Sistema web de gestão de riscos com análise preditiva para apoio à decisão em projetos de TI: como ele
+        avalia, trata e monitora os riscos, e onde cada parte se apoia no PMBOK e no MR-MPS-SW:2023.
       </Typography>
+
+      <InformacoesSistema />
 
       <Secao titulo="Como avaliar um risco">
         <Grid container spacing={3}>

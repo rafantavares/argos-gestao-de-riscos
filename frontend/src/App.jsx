@@ -2,9 +2,9 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import AppLayout from "./components/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth } from "./contexts/AuthContext";
-import Ajuda from "./pages/Ajuda";
 import Login from "./pages/Login";
 import Perfil from "./pages/Perfil";
+import Sobre from "./pages/Sobre";
 import AdminDashboard from "./pages/admin/Dashboard";
 import Gerentes from "./pages/admin/Gerentes";
 import PlanosContingencia from "./pages/admin/PlanosContingencia";
@@ -121,10 +121,10 @@ export default function App() {
       />
 
       <Route
-        path="/ajuda"
+        path="/sobre"
         element={
           <PaginaProtegida>
-            <Ajuda />
+            <Sobre />
           </PaginaProtegida>
         }
       />
@@ -138,6 +138,7 @@ export default function App() {
         }
       />
 
+      <Route path="/ajuda" element={<Navigate to="/sobre" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

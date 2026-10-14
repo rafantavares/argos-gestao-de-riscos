@@ -22,13 +22,12 @@ import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import SpaceDashboardOutlinedIcon from "@mui/icons-material/SpaceDashboardOutlined";
-import MemoryIcon from "@mui/icons-material/Memory";
 import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { ml as servicoMl, riscos as servicoRiscos } from "../services/api";
-import { ALGORITMOS, NOMES_ALGORITMOS, VERSAO_SISTEMA, iniciais, precisaReavaliar } from "../constants";
+import { riscos as servicoRiscos } from "../services/api";
+import { VERSAO_SISTEMA, iniciais, precisaReavaliar } from "../constants";
 import { Logo } from "./Logo";
 
 const LARGURA_MENU = 248;
@@ -93,25 +92,13 @@ const ITENS_GERENTE = [
   },
 ];
 
-function algoritmoAtivo(metricas) {
-  if (!metricas) return null;
-  const candidatos = ALGORITMOS.filter((a) => metricas[a]);
-  if (candidatos.length === 0) return null;
-  const melhor = candidatos.reduce((a, b) => (metricas[b].acuracia > metricas[a].acuracia ? b : a));
-  return { nome: melhor, acuracia: metricas[melhor].acuracia, f1: metricas[melhor].f1 };
-}
-
 export default function AppLayout({ children }) {
   const { usuario, sair } = useAuth();
   const navigate = useNavigate();
   const localizacao = useLocation();
-  const [metricas, setMetricas] = useState(null);
 
   const [pendentesReavaliacao, setPendentesReavaliacao] = useState(0);
 
-  useEffect(() => {
-    servicoMl.metricas().then(setMetricas).catch(() => setMetricas(null));
-  }, []);
 
   // Badge de riscos que precisam de reavaliação (atualiza ao trocar de página).
   useEffect(() => {
@@ -125,7 +112,6 @@ export default function AppLayout({ children }) {
   const ehAdmin = usuario.perfil === "admin";
   const itens = ehAdmin ? ITENS_ADMIN : ITENS_GERENTE;
   const cargo = ehAdmin ? "Administrador" : "Gerente de projetos";
-  const ativo = algoritmoAtivo(metricas);
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -134,16 +120,6 @@ export default function AppLayout({ children }) {
           <Box sx={{ flexGrow: 1 }}>
             <Logo size={26} fontSize={18} />
           </Box>
-          <Button
-            variant={localizacao.pathname === "/ajuda" ? "contained" : "outlined"}
-            color="secondary"
-            size="small"
-            startIcon={<HelpOutlineIcon />}
-            onClick={() => navigate("/ajuda")}
-            sx={{ fontWeight: 700, borderWidth: 2, "&:hover": { borderWidth: 2 } }}
-          >
-            Ajuda
-          </Button>
           <Tooltip title="Meu perfil">
             <Button
               color="inherit"
@@ -251,30 +227,21 @@ export default function AppLayout({ children }) {
           ))}
         </List>
 
-        {/* Informações do sistema */}
+        {/* Sobre o sistema (glossário, base normativa e informações do modelo) */}
         <Divider />
-        <Box sx={{ px: 2, py: 2 }}>
-          <Typography
-            variant="caption"
-            sx={{ color: "text.secondary", textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 600 }}
+        <Box sx={{ p: 1.5 }}>
+          <Button
+            fullWidth
+            variant={localizacao.pathname === "/sobre" ? "contained" : "outlined"}
+            color="secondary"
+            startIcon={<InfoOutlinedIcon />}
+            onClick={() => navigate("/sobre")}
+            sx={{ fontWeight: 700, borderWidth: 2, "&:hover": { borderWidth: 2 }, justifyContent: "flex-start", py: 1 }}
           >
-            Informações do sistema
-          </Typography>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1 }}>
-            <MemoryIcon sx={{ fontSize: 18, color: "secondary.main" }} />
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="caption" sx={{ display: "block" }} noWrap>
-                {ativo ? NOMES_ALGORITMOS[ativo.nome] : "Modelo não treinado"}
-              </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                {ativo ? `Acurácia ${(ativo.acuracia * 100).toFixed(1)}%` : "—"}
-                {ativo?.f1 != null ? ` · F1 ${(ativo.f1 * 100).toFixed(1)}%` : ""}
-              </Typography>
-            </Box>
-          </Box>
-          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
+            Sobre o Argos
+          </Button>
+          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1, textAlign: "center" }}>
             Versão {VERSAO_SISTEMA}
-            {metricas?._dataset ? ` · ${metricas._dataset.n_exemplos} exemplos de treino` : ""}
           </Typography>
         </Box>
       </Drawer>
