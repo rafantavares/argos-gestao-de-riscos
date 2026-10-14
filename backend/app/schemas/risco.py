@@ -51,6 +51,7 @@ class RiscoResposta(RiscoBase):
     id_projeto: int
     id_gerente: int
     status: StatusRisco
+    arquivado: bool = False
     criado_em: datetime
     atualizado_em: datetime
     ultima_avaliacao_em: Optional[datetime] = None
@@ -67,7 +68,13 @@ class RiscoResposta(RiscoBase):
 
 
 class RiscoPlanoAtualizar(BaseModel):
-    """Edição dos campos de tratamento (o gerente refina o que a IA sugeriu)."""
+    """Edição do registro (identificação e tratamento). As notas de impacto e
+    probabilidade mudam pela reavaliação, que guarda o histórico."""
+
+    titulo: Optional[str] = Field(default=None, min_length=3, max_length=200)
+    area_afetada: Optional[AreaAfetada] = None
+    orcamento_impacto: Optional[OrcamentoImpacto] = None
+    urgencia: Optional[Urgencia] = None
 
     descricao_impacto: Optional[str] = Field(default=None, min_length=5, max_length=2000)
     mitigacao: Optional[str] = Field(default=None, max_length=2000)
@@ -186,3 +193,18 @@ class AssistenteResposta(BaseModel):
     similares: List[RiscoSimilar]
     alertas_coerencia: List[AlertaCoerencia]
     sugestao_plano: Optional[SugestaoPlano]
+
+
+class RiscoArquivar(BaseModel):
+    arquivado: bool
+
+
+class AnexoResposta(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    id_risco: int
+    nome_arquivo: str
+    tipo_conteudo: str
+    tamanho: int
+    criado_em: datetime

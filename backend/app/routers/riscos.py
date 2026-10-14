@@ -1,14 +1,15 @@
 """Router de riscos: cadastro e listagem, restritos ao gerente vinculado ao projeto."""
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.assistente import classificador, coerencia, monitoramento, predicao, sugestoes
 from app.core.exposicao import nivel_exposicao, pontuacao_exposicao
 from app.core.security import exigir_perfil, obter_usuario_atual
 from app.database import obter_sessao
-from app.models.enums import PerfilUsuario, StatusRisco
+from app.models.anexo_risco import AnexoRisco
+from app.models.enums import AREA_PARA_CATEGORIA, PerfilUsuario, StatusRisco
 from app.models.historico_risco import HistoricoRisco
 from app.models.projeto import Projeto
 from app.models.projeto_gerente import ProjetoGerente
@@ -16,11 +17,13 @@ from app.models.reavaliacao_risco import ReavaliacaoRisco
 from app.models.risco import Risco
 from app.models.usuario import Usuario
 from app.schemas.risco import (
+    AnexoResposta,
     AssistenteEntrada,
     AssistenteResposta,
     EvolucaoExposicao,
     HistoricoRiscoResposta,
     RiscoCriar,
+    RiscoArquivar,
     RiscoPlanoAtualizar,
     RiscoReavaliar,
     RiscoResposta,
@@ -130,7 +133,9 @@ def consultar_assistente(
 
     existentes = [
         dict(id=r.id, indice=r.indice, titulo=r.titulo, descricao_impacto=r.descricao_impacto)
-        for r in sessao.query(Risco).filter(Risco.id_projeto == dados.id_projeto).all()
+        for r in sessao.query(Risco)
+        .filter(Risco.id_projeto == dados.id_projeto, Risco.arquivado.is_(False))
+        .all()
     ]
     similares = classificador.encontrar_similares(dados.titulo, dados.descricao_impacto, existentes)
 
@@ -147,7 +152,7 @@ def consultar_assistente(
         )
         for r, nome_projeto in sessao.query(Risco, Projeto.nome)
         .join(Projeto, Projeto.id == Risco.id_projeto)
-        .filter(Projeto.id_admin == projeto.id_admin)
+        .filter(Projeto.id_admin == projeto.id_admin, Risco.arquivado.is_(False))
         .all()
     ]
     notas_sugeridas = predicao.sugerir_notas(dados.titulo, dados.descricao_impacto, historico)
@@ -177,9 +182,14 @@ def consultar_assistente(
     dependencies=[Depends(exigir_perfil(PerfilUsuario.GERENTE))],
 )
 def listar_meus_riscos(
-    sessao: Session = Depends(obter_sessao), gerente: Usuario = Depends(obter_usuario_atual)
+    incluir_arquivados: bool = False,
+    sessao: Session = Depends(obter_sessao),
+    gerente: Usuario = Depends(obter_usuario_atual),
 ):
-    return sessao.query(Risco).filter(Risco.id_gerente == gerente.id).all()
+    consulta = sessao.query(Risco).filter(Risco.id_gerente == gerente.id)
+    if not incluir_arquivados:
+        consulta = consulta.filter(Risco.arquivado.is_(False))
+    return consulta.all()
 
 
 @roteador.get(
@@ -206,7 +216,11 @@ def listar_riscos_do_projeto(
     gerente: Usuario = Depends(obter_usuario_atual),
 ):
     _verificar_gerente_vinculado(id_projeto, gerente, sessao)
-    return sessao.query(Risco).filter(Risco.id_projeto == id_projeto).all()
+    return (
+        sessao.query(Risco)
+        .filter(Risco.id_projeto == id_projeto, Risco.arquivado.is_(False))
+        .all()
+    )
 
 
 @roteador.get(
@@ -221,7 +235,7 @@ def listar_todos_riscos_do_admin(
     return (
         sessao.query(Risco)
         .join(Projeto, Projeto.id == Risco.id_projeto)
-        .filter(Projeto.id_admin == admin.id)
+        .filter(Projeto.id_admin == admin.id, Risco.arquivado.is_(False))
         .all()
     )
 
@@ -274,8 +288,11 @@ def atualizar_tratamento_risco(
 ):
     """O gerente refina a descrição do impacto, a mitigação, a contingência e o gatilho."""
     risco = _obter_risco_do_gerente(id_risco, gerente, sessao)
-    for campo, valor in dados.model_dump(exclude_unset=True).items():
-        setattr(risco, campo, valor)
+    for campo, valor in dados.model_dump(exclude_unset=True, exclude_none=True).items():
+        setattr(risco, campo, valor.value if campo == "area_afetada" else valor)
+    if dados.area_afetada is not None:
+        # O grupo PMBOK (feature do ML) acompanha a área afetada.
+        risco.categoria = AREA_PARA_CATEGORIA[dados.area_afetada]
     sessao.commit()
     sessao.refresh(risco)
     return risco
@@ -366,3 +383,131 @@ def listar_historico_risco(
         .order_by(HistoricoRisco.criado_em)
         .all()
     )
+
+
+@roteador.patch(
+    "/{id_risco}/arquivo",
+    response_model=RiscoResposta,
+    dependencies=[Depends(exigir_perfil(PerfilUsuario.GERENTE))],
+)
+def arquivar_risco(
+    id_risco: int,
+    dados: RiscoArquivar,
+    sessao: Session = Depends(obter_sessao),
+    gerente: Usuario = Depends(obter_usuario_atual),
+):
+    """Arquiva (ou restaura) o risco: ele some das listas, painéis, do ML e do
+    assistente, mas o registro e o histórico continuam no banco."""
+    risco = _obter_risco_do_gerente(id_risco, gerente, sessao)
+    risco.arquivado = dados.arquivado
+    sessao.commit()
+    sessao.refresh(risco)
+    return risco
+
+
+# ---------- anexos (evidências do risco) ----------
+
+TAMANHO_MAXIMO_ANEXO = 5 * 1024 * 1024  # 5 MB
+
+
+@roteador.get(
+    "/{id_risco}/anexos",
+    response_model=List[AnexoResposta],
+    dependencies=[Depends(exigir_perfil(PerfilUsuario.GERENTE))],
+)
+def listar_anexos(
+    id_risco: int,
+    sessao: Session = Depends(obter_sessao),
+    gerente: Usuario = Depends(obter_usuario_atual),
+):
+    _obter_risco_do_gerente(id_risco, gerente, sessao)
+    return (
+        sessao.query(AnexoRisco)
+        .filter(AnexoRisco.id_risco == id_risco)
+        .order_by(AnexoRisco.criado_em.desc(), AnexoRisco.id.desc())
+        .all()
+    )
+
+
+@roteador.post(
+    "/{id_risco}/anexos",
+    response_model=AnexoResposta,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(exigir_perfil(PerfilUsuario.GERENTE))],
+)
+async def anexar_arquivo(
+    id_risco: int,
+    arquivo: UploadFile = File(...),
+    sessao: Session = Depends(obter_sessao),
+    gerente: Usuario = Depends(obter_usuario_atual),
+):
+    _obter_risco_do_gerente(id_risco, gerente, sessao)
+    conteudo = await arquivo.read(TAMANHO_MAXIMO_ANEXO + 1)
+    if len(conteudo) > TAMANHO_MAXIMO_ANEXO:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="O arquivo passa do limite de 5 MB",
+        )
+    if not conteudo:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Arquivo vazio")
+    anexo = AnexoRisco(
+        id_risco=id_risco,
+        id_usuario=gerente.id,
+        nome_arquivo=(arquivo.filename or "anexo")[:255],
+        tipo_conteudo=(arquivo.content_type or "application/octet-stream")[:120],
+        tamanho=len(conteudo),
+        conteudo=conteudo,
+    )
+    sessao.add(anexo)
+    sessao.commit()
+    sessao.refresh(anexo)
+    return anexo
+
+
+def _obter_anexo(id_risco: int, id_anexo: int, gerente: Usuario, sessao: Session) -> AnexoRisco:
+    _obter_risco_do_gerente(id_risco, gerente, sessao)
+    anexo = (
+        sessao.query(AnexoRisco)
+        .filter(AnexoRisco.id == id_anexo, AnexoRisco.id_risco == id_risco)
+        .first()
+    )
+    if anexo is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Anexo não encontrado")
+    return anexo
+
+
+@roteador.get(
+    "/{id_risco}/anexos/{id_anexo}",
+    dependencies=[Depends(exigir_perfil(PerfilUsuario.GERENTE))],
+)
+def baixar_anexo(
+    id_risco: int,
+    id_anexo: int,
+    sessao: Session = Depends(obter_sessao),
+    gerente: Usuario = Depends(obter_usuario_atual),
+):
+    from urllib.parse import quote
+
+    anexo = _obter_anexo(id_risco, id_anexo, gerente, sessao)
+    nome = quote(anexo.nome_arquivo)
+    return Response(
+        content=anexo.conteudo,
+        media_type=anexo.tipo_conteudo,
+        headers={"Content-Disposition": "attachment; filename*=UTF-8''" + nome},
+    )
+
+
+@roteador.delete(
+    "/{id_risco}/anexos/{id_anexo}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(exigir_perfil(PerfilUsuario.GERENTE))],
+)
+def excluir_anexo(
+    id_risco: int,
+    id_anexo: int,
+    sessao: Session = Depends(obter_sessao),
+    gerente: Usuario = Depends(obter_usuario_atual),
+):
+    sessao.delete(_obter_anexo(id_risco, id_anexo, gerente, sessao))
+    sessao.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

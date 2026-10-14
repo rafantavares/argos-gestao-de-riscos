@@ -48,7 +48,7 @@ def relatorio_riscos(
             joinedload(Risco.gerente),
             joinedload(Risco.recomendacoes).joinedload(Recomendacao.plano),
         )
-        .filter(Risco.id_projeto.in_(ids_projetos))
+        .filter(Risco.id_projeto.in_(ids_projetos), Risco.arquivado.is_(False))
     )
     if id_gerente is not None:
         consulta_riscos = consulta_riscos.filter(Risco.id_gerente == id_gerente)

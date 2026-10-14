@@ -41,7 +41,9 @@ def conversar(
 
 def _instrucoes_do_projeto(id_projeto: int, sessao: Session) -> str:
     projeto = sessao.get(Projeto, id_projeto)
-    riscos = sessao.query(Risco).filter(Risco.id_projeto == id_projeto).all()
+    riscos = (
+        sessao.query(Risco).filter(Risco.id_projeto == id_projeto, Risco.arquivado.is_(False)).all()
+    )
     planos = sessao.query(PlanoContingencia).filter(PlanoContingencia.ativo.is_(True)).all()
     return chat.montar_instrucoes(projeto, riscos, planos)
 

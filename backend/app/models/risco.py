@@ -1,5 +1,6 @@
 """Model ORM da entidade Risco."""
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     Column,
     DateTime,
@@ -69,6 +70,8 @@ class Risco(Base):
         default=StatusRisco.IDENTIFICADO,
         server_default=StatusRisco.IDENTIFICADO.value,
     )
+    # Arquivado = some das listas, painéis, ML e assistente (sem apagar o histórico).
+    arquivado = Column(Boolean, nullable=False, default=False, server_default="false")
     id_projeto = Column(Integer, ForeignKey("projetos.id"), nullable=False)
     id_gerente = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
