@@ -28,6 +28,7 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PendingActionsIcon from "@mui/icons-material/PendingActions";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import NotificationImportantOutlinedIcon from "@mui/icons-material/NotificationImportantOutlined";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { useAviso, useConfirmacao } from "../../contexts/FeedbackContext";
@@ -191,6 +192,13 @@ export default function Dashboard() {
             ))}
           </TextField>
         )}
+        <Button
+          variant="outlined"
+          startIcon={<PictureAsPdfIcon />}
+          onClick={() => navigate("/gerente/relatorio", { state: { idProjeto: filtroProjeto || undefined } })}
+        >
+          {filtroProjeto ? "Relatório do projeto" : "Relatório geral"}
+        </Button>
       </Box>
 
       <Grid container spacing={2} sx={{ mb: 3 }}>

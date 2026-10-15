@@ -35,6 +35,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import SortIcon from "@mui/icons-material/Sort";
 import GridViewIcon from "@mui/icons-material/GridView";
 import TableRowsIcon from "@mui/icons-material/TableRows";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { useAviso, useConfirmacao } from "../../contexts/FeedbackContext";
 import ViewKanbanOutlinedIcon from "@mui/icons-material/ViewKanbanOutlined";
 import MiniMatriz from "../../components/MiniMatriz";
@@ -127,6 +128,21 @@ function lerFiltros() {
   } catch {
     return FILTROS_PADRAO;
   }
+}
+
+// Texto dos filtros ativos, para o cabeçalho do relatório em PDF.
+function descreverFiltros(filtros, projetos) {
+  const partes = [];
+  if (filtros.busca.trim()) partes.push(`busca "${filtros.busca.trim()}"`);
+  if (filtros.projeto) partes.push(`projeto ${projetos.find((p) => p.id === filtros.projeto)?.nome ?? ""}`);
+  if (filtros.gravidade) partes.push(`gravidade ${filtros.gravidade}`);
+  const status = { "": "todos os status", ativos: "ativos", reavaliar: "reavaliação pendente", arquivados: "arquivados" };
+  partes.push(`status: ${status[filtros.status] ?? rotulo(STATUS_RISCO, filtros.status)}`);
+  if (filtros.area) partes.push(`área ${rotulo(AREAS_AFETADAS, filtros.area)}`);
+  if (filtros.recomendacao) partes.push(`recomendação: ${rotulo(SITUACOES_RECOMENDACAO, filtros.recomendacao)}`);
+  if (filtros.celula) partes.push(`matriz P${filtros.celula.replace("-", " × I")}`);
+  partes.push(`ordenado por ${rotulo(ORDENACOES, filtros.ordenacao).toLowerCase()}`);
+  return partes.join(" · ");
 }
 
 function normalizar(texto) {
@@ -463,6 +479,18 @@ export default function Riscos() {
             onClick={() => exportarCsv("riscos.csv", COLUNAS_CSV, riscosFiltrados)}
           >
             Exportar CSV
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<PictureAsPdfIcon />}
+            disabled={riscosFiltrados.length === 0}
+            onClick={() =>
+              navigate("/gerente/relatorio", {
+                state: { ids: riscosFiltrados.map((r) => r.id), filtros: descreverFiltros(filtros, meusProjetos) },
+              })
+            }
+          >
+            Relatório PDF
           </Button>
           <Button
             variant="contained"
