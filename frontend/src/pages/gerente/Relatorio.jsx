@@ -20,6 +20,7 @@ import {
   precisaReavaliar,
   rotulo,
 } from "../../constants";
+import { COR, Etiqueta, Indicador, Secao, cabecalho, celula } from "../../components/DocumentoPdf";
 import LogoMark from "../../components/Logo";
 
 // Relatório de riscos para impressão / PDF (o navegador salva em PDF pelo
@@ -27,54 +28,6 @@ import LogoMark from "../../components/Logo";
 // riscos identificados (GPR 10), tratamento (GPR 10+) e monitoramento (GPR 17).
 // Recebe pela navegação os riscos já filtrados (página Riscos) ou um projeto
 // (Visão geral); sem isso, usa todos os riscos ativos.
-
-const COR = { texto: "#111827", suave: "#4B5563", linha: "#D1D5DB", fundo: "#F3F4F6", marca: "#0F766E" };
-
-function Secao({ numero, titulo, norma, children }) {
-  return (
-    <Box component="section" sx={{ mt: 3.5, breakInside: "avoid-page" }}>
-      <Box sx={{ display: "flex", alignItems: "baseline", gap: 1, borderBottom: `2px solid ${COR.marca}`, pb: 0.5, mb: 1.5 }}>
-        <Typography sx={{ fontWeight: 700, fontSize: 15, color: COR.texto }}>
-          {numero}. {titulo}
-        </Typography>
-        {norma && <Typography sx={{ fontSize: 11, color: COR.suave, ml: "auto" }}>{norma}</Typography>}
-      </Box>
-      {children}
-    </Box>
-  );
-}
-
-function Indicador({ valor, rotulo: nome, cor }) {
-  return (
-    <Box sx={{ flex: 1, border: `1px solid ${COR.linha}`, borderRadius: 1, p: 1.25, textAlign: "center" }}>
-      <Typography sx={{ fontSize: 22, fontWeight: 700, color: cor ?? COR.texto, lineHeight: 1.1 }}>{valor}</Typography>
-      <Typography sx={{ fontSize: 11, color: COR.suave }}>{nome}</Typography>
-    </Box>
-  );
-}
-
-const celula = { border: `1px solid ${COR.linha}`, padding: "5px 7px", fontSize: 11, color: COR.texto, verticalAlign: "top" };
-const cabecalho = { ...celula, background: COR.fundo, fontWeight: 700, textAlign: "left" };
-
-function Etiqueta({ cor, children }) {
-  return (
-    <span
-      style={{
-        display: "inline-block",
-        padding: "1px 6px",
-        borderRadius: 4,
-        fontSize: 10,
-        fontWeight: 700,
-        color: "#111827",
-        background: `${cor}55`,
-        border: `1px solid ${cor}`,
-        whiteSpace: "nowrap",
-      }}
-    >
-      {children}
-    </span>
-  );
-}
 
 export default function Relatorio() {
   const { usuario } = useAuth();
