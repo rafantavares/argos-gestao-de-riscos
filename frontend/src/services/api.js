@@ -84,6 +84,8 @@ export const riscos = {
   atualizarTratamento: (id, dados) => api.patch(`/riscos/${id}/tratamento`, dados).then((r) => r.data),
   reavaliar: (id, dados) => api.post(`/riscos/${id}/reavaliacao`, dados).then((r) => r.data),
   evolucao: (id) => api.get(`/riscos/${id}/evolucao`).then((r) => r.data),
+  evolucaoAgregada: (idProjeto, semanas = 12) =>
+    api.get("/riscos/painel/evolucao", { params: { id_projeto: idProjeto, semanas } }).then((r) => r.data),
   assistente: (dados) => api.post("/riscos/assistente", dados).then((r) => r.data),
   listarTodosAdmin: () => api.get("/riscos/admin/todos").then((r) => r.data),
 };

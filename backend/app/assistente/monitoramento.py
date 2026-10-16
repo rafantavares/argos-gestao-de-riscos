@@ -7,7 +7,7 @@ avisa quando o risco está há muito tempo sem ser reavaliado e sugere um
 recálculo das notas quando o andamento do risco indica mudança (ex.: a
 mitigação foi concluída depois da última avaliação). Regras determinísticas e
 explicáveis -- a sugestão sempre traz o motivo e só é aplicada pelo gerente."""
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from app.core.exposicao import avaliacao_exposicao, pontuacao_exposicao
@@ -100,3 +100,57 @@ def montar_evolucao(risco, reavaliacoes: List, historico_status: List,
         "sugestao": None if risco.status in STATUS_SEM_MONITORAMENTO
         else sugerir_recalculo(risco, serie, historico_status),
     }
+
+
+# ---------- evolução agregada do projeto ----------
+
+
+def _notas_em(risco, reavaliacoes: List, momento: datetime):
+    """Notas (P, I) do risco num momento: a última reavaliação até ali ou, se
+    nenhuma, a avaliação inicial (o "anterior" da primeira reavaliação)."""
+    anteriores = [r for r in reavaliacoes if _em_utc(r.criado_em) <= momento]
+    if anteriores:
+        ultima = anteriores[-1]
+        return ultima.probabilidade, ultima.impacto
+    if reavaliacoes:
+        return reavaliacoes[0].probabilidade_anterior, reavaliacoes[0].impacto_anterior
+    return risco.probabilidade, risco.impacto
+
+
+def _ativo_em(risco, historico_status: List, momento: datetime) -> bool:
+    if _em_utc(risco.criado_em) > momento:
+        return False
+    status = StatusRisco.IDENTIFICADO
+    for h in historico_status:
+        if _em_utc(h.criado_em) <= momento:
+            status = h.status_novo
+    return status != StatusRisco.ENCERRADO
+
+
+def serie_exposicao(riscos: List, reavaliacoes_por_risco: dict, historico_por_risco: dict,
+                    semanas: int = 12, agora: Optional[datetime] = None) -> List[dict]:
+    """Exposição do conjunto de riscos ao fim de cada semana: total, média,
+    quantidade de riscos ativos e a soma da exposição em cada faixa."""
+    agora = agora or datetime.now(timezone.utc)
+    pontos = []
+    for k in range(semanas - 1, -1, -1):
+        momento = agora - timedelta(weeks=k)
+        por_faixa = {}
+        total = quantidade = 0
+        for risco in riscos:
+            if not _ativo_em(risco, historico_por_risco.get(risco.id, []), momento):
+                continue
+            p, i = _notas_em(risco, reavaliacoes_por_risco.get(risco.id, []), momento)
+            exposicao = pontuacao_exposicao(p, i)
+            faixa = avaliacao_exposicao(exposicao)
+            por_faixa[faixa] = por_faixa.get(faixa, 0) + exposicao
+            total += exposicao
+            quantidade += 1
+        pontos.append({
+            "data": momento,
+            "total": total,
+            "quantidade": quantidade,
+            "media": round(total / quantidade, 1) if quantidade else 0,
+            "por_faixa": por_faixa,
+        })
+    return pontos

@@ -1,5 +1,5 @@
 """Router de riscos: cadastro e listagem, restritos ao gerente vinculado ao projeto."""
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
 from sqlalchemy.orm import Session, selectinload
@@ -209,6 +209,42 @@ def listar_meus_riscos(
     if not incluir_arquivados:
         consulta = consulta.filter(Risco.arquivado.is_(False))
     return consulta.all()
+
+
+@roteador.get(
+    "/painel/evolucao",
+    dependencies=[Depends(exigir_perfil(PerfilUsuario.GERENTE))],
+)
+def evolucao_exposicao_agregada(
+    id_projeto: Optional[int] = None,
+    semanas: int = 12,
+    sessao: Session = Depends(obter_sessao),
+    gerente: Usuario = Depends(obter_usuario_atual),
+):
+    """Exposição total dos riscos do gerente (ou de um projeto) semana a semana,
+    reconstruída a partir dos cadastros, reavaliações e mudanças de status."""
+    if id_projeto:
+        _verificar_gerente_vinculado(id_projeto, gerente, sessao)
+    consulta = sessao.query(Risco).filter(Risco.id_gerente == gerente.id, Risco.arquivado.is_(False))
+    if id_projeto:
+        consulta = consulta.filter(Risco.id_projeto == id_projeto)
+    riscos = consulta.all()
+    ids = [r.id for r in riscos]
+    reavaliacoes, historico = {}, {}
+    if ids:
+        for r in (
+            sessao.query(ReavaliacaoRisco)
+            .filter(ReavaliacaoRisco.id_risco.in_(ids))
+            .order_by(ReavaliacaoRisco.criado_em, ReavaliacaoRisco.id)
+        ):
+            reavaliacoes.setdefault(r.id_risco, []).append(r)
+        for h in (
+            sessao.query(HistoricoRisco)
+            .filter(HistoricoRisco.id_risco.in_(ids))
+            .order_by(HistoricoRisco.criado_em, HistoricoRisco.id)
+        ):
+            historico.setdefault(h.id_risco, []).append(h)
+    return monitoramento.serie_exposicao(riscos, reavaliacoes, historico, semanas=max(1, min(semanas, 52)))
 
 
 @roteador.get(
