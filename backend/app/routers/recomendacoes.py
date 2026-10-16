@@ -5,7 +5,7 @@ from typing import List
 
 import pandas as pd
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.core.security import exigir_perfil, obter_usuario_atual
 from app.assistente.sugestoes import gerar_sugestao
@@ -181,6 +181,7 @@ def listar_minhas_recomendacoes(
 ):
     return (
         sessao.query(Recomendacao)
+        .options(joinedload(Recomendacao.plano))  # evita uma consulta por recomendação
         .join(Risco, Risco.id == Recomendacao.id_risco)
         .filter(Risco.id_gerente == gerente.id)
         .all()
@@ -198,7 +199,12 @@ def listar_recomendacoes_do_risco(
     gerente: Usuario = Depends(obter_usuario_atual),
 ):
     _obter_risco_do_gerente(id_risco, gerente, sessao)
-    return sessao.query(Recomendacao).filter(Recomendacao.id_risco == id_risco).all()
+    return (
+        sessao.query(Recomendacao)
+        .options(joinedload(Recomendacao.plano))
+        .filter(Recomendacao.id_risco == id_risco)
+        .all()
+    )
 
 
 @roteador.patch(
@@ -282,6 +288,7 @@ def listar_todas_recomendacoes(
 ):
     return (
         sessao.query(Recomendacao)
+        .options(joinedload(Recomendacao.plano))
         .join(Risco, Risco.id == Recomendacao.id_risco)
         .join(Projeto, Projeto.id == Risco.id_projeto)
         .filter(Projeto.id_admin == admin.id)

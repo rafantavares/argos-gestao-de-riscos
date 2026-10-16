@@ -57,3 +57,17 @@ def status():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/health/banco")
+def health_banco():
+    """Testa o banco de verdade. Chamado diariamente pela rotina do GitHub
+    (.github/workflows/manter-ativo.yml) para o Supabase gratuito não pausar."""
+    from sqlalchemy import text
+
+    sessao = SessaoLocal()
+    try:
+        sessao.execute(text("SELECT 1"))
+    finally:
+        sessao.close()
+    return {"status": "ok", "banco": "ok"}

@@ -100,14 +100,19 @@ export default function AppLayout({ children }) {
   const [pendentesReavaliacao, setPendentesReavaliacao] = useState(0);
 
 
-  // Badge de riscos que precisam de reavaliação (atualiza ao trocar de página).
+  // Badge de riscos que precisam de reavaliação: carrega ao entrar e a cada
+  // 5 minutos (não a cada troca de página, para não pesar na API).
   useEffect(() => {
-    if (usuario.perfil !== "gerente") return;
-    servicoRiscos
-      .listarMeus()
-      .then((lista) => setPendentesReavaliacao(lista.filter(precisaReavaliar).length))
-      .catch(() => setPendentesReavaliacao(0));
-  }, [usuario.perfil, localizacao.pathname]);
+    if (usuario.perfil !== "gerente") return undefined;
+    const atualizar = () =>
+      servicoRiscos
+        .listarMeus()
+        .then((lista) => setPendentesReavaliacao(lista.filter(precisaReavaliar).length))
+        .catch(() => {});
+    atualizar();
+    const intervalo = setInterval(atualizar, 5 * 60 * 1000);
+    return () => clearInterval(intervalo);
+  }, [usuario.perfil]);
 
   const ehAdmin = usuario.perfil === "admin";
   const itens = ehAdmin ? ITENS_ADMIN : ITENS_GERENTE;

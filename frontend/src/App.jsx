@@ -14,6 +14,7 @@ import GerenteDashboard from "./pages/gerente/Dashboard";
 import ProjetosGerente from "./pages/gerente/Projetos";
 import Assistente from "./pages/gerente/Assistente";
 import Relatorio from "./pages/gerente/Relatorio";
+import FichaRiscoPdf from "./pages/gerente/FichaRiscoPdf";
 import Recomendacao from "./pages/gerente/Recomendacao";
 import Riscos from "./pages/gerente/Riscos";
 
@@ -118,6 +119,15 @@ export default function App() {
           <PaginaProtegida perfil="gerente">
             <Assistente />
           </PaginaProtegida>
+        }
+      />
+
+      <Route
+        path="/gerente/riscos/:idRisco/ficha"
+        element={
+          <ProtectedRoute perfil="gerente">
+            <FichaRiscoPdf />
+          </ProtectedRoute>
         }
       />
 

@@ -2,6 +2,7 @@ import { Box, Button, Paper, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
 import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import UnarchiveOutlinedIcon from "@mui/icons-material/UnarchiveOutlined";
 import { FASES_PROJETO, IMPACTOS, PROBABILIDADES, faixaExposicao, precisaReavaliar, rotulo } from "../constants";
 import { ChipArea, ChipStatus, ChipUrgencia } from "./Badges";
@@ -103,6 +104,15 @@ export default function FichaRisco({ risco, aoArquivar }) {
 
         <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
           <MiniMatriz probabilidade={risco.probabilidade} impacto={risco.impacto} tamanho={14} folga={3} />
+          <Button
+            size="small"
+            color="inherit"
+            startIcon={<PictureAsPdfIcon />}
+            onClick={() => navigate(`/gerente/riscos/${risco.id}/ficha`)}
+            sx={{ color: "text.secondary" }}
+          >
+            Ficha em PDF
+          </Button>
           <Button
             size="small"
             color={risco.arquivado ? "primary" : "inherit"}

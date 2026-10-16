@@ -2,7 +2,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.assistente import classificador, coerencia, monitoramento, predicao, sugestoes
 from app.core.exposicao import nivel_exposicao, pontuacao_exposicao
@@ -31,6 +31,10 @@ from app.schemas.risco import (
 )
 
 roteador = APIRouter(prefix="/riscos", tags=["Riscos"])
+
+# As listagens carregam as reavaliações numa consulta só (a data da última
+# avaliação de cada risco depende delas); sem isso seria uma consulta por risco.
+COM_REAVALIACOES = selectinload(Risco.reavaliacoes)
 
 
 def _verificar_gerente_vinculado(id_projeto: int, gerente: Usuario, sessao: Session) -> None:
@@ -199,7 +203,7 @@ def listar_meus_riscos(
     sessao: Session = Depends(obter_sessao),
     gerente: Usuario = Depends(obter_usuario_atual),
 ):
-    consulta = sessao.query(Risco).filter(Risco.id_gerente == gerente.id)
+    consulta = sessao.query(Risco).options(COM_REAVALIACOES).filter(Risco.id_gerente == gerente.id)
     if not incluir_arquivados:
         consulta = consulta.filter(Risco.arquivado.is_(False))
     return consulta.all()
@@ -231,6 +235,7 @@ def listar_riscos_do_projeto(
     _verificar_gerente_vinculado(id_projeto, gerente, sessao)
     return (
         sessao.query(Risco)
+        .options(COM_REAVALIACOES)
         .filter(Risco.id_projeto == id_projeto, Risco.arquivado.is_(False))
         .all()
     )
@@ -247,6 +252,7 @@ def listar_todos_riscos_do_admin(
     """Riscos de todos os projetos administrados pelo admin autenticado (visão cross-projeto)."""
     return (
         sessao.query(Risco)
+        .options(COM_REAVALIACOES)
         .join(Projeto, Projeto.id == Risco.id_projeto)
         .filter(Projeto.id_admin == admin.id, Risco.arquivado.is_(False))
         .all()

@@ -1,0 +1,21 @@
+# Acessa a API uma vez por dia para o banco (Supabase gratuito) não pausar
+# por inatividade. O primeiro acesso pode levar ~1 min (Render acordando).
+name: Manter banco ativo
+
+on:
+  schedule:
+    - cron: "0 12 * * *" # 09:00 em Brasília
+  workflow_dispatch: {}
+
+jobs:
+  acordar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Acessar /health/banco
+        run: |
+          for tentativa in 1 2 3 4; do
+            if curl -fsS --max-time 120 https://gestao-risco-api.onrender.com/health/banco; then exit 0; fi
+            sleep 30
+          done
+          exit 1
