@@ -114,3 +114,25 @@ def test_login_de_admin_funciona(cliente, admin):
     resposta = cliente.post("/auth/login", json={"email": admin.email, "senha": SENHA_ADMIN})
 
     assert resposta.status_code == 200
+
+
+def test_usuario_troca_a_propria_senha(cliente, gerente):
+    from tests.conftest import SENHA_GERENTE, autenticar
+
+    cabecalho = autenticar(cliente, gerente.email, SENHA_GERENTE)
+    r = cliente.patch("/auth/me/senha", headers=cabecalho, json={"senha_atual": SENHA_GERENTE, "senha_nova": "nova-senha-123"})
+    assert r.status_code == 204
+    assert cliente.post("/auth/login", json={"email": gerente.email, "senha": SENHA_GERENTE}).status_code == 401
+    assert cliente.post("/auth/login", json={"email": gerente.email, "senha": "nova-senha-123"}).status_code == 200
+
+
+def test_troca_de_senha_exige_a_senha_atual_correta(cliente, cabecalho_gerente):
+    r = cliente.patch("/auth/me/senha", headers=cabecalho_gerente, json={"senha_atual": "errada", "senha_nova": "nova-senha-123"})
+    assert r.status_code == 400
+
+
+def test_nova_senha_curta_e_recusada(cliente, cabecalho_gerente):
+    from tests.conftest import SENHA_GERENTE
+
+    r = cliente.patch("/auth/me/senha", headers=cabecalho_gerente, json={"senha_atual": SENHA_GERENTE, "senha_nova": "123"})
+    assert r.status_code == 422

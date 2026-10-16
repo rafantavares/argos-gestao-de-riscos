@@ -62,6 +62,10 @@ class Risco(Base):
         server_default=FaseProjeto.PLANEJAMENTO.value,
     )
     mitigacao = Column(Text, nullable=True)
+    # Risco residual (PMBOK / ISO 31000): notas esperadas DEPOIS da mitigação.
+    # As notas `probabilidade` e `impacto` são a avaliação atual (inerente).
+    probabilidade_residual = Column(SmallInteger, nullable=True)
+    impacto_residual = Column(SmallInteger, nullable=True)
     contingencia = Column(Text, nullable=True)
     gatilho = Column(Text, nullable=True)
     status = Column(

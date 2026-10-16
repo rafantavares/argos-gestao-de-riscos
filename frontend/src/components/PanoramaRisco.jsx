@@ -1,6 +1,6 @@
 import { Box, Grid, Paper, Typography } from "@mui/material";
 import { Gauge, gaugeClasses } from "@mui/x-charts/Gauge";
-import { AREAS_AFETADAS, faixaExposicao } from "../constants";
+import { AREAS_AFETADAS, exposicaoResidual, faixaExposicao, reducaoPercentual } from "../constants";
 import { IconeArea } from "./Badges";
 
 // Panorama do risco do projeto: o "termômetro" (exposição média dos riscos
@@ -9,6 +9,10 @@ export default function PanoramaRisco({ riscos }) {
   const media = riscos.length ? riscos.reduce((soma, r) => soma + r.exposicao, 0) / riscos.length : 0;
   const faixaMedia = faixaExposicao(Math.max(1, Math.round(media)));
   const graves = riscos.filter((r) => r.exposicao >= 16).length;
+  const total = riscos.reduce((s, r) => s + r.exposicao, 0);
+  const totalResidual = riscos.reduce((s, r) => s + exposicaoResidual(r), 0);
+  const comResidual = riscos.filter((r) => r.exposicao_residual != null).length;
+  const reducao = reducaoPercentual(total, totalResidual);
 
   const porArea = AREAS_AFETADAS.map((area) => {
     const lista = riscos.filter((r) => r.area_afetada === area.value);
@@ -54,6 +58,11 @@ export default function PanoramaRisco({ riscos }) {
           <Typography variant="caption" align="center" color="text.secondary">
             {riscos.length} riscos ativos · {graves} graves ou muito graves
           </Typography>
+          {comResidual > 0 && (
+            <Typography variant="caption" align="center" sx={{ mt: 0.5, color: "#4ADE80", fontWeight: 600 }}>
+              Com as mitigações: −{reducao}% de exposição esperada ({comResidual} riscos com residual)
+            </Typography>
+          )}
         </Paper>
       </Grid>
 

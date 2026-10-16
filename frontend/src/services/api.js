@@ -45,6 +45,8 @@ export const auth = {
   me: () => api.get("/auth/me").then((r) => r.data),
   cadastrarGerente: (dados) => api.post("/auth/gerentes", dados).then((r) => r.data),
   listarGerentes: () => api.get("/auth/gerentes").then((r) => r.data),
+  trocarSenha: (senhaAtual, senhaNova) =>
+    api.patch("/auth/me/senha", { senha_atual: senhaAtual, senha_nova: senhaNova }),
 };
 
 // --- projetos ---

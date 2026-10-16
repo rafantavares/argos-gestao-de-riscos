@@ -270,3 +270,30 @@ def test_assistente_exige_gerente_vinculado_ao_projeto(cliente, cabecalho_gerent
     resposta = cliente.post("/riscos/assistente", headers=cabecalho_gerente, json={"id_projeto": projeto.id})
 
     assert resposta.status_code == 403
+
+
+# ---------- risco residual (após a mitigação) ----------
+
+
+def test_cadastro_com_risco_residual(cliente, cabecalho_gerente, projeto_com_gerente):
+    corpo = cliente.post(
+        "/riscos",
+        headers=cabecalho_gerente,
+        json={**RISCO, "id_projeto": projeto_com_gerente.id, "probabilidade_residual": 1, "impacto_residual": 4},
+    ).json()
+    assert corpo["exposicao"] == 15 and corpo["exposicao_residual"] == 4
+    assert corpo["avaliacao_exposicao_residual"] == "Leve"
+
+
+def test_residual_e_opcional_e_pode_ser_editado_e_apagado(cliente, cabecalho_gerente, risco):
+    url = f"/riscos/{risco.id}/tratamento"
+    assert cliente.get(f"/riscos/{risco.id}", headers=cabecalho_gerente).json()["exposicao_residual"] is None
+    r = cliente.patch(url, headers=cabecalho_gerente, json={"probabilidade_residual": 2, "impacto_residual": 3}).json()
+    assert r["exposicao_residual"] == 6
+    r = cliente.patch(url, headers=cabecalho_gerente, json={"probabilidade_residual": None, "impacto_residual": None}).json()
+    assert r["exposicao_residual"] is None
+
+
+def test_residual_fora_da_escala_e_recusado(cliente, cabecalho_gerente, risco):
+    r = cliente.patch(f"/riscos/{risco.id}/tratamento", headers=cabecalho_gerente, json={"probabilidade_residual": 7})
+    assert r.status_code == 422

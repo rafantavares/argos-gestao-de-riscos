@@ -105,6 +105,8 @@ def cadastrar_risco(
         probabilidade=dados.probabilidade,
         impacto=dados.impacto,
         mitigacao=dados.mitigacao,
+        probabilidade_residual=dados.probabilidade_residual,
+        impacto_residual=dados.impacto_residual,
         contingencia=dados.contingencia,
         gatilho=dados.gatilho,
         orcamento_impacto=dados.orcamento_impacto,
@@ -309,6 +311,10 @@ def atualizar_tratamento_risco(
     risco = _obter_risco_do_gerente(id_risco, gerente, sessao)
     for campo, valor in dados.model_dump(exclude_unset=True, exclude_none=True).items():
         setattr(risco, campo, valor.value if campo == "area_afetada" else valor)
+    # O residual pode ser apagado (enviado como null).
+    for campo in ("probabilidade_residual", "impacto_residual"):
+        if campo in dados.model_fields_set and getattr(dados, campo) is None:
+            setattr(risco, campo, None)
     if dados.area_afetada is not None:
         # O grupo PMBOK (feature do ML) acompanha a área afetada.
         risco.categoria = AREA_PARA_CATEGORIA[dados.area_afetada]

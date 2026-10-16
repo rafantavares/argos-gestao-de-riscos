@@ -40,7 +40,9 @@ import {
   PROBABILIDADES,
   STATUS_RISCO,
   URGENCIAS,
+  faixaExposicao,
   nivelSeveridade,
+  reducaoPercentual,
   rotulo,
 } from "../../constants";
 import BarraConfianca from "../../components/BarraConfianca";
@@ -544,10 +546,59 @@ const CAMPOS_REGISTRO = [
   "mitigacao",
   "contingencia",
   "gatilho",
+  "probabilidade_residual",
+  "impacto_residual",
 ];
 
 function valoresDoRisco(risco) {
   return Object.fromEntries(CAMPOS_REGISTRO.map((campo) => [campo, risco[campo] ?? ""]));
+}
+
+// Exposição residual esperada após a mitigação (opcional), com a redução prevista.
+function ResidualEsperado({ risco, valores, campo }) {
+  const p = Number(valores.probabilidade_residual) || 0;
+  const i = Number(valores.impacto_residual) || 0;
+  const residual = p && i ? p * i : null;
+  const faixa = residual ? faixaExposicao(residual) : null;
+  const reducao = residual ? reducaoPercentual(risco.exposicao, residual) : null;
+  return (
+    <Box sx={{ border: 1, borderColor: "divider", borderRadius: 1.5, p: 1.5 }}>
+      <Typography variant="body2" fontWeight={600}>
+        Exposição residual esperada (após a mitigação)
+      </Typography>
+      <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
+        Quanto deve sobrar do risco se a mitigação funcionar (PMBOK / ISO 31000). Opcional.
+      </Typography>
+      <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }}>
+        <TextField select size="small" label="Probabilidade residual" {...campo("probabilidade_residual")} sx={{ minWidth: 200 }}>
+          <MenuItem value="">Sem previsão</MenuItem>
+          {PROBABILIDADES.map((o) => (
+            <MenuItem key={o.value} value={o.value}>
+              {o.value} · {o.label}
+            </MenuItem>
+          ))}
+        </TextField>
+        <TextField select size="small" label="Impacto residual" {...campo("impacto_residual")} sx={{ minWidth: 200 }}>
+          <MenuItem value="">Sem previsão</MenuItem>
+          {IMPACTOS.map((o) => (
+            <MenuItem key={o.value} value={o.value}>
+              {o.value} · {o.label}
+            </MenuItem>
+          ))}
+        </TextField>
+        <Typography variant="body2" color="text.secondary">
+          {residual ? (
+            <>
+              {risco.exposicao} → <strong style={{ color: faixa.cor }}>{residual} · {faixa.label}</strong>
+              {reducao > 0 ? ` (redução de ${reducao}%)` : reducao < 0 ? " (maior que a atual: revise)" : ""}
+            </>
+          ) : (
+            "Preencha as duas notas para ver a redução esperada."
+          )}
+        </Typography>
+      </Stack>
+    </Box>
+  );
 }
 
 function RegistroRisco({ risco, aoSalvar }) {
@@ -571,7 +622,12 @@ function RegistroRisco({ risco, aoSalvar }) {
   async function salvar() {
     setSalvando(true);
     try {
-      aoSalvar(await servicoRiscos.atualizarTratamento(risco.id, valores));
+      const dados = {
+        ...valores,
+        probabilidade_residual: valores.probabilidade_residual || null,
+        impacto_residual: valores.impacto_residual || null,
+      };
+      aoSalvar(await servicoRiscos.atualizarTratamento(risco.id, dados));
       avisar("Registro atualizado.");
     } catch (e) {
       const detalhe = e.response?.data?.detail;
@@ -618,6 +674,7 @@ function RegistroRisco({ risco, aoSalvar }) {
         </Stack>
         <TextField label="Descrição do impacto" {...campo("descricao_impacto")} multiline minRows={2} />
         <TextField label="Mitigação (ação preventiva)" {...campo("mitigacao")} multiline minRows={2} />
+        <ResidualEsperado risco={risco} valores={valores} campo={campo} />
         <TextField label="Contingência (ação reativa)" {...campo("contingencia")} multiline minRows={2} />
         <TextField
           label="Gatilho"

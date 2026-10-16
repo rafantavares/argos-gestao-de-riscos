@@ -4,7 +4,15 @@ import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
 import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import UnarchiveOutlinedIcon from "@mui/icons-material/UnarchiveOutlined";
-import { FASES_PROJETO, IMPACTOS, PROBABILIDADES, faixaExposicao, precisaReavaliar, rotulo } from "../constants";
+import {
+  FASES_PROJETO,
+  IMPACTOS,
+  PROBABILIDADES,
+  faixaExposicao,
+  precisaReavaliar,
+  reducaoPercentual,
+  rotulo,
+} from "../constants";
 import { ChipArea, ChipStatus, ChipUrgencia } from "./Badges";
 import MiniMatriz from "./MiniMatriz";
 
@@ -88,6 +96,16 @@ export default function FichaRisco({ risco, aoArquivar }) {
             </Dado>
             <Dado rotulo="Fase">{rotulo(FASES_PROJETO, risco.fase_projeto)}</Dado>
             <Dado rotulo="Última avaliação">{ultimaAvaliacao.toLocaleDateString("pt-BR")}</Dado>
+            {risco.exposicao_residual != null && (
+              <Dado rotulo="Residual esperada">
+                <span style={{ color: faixaExposicao(risco.exposicao_residual).cor }}>
+                  {risco.exposicao_residual} · {risco.avaliacao_exposicao_residual}
+                </span>{" "}
+                <Typography component="span" variant="caption" color="text.secondary">
+                  (−{reducaoPercentual(risco.exposicao, risco.exposicao_residual)}%)
+                </Typography>
+              </Dado>
+            )}
           </Box>
           {risco.id_conversa_origem && (
             <Button

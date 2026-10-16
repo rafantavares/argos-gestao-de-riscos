@@ -26,6 +26,9 @@ class RiscoBase(BaseModel):
     urgencia: Urgencia
     fase_projeto: FaseProjeto
     mitigacao: Optional[str] = Field(default=None, max_length=2000)
+    # Exposição residual esperada após a mitigação (opcional).
+    probabilidade_residual: Optional[int] = Field(default=None, ge=1, le=5)
+    impacto_residual: Optional[int] = Field(default=None, ge=1, le=5)
     contingencia: Optional[str] = Field(default=None, max_length=2000)
     gatilho: Optional[str] = Field(default=None, max_length=1000)
 
@@ -69,6 +72,19 @@ class RiscoResposta(RiscoBase):
     def avaliacao_exposicao(self) -> str:
         return avaliacao_exposicao(self.exposicao)
 
+    @computed_field
+    @property
+    def exposicao_residual(self) -> Optional[int]:
+        if self.probabilidade_residual and self.impacto_residual:
+            return pontuacao_exposicao(self.probabilidade_residual, self.impacto_residual)
+        return None
+
+    @computed_field
+    @property
+    def avaliacao_exposicao_residual(self) -> Optional[str]:
+        residual = self.exposicao_residual
+        return avaliacao_exposicao(residual) if residual else None
+
 
 class RiscoPlanoAtualizar(BaseModel):
     """Edição do registro (identificação e tratamento). As notas de impacto e
@@ -81,6 +97,8 @@ class RiscoPlanoAtualizar(BaseModel):
 
     descricao_impacto: Optional[str] = Field(default=None, min_length=5, max_length=2000)
     mitigacao: Optional[str] = Field(default=None, max_length=2000)
+    probabilidade_residual: Optional[int] = Field(default=None, ge=1, le=5)
+    impacto_residual: Optional[int] = Field(default=None, ge=1, le=5)
     contingencia: Optional[str] = Field(default=None, max_length=2000)
     gatilho: Optional[str] = Field(default=None, max_length=1000)
 

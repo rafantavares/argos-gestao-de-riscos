@@ -16,8 +16,10 @@ import {
   PROBABILIDADES,
   STATUS_RISCO,
   URGENCIAS,
+  exposicaoResidual,
   faixaExposicao,
   precisaReavaliar,
+  reducaoPercentual,
   rotulo,
 } from "../../constants";
 import { COR, Etiqueta, Indicador, Secao, cabecalho, celula } from "../../components/DocumentoPdf";
@@ -91,6 +93,10 @@ export default function Relatorio() {
   const contagemFaixa = FAIXAS_EXPOSICAO.map((f) => ({ ...f, n: riscos.filter((r) => r.avaliacao_exposicao === f.label).length }));
   const aceitos = riscos.filter((r) => ultimaRec.get(r.id)?.aceita === true).length;
   const pendentesReav = riscos.filter(precisaReavaliar).length;
+  const reducao = reducaoPercentual(
+    riscos.reduce((s, r) => s + r.exposicao, 0),
+    riscos.reduce((s, r) => s + exposicaoResidual(r), 0)
+  );
 
   return (
     <Box sx={{ py: { xs: 0, md: 3 }, "@media print": { py: 0 } }}>
@@ -169,6 +175,7 @@ export default function Relatorio() {
             <Indicador valor={riscos.filter((r) => r.exposicao >= 16).length} rotulo="graves ou muito graves" cor="#DC2626" />
             <Indicador valor={aceitos} rotulo="com plano aceito" />
             <Indicador valor={pendentesReav} rotulo="reavaliação pendente" cor={pendentesReav ? "#EA580C" : undefined} />
+            <Indicador valor={`−${reducao}%`} rotulo="exposição após mitigação" cor="#15803D" />
           </Box>
           <Typography sx={{ fontSize: 11, color: COR.suave, mt: 1 }}>
             Distribuição por faixa de exposição:{" "}
@@ -224,7 +231,7 @@ export default function Relatorio() {
           <table style={{ borderCollapse: "collapse", width: "100%" }}>
             <thead>
               <tr>
-                {["Índice", "Risco", "Projeto", "Área", "P", "I", "Exposição", "Status", "Plano"].map((c) => (
+                {["Índice", "Risco", "Projeto", "Área", "P", "I", "Exposição", "Residual", "Status", "Plano"].map((c) => (
                   <th key={c} style={cabecalho}>
                     {c}
                   </th>
@@ -247,6 +254,13 @@ export default function Relatorio() {
                       <Etiqueta cor={faixa.cor}>
                         {r.exposicao} · {faixa.label}
                       </Etiqueta>
+                    </td>
+                    <td style={celula}>
+                      {r.exposicao_residual != null ? (
+                        <Etiqueta cor={faixaExposicao(r.exposicao_residual).cor}>{r.exposicao_residual}</Etiqueta>
+                      ) : (
+                        "—"
+                      )}
                     </td>
                     <td style={celula}>{rotulo(STATUS_RISCO, r.status)}</td>
                     <td style={celula}>{!rec ? "—" : rec.aceita === true ? "Aceito" : rec.aceita === false ? "Rejeitado" : "Pendente"}</td>

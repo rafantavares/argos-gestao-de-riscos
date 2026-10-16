@@ -203,3 +203,13 @@ export function precisaReavaliar(risco) {
   const data = new Date(risco.ultima_avaliacao_em ?? risco.criado_em);
   return (Date.now() - data.getTime()) / 86400000 >= DIAS_PARA_REAVALIAR;
 }
+
+// Risco residual (PMBOK / ISO 31000): exposição esperada após a mitigação.
+// Sem previsão de residual, o risco conta com a exposição atual.
+export function exposicaoResidual(risco) {
+  return risco.exposicao_residual ?? risco.exposicao;
+}
+
+export function reducaoPercentual(antes, depois) {
+  return antes > 0 ? Math.round(((antes - depois) / antes) * 100) : 0;
+}

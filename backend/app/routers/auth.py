@@ -15,7 +15,7 @@ from app.core.security import (
 from app.database import obter_sessao
 from app.models.enums import PerfilUsuario
 from app.models.usuario import Usuario
-from app.schemas.auth import LoginRequisicao, TokenResposta
+from app.schemas.auth import LoginRequisicao, TokenResposta, TrocaSenha
 from app.schemas.usuario import UsuarioCriar, UsuarioResposta
 
 roteador = APIRouter(prefix="/auth", tags=["Autenticação"])
@@ -38,6 +38,22 @@ def login(credenciais: LoginRequisicao, sessao: Session = Depends(obter_sessao))
 @roteador.get("/me", response_model=UsuarioResposta)
 def obter_usuario_logado(usuario_atual: Usuario = Depends(obter_usuario_atual)):
     return usuario_atual
+
+
+@roteador.patch("/me/senha", status_code=status.HTTP_204_NO_CONTENT)
+def trocar_senha(
+    dados: TrocaSenha,
+    sessao: Session = Depends(obter_sessao),
+    usuario_atual: Usuario = Depends(obter_usuario_atual),
+):
+    """O próprio usuário troca a senha, confirmando a senha atual."""
+    if not verificar_senha(dados.senha_atual, usuario_atual.senha_hash):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A senha atual está incorreta")
+    if dados.senha_nova == dados.senha_atual:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A nova senha deve ser diferente da atual")
+    usuario = sessao.get(Usuario, usuario_atual.id)
+    usuario.senha_hash = criar_hash_senha(dados.senha_nova)
+    sessao.commit()
 
 
 @roteador.post(

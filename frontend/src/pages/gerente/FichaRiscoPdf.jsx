@@ -19,6 +19,7 @@ import {
   URGENCIAS,
   faixaExposicao,
   precisaReavaliar,
+  reducaoPercentual,
   rotulo,
 } from "../../constants";
 import { COR, DocumentoPdf, Etiqueta, Secao, cabecalho, celula } from "../../components/DocumentoPdf";
@@ -144,6 +145,11 @@ export default function FichaRiscoPdf() {
 
       <Secao numero={2} titulo="Tratamento" norma="GPR 10+ · mitigação e contingência">
         <Campo nome="Mitigação (ação preventiva)">{risco.mitigacao}</Campo>
+        <Campo nome="Exposição residual esperada (após a mitigação)">
+          {risco.exposicao_residual != null
+            ? `P${risco.probabilidade_residual} × I${risco.impacto_residual} = ${risco.exposicao_residual} · ${risco.avaliacao_exposicao_residual} (de ${risco.exposicao}, redução de ${reducaoPercentual(risco.exposicao, risco.exposicao_residual)}%)`
+            : "Sem previsão"}
+        </Campo>
         <Campo nome="Contingência (ação reativa)">{risco.contingencia}</Campo>
         <Campo nome="Gatilho">{risco.gatilho}</Campo>
       </Secao>
