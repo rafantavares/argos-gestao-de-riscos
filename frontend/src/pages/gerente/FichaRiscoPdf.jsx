@@ -84,6 +84,8 @@ export default function FichaRiscoPdf() {
     <DocumentoPdf
       titulo={`${risco.indice} · ${risco.titulo}`}
       subtitulo={`Ficha do risco · ${projeto?.nome ?? "Projeto"}`}
+      rotulo={`Ficha do risco ${risco.indice}`}
+      resumo={`${projeto?.nome ?? "Projeto"} · ${faixa.label.toLowerCase()} (${risco.exposicao})`}
       metadados={[
         ["Situação", situacao],
         ["Cadastrado em", data(risco.criado_em)],

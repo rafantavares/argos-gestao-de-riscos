@@ -102,6 +102,7 @@ export default function Relatorio() {
     <DocumentoPdf
       titulo={pedido.idProjeto ? "Relatório de riscos do projeto" : "Relatório de riscos"}
       subtitulo={nomesProjetos.length ? nomesProjetos.join(" · ") : "Todos os projetos"}
+      resumo={`${riscos.length} ${riscos.length === 1 ? "risco" : "riscos"} · ${nomesProjetos.length || "todos os"} ${nomesProjetos.length === 1 ? "projeto" : "projetos"}`}
       metadados={[
         ["Emitido em", quando()],
         ["Responsável", usuario.nome],

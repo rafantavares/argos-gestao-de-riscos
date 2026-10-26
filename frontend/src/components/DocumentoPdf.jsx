@@ -1,8 +1,8 @@
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Button, GlobalStyles, Typography } from "@mui/material";
+import { Box, Button, GlobalStyles, IconButton, Tooltip, Typography } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { FAIXAS_EXPOSICAO, IMPACTOS, PROBABILIDADES, faixaExposicao } from "../constants";
 import LogoMark from "./Logo";
 
@@ -237,59 +237,106 @@ const CSS_PAGINA = `@page {
   @bottom-right { content: "Página " counter(page) " de " counter(pages); font: 8pt "IBM Plex Sans", Arial, sans-serif; color: #7A8497; }
 }`;
 
-export function DocumentoPdf({ titulo, subtitulo, metadados = [], children }) {
+export function DocumentoPdf({ titulo, subtitulo, rotulo: rotuloBarra, resumo, metadados = [], children }) {
   const navigate = useNavigate();
 
-  // Documento claro para impressão, independente do modo do sistema.
-  useEffect(() => {
-    const anterior = document.body.style.backgroundColor;
-    document.body.style.backgroundColor = "#E5E7EB";
-    document.body.classList.add("documento-claro");
-    return () => {
-      document.body.style.backgroundColor = anterior;
-      document.body.classList.remove("documento-claro");
-    };
-  }, []);
-
   return (
-    <Box sx={{ py: { xs: 0, md: 3 }, "@media print": { py: 0 } }}>
+    <Box
+      className="pdf-mesa"
+      sx={{
+        minHeight: "100vh",
+        // "Mesa" em volta da folha, no tema do sistema (escuro ou claro).
+        bgcolor: "color-mix(in srgb, var(--argos-texto) 7%, var(--argos-fundo))",
+        "@media print": { bgcolor: "#fff", minHeight: 0 },
+      }}
+    >
       {/* Margens e rodapé da página impressa (número de página); CSS puro porque
           as regras aninhadas do @page não passam bem pelo GlobalStyles. */}
       <style>{CSS_PAGINA}</style>
       <GlobalStyles
         styles={{
-          "@media print": { body: { backgroundColor: "#fff !important" } },
+          "@media print": { "html, body": { backgroundColor: "#fff !important" } },
           "*": { WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" },
           "tr, img": { breakInside: "avoid" },
           thead: { display: "table-header-group" },
         }}
       />
+
+      {/* Barra da pré-visualização (não sai na impressão) */}
       <Box
-        sx={{ maxWidth: 840, mx: "auto", mb: 2, px: 2, display: "flex", gap: 1.5, alignItems: "center", "@media print": { display: "none" } }}
+        component="header"
+        sx={{
+          position: "sticky",
+          top: 0,
+          zIndex: 2,
+          display: "flex",
+          alignItems: "center",
+          gap: { xs: 1, sm: 1.5 },
+          px: { xs: 1.5, sm: 3 },
+          minHeight: 64,
+          bgcolor: "var(--argos-menu)",
+          borderBottom: "1px solid var(--argos-borda-suave)",
+          "@media print": { display: "none" },
+        }}
       >
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} sx={{ color: "#111827" }}>
-          Voltar
-        </Button>
-        <Typography sx={{ flexGrow: 1, fontSize: 13, color: "#374151" }}>
-          Em &quot;Destino&quot;, escolha <strong>Salvar como PDF</strong>. Para as cores saírem, deixe marcado &quot;Gráficos de
-          segundo plano&quot;.
-        </Typography>
+        <Tooltip title="Voltar">
+          <IconButton onClick={() => navigate(-1)} aria-label="Voltar" sx={{ color: "text.secondary" }}>
+            <ArrowBackIcon />
+          </IconButton>
+        </Tooltip>
+        <Box sx={{ display: { xs: "none", sm: "flex" }, alignItems: "center", pr: 1.5, mr: 0.5, borderRight: "1px solid var(--argos-borda)" }}>
+          <LogoMark size={26} />
+        </Box>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography variant="subtitle1" component="p" noWrap sx={{ lineHeight: 1.3 }}>
+            {rotuloBarra ?? titulo}
+          </Typography>
+          <Typography variant="caption" color="text.secondary" noWrap component="p">
+            Pré-visualização · folha A4{resumo ? ` · ${resumo}` : ""}
+          </Typography>
+        </Box>
+        <Tooltip
+          title={
+            <>
+              Na janela que abrir, em &quot;Destino&quot;, escolha <strong>Salvar como PDF</strong>. Em &quot;Mais
+              configurações&quot;, deixe marcado <strong>Gráficos de segundo plano</strong> para as cores saírem.
+            </>
+          }
+        >
+          <IconButton aria-label="Como salvar o PDF" sx={{ color: "text.secondary", display: { xs: "none", sm: "inline-flex" } }}>
+            <HelpOutlineIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
         <Button variant="contained" startIcon={<PictureAsPdfIcon />} onClick={() => window.print()}>
           Baixar PDF
         </Button>
       </Box>
 
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        component="p"
+        sx={{ textAlign: "center", px: 2, pt: 2, "@media print": { display: "none" } }}
+      >
+        Ao salvar, escolha &quot;Salvar como PDF&quot; e mantenha &quot;Gráficos de segundo plano&quot; marcado.
+      </Typography>
+
+      {/* A folha: sempre na paleta clara (classe documento-claro), como no papel. */}
       <Box
         component="article"
+        className="documento-claro"
         sx={{
           maxWidth: 840,
+          minHeight: { md: 1188 },
           mx: "auto",
+          my: { xs: 2, md: 3 },
           bgcolor: "#FFFFFF",
           color: COR.texto,
           px: { xs: 2.5, md: 6 },
           py: { xs: 3, md: 5.5 },
-          boxShadow: "0 4px 24px rgba(15,23,42,0.12)",
-          "@media print": { boxShadow: "none", p: 0, maxWidth: "none" },
+          borderRadius: "2px",
+          boxShadow: "0 1px 2px rgba(15,23,42,0.08), 0 12px 40px rgba(15,23,42,0.18)",
+          "@media print": { boxShadow: "none", p: 0, m: 0, maxWidth: "none", minHeight: 0, borderRadius: 0 },
           "& *": { fontFamily: '"IBM Plex Sans", Arial, sans-serif' },
           "& h1, & h2": { fontFamily: `${TITULO} !important` },
         }}
