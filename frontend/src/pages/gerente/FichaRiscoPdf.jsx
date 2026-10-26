@@ -22,21 +22,12 @@ import {
   reducaoPercentual,
   rotulo,
 } from "../../constants";
-import { COR, DocumentoPdf, Etiqueta, Secao, cabecalho, celula } from "../../components/DocumentoPdf";
+import { COR, Campos, DocumentoPdf, MarcadorFaixa, Secao, Tabela, celula, quando } from "../../components/DocumentoPdf";
 import MiniMatriz from "../../components/MiniMatriz";
 
 const data = (valor) => new Date(valor).toLocaleDateString("pt-BR");
 const dataHora = (valor) =>
   new Date(valor).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-
-function Campo({ nome, children }) {
-  return (
-    <Box sx={{ mb: 0.75 }}>
-      <Typography sx={{ fontSize: 10, color: COR.suave, textTransform: "uppercase", letterSpacing: 0.4 }}>{nome}</Typography>
-      <Typography sx={{ fontSize: 12 }}>{children || "—"}</Typography>
-    </Box>
-  );
-}
 
 function decisao(rec) {
   if (rec.aceita === true) return "Aceito";
@@ -81,22 +72,34 @@ export default function FichaRiscoPdf() {
   const faixa = faixaExposicao(risco.exposicao);
   const projeto = projetos.find((p) => p.id === risco.id_projeto);
   const pontos = evolucao?.pontos ?? [];
+  const situacao = [
+    rotulo(STATUS_RISCO, risco.status),
+    risco.arquivado ? "arquivado" : null,
+    precisaReavaliar(risco) ? "reavaliação pendente" : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <DocumentoPdf
-      titulo={`Ficha do risco ${risco.indice}`}
-      subtitulo={`${projeto?.nome ?? "Projeto"} · ${risco.titulo}`}
-      responsavel={usuario.nome}
+      titulo={`${risco.indice} · ${risco.titulo}`}
+      subtitulo={`Ficha do risco · ${projeto?.nome ?? "Projeto"}`}
+      metadados={[
+        ["Situação", situacao],
+        ["Cadastrado em", data(risco.criado_em)],
+        ["Última avaliação", data(risco.ultima_avaliacao_em ?? risco.criado_em)],
+        ["Emitido em", `${quando()} por ${usuario.nome}`],
+      ]}
     >
-      {/* Identificação + exposição em destaque */}
-      <Box sx={{ display: "flex", gap: 2.5, alignItems: "center", mt: 2.5, flexWrap: "wrap" }}>
+      {/* Exposição em destaque: célula da matriz + posição na matriz */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 3, mt: 3.5, p: 2, bgcolor: COR.fundo, borderRadius: 2, breakInside: "avoid" }}>
         <Box
           sx={{
-            width: 92,
-            height: 92,
-            borderRadius: 1.5,
-            border: `2px solid ${faixa.cor}`,
-            bgcolor: `color-mix(in srgb, ${faixa.cor} 20%, transparent)`,
+            width: 88,
+            height: 88,
+            borderRadius: 2,
+            bgcolor: faixa.cor,
+            color: faixa.corTexto,
             display: "grid",
             placeItems: "center",
             textAlign: "center",
@@ -104,89 +107,90 @@ export default function FichaRiscoPdf() {
           }}
         >
           <Box>
-            <Typography sx={{ fontSize: 34, fontWeight: 700, lineHeight: 1 }}>{risco.exposicao}</Typography>
-            <Typography sx={{ fontSize: 11, fontWeight: 700 }}>{faixa.label}</Typography>
+            <Typography sx={{ fontSize: 34, fontWeight: 700, lineHeight: 1, color: "inherit", fontFamily: '"Space Grotesk", sans-serif !important' }}>
+              {risco.exposicao}
+            </Typography>
+            <Typography sx={{ fontSize: 11, fontWeight: 600, color: "inherit" }}>{faixa.label}</Typography>
           </Box>
         </Box>
-        <Box sx={{ flex: 1, minWidth: 260 }}>
-          <Typography sx={{ fontSize: 18, fontWeight: 700, lineHeight: 1.25 }}>
-            <span style={{ color: COR.marca }}>{risco.indice}</span> · {risco.titulo}
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography sx={{ fontSize: 11, color: COR.suave }}>Exposição = probabilidade × impacto (1 a 25)</Typography>
+          <Typography sx={{ fontSize: 14, fontWeight: 600, mt: 0.5 }}>
+            Probabilidade {risco.probabilidade} ({rotulo(PROBABILIDADES, risco.probabilidade).toLowerCase()}) × impacto{" "}
+            {risco.impacto} ({rotulo(IMPACTOS, risco.impacto).toLowerCase()})
           </Typography>
-          <Typography sx={{ fontSize: 12, color: COR.suave, mt: 0.5 }}>
-            Status: <strong style={{ color: COR.texto }}>{rotulo(STATUS_RISCO, risco.status)}</strong>
-            {risco.arquivado ? " · ARQUIVADO" : ""}
-            {precisaReavaliar(risco) ? " · reavaliação pendente (30+ dias)" : ""} · cadastrado em {data(risco.criado_em)} ·
-            última avaliação em {data(risco.ultima_avaliacao_em ?? risco.criado_em)}
-          </Typography>
+          {risco.exposicao_residual != null && (
+            <Typography sx={{ fontSize: 12, color: COR.suave, mt: 0.5, display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+              Esperada após a mitigação:
+              <Box component="span" sx={{ color: COR.texto, fontWeight: 600 }}>
+                <MarcadorFaixa pontuacao={risco.exposicao_residual} />
+              </Box>
+              (redução de {reducaoPercentual(risco.exposicao, risco.exposicao_residual)}%)
+            </Typography>
+          )}
         </Box>
-        <MiniMatriz probabilidade={risco.probabilidade} impacto={risco.impacto} tamanho={13} folga={3} />
+        <MiniMatriz probabilidade={risco.probabilidade} impacto={risco.impacto} tamanho={12} folga={3} />
       </Box>
 
       <Secao numero={1} titulo="Identificação e avaliação" norma="MR-MPS-SW:2023 · GPR 10">
-        <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", columnGap: 2 }}>
-          <Campo nome="Área afetada">{rotulo(AREAS_AFETADAS, risco.area_afetada)}</Campo>
-          <Campo nome="Grupo PMBOK">{rotulo(CATEGORIAS, risco.categoria)}</Campo>
-          <Campo nome="Fase do projeto">{rotulo(FASES_PROJETO, risco.fase_projeto)}</Campo>
-          <Campo nome="Probabilidade">
-            {risco.probabilidade} · {rotulo(PROBABILIDADES, risco.probabilidade)}
-          </Campo>
-          <Campo nome="Impacto">
-            {risco.impacto} · {rotulo(IMPACTOS, risco.impacto)}
-          </Campo>
-          <Campo nome="Exposição (P × I)">
-            {risco.exposicao} · {risco.avaliacao_exposicao}
-          </Campo>
-          <Campo nome="Urgência">{rotulo(URGENCIAS, risco.urgencia)}</Campo>
-          <Campo nome="Impacto no orçamento">{rotulo(ORCAMENTOS_IMPACTO, risco.orcamento_impacto)}</Campo>
-          <Campo nome="Projeto">{projeto?.nome}</Campo>
-        </Box>
-        <Campo nome="Descrição do impacto">{risco.descricao_impacto}</Campo>
+        <Campos
+          itens={[
+            ["Projeto", projeto?.nome],
+            ["Área afetada", rotulo(AREAS_AFETADAS, risco.area_afetada)],
+            ["Grupo PMBOK", rotulo(CATEGORIAS, risco.categoria)],
+            ["Fase do projeto", rotulo(FASES_PROJETO, risco.fase_projeto)],
+            ["Urgência", rotulo(URGENCIAS, risco.urgencia)],
+            ["Impacto no orçamento", rotulo(ORCAMENTOS_IMPACTO, risco.orcamento_impacto)],
+            ["Descrição do impacto", risco.descricao_impacto],
+          ]}
+        />
       </Secao>
 
       <Secao numero={2} titulo="Tratamento" norma="GPR 10+ · mitigação e contingência">
-        <Campo nome="Mitigação (ação preventiva)">{risco.mitigacao}</Campo>
-        <Campo nome="Exposição residual esperada (após a mitigação)">
-          {risco.exposicao_residual != null
-            ? `P${risco.probabilidade_residual} × I${risco.impacto_residual} = ${risco.exposicao_residual} · ${risco.avaliacao_exposicao_residual} (de ${risco.exposicao}, redução de ${reducaoPercentual(risco.exposicao, risco.exposicao_residual)}%)`
-            : "Sem previsão"}
-        </Campo>
-        <Campo nome="Contingência (ação reativa)">{risco.contingencia}</Campo>
-        <Campo nome="Gatilho">{risco.gatilho}</Campo>
+        <Campos
+          itens={[
+            ["Mitigação", risco.mitigacao],
+            [
+              "Exposição residual",
+              risco.exposicao_residual != null
+                ? `Probabilidade ${risco.probabilidade_residual} × impacto ${risco.impacto_residual} = ${risco.exposicao_residual} (${risco.avaliacao_exposicao_residual})`
+                : "Sem previsão",
+            ],
+            ["Contingência", risco.contingencia],
+            ["Gatilho", risco.gatilho],
+          ]}
+        />
       </Secao>
 
       <Secao numero={3} titulo="Planos recomendados pelo modelo" norma="apoio à decisão">
         {recomendacoes.length === 0 ? (
           <Typography sx={{ fontSize: 12, color: COR.suave }}>Nenhuma recomendação gerada.</Typography>
         ) : (
-          <table style={{ borderCollapse: "collapse", width: "100%" }}>
-            <thead>
-              <tr>
-                {["Data", "Plano de contingência", "Algoritmo", "Confiança", "Decisão"].map((c) => (
-                  <th key={c} style={cabecalho}>
-                    {c}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {[...recomendacoes]
-                .sort((a, b) => new Date(a.criado_em) - new Date(b.criado_em))
-                .map((rec) => (
-                  <tr key={rec.id} style={{ breakInside: "avoid" }}>
-                    <td style={{ ...celula, whiteSpace: "nowrap" }}>{data(rec.criado_em)}</td>
-                    <td style={celula}>{rec.plano?.descricao ?? "—"}</td>
-                    <td style={celula}>
-                      {NOMES_ALGORITMOS[rec.algoritmo_usado] ?? rec.algoritmo_usado}
-                      {rec.acuracia_momento ? ` (acurácia ${(rec.acuracia_momento * 100).toFixed(1)}%)` : ""}
-                    </td>
-                    <td style={{ ...celula, textAlign: "right" }}>
-                      {rec.confianca != null ? `${(rec.confianca * 100).toFixed(0)}%` : "—"}
-                    </td>
-                    <td style={{ ...celula, fontWeight: 700 }}>{decisao(rec)}</td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+          <Tabela
+            colunas={["Data", "Plano de contingência", "Algoritmo", { rotulo: "Confiança", estilo: { textAlign: "right" } }, "Decisão"]}
+          >
+            {[...recomendacoes]
+              .sort((a, b) => new Date(a.criado_em) - new Date(b.criado_em))
+              .map((rec) => (
+                <tr key={rec.id}>
+                  <td style={{ ...celula, whiteSpace: "nowrap" }}>{data(rec.criado_em)}</td>
+                  <td style={celula}>{rec.plano?.descricao ?? "—"}</td>
+                  <td style={celula}>
+                    {NOMES_ALGORITMOS[rec.algoritmo_usado] ?? rec.algoritmo_usado}
+                    {rec.acuracia_momento ? (
+                      <span style={{ color: COR.suave }}>
+                        {" "}
+                        · acurácia {(rec.acuracia_momento * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%
+                      </span>
+                    ) : null}
+                  </td>
+                  <td style={{ ...celula, textAlign: "right", whiteSpace: "nowrap" }}>
+                    {rec.confianca != null ? `${Math.round(rec.confianca * 100)}%` : "—"}
+                  </td>
+                  <td style={{ ...celula, fontWeight: 600, whiteSpace: "nowrap" }}>{decisao(rec)}</td>
+                </tr>
+              ))}
+          </Tabela>
         )}
       </Secao>
 
@@ -196,83 +200,62 @@ export default function FichaRiscoPdf() {
             Sem reavaliações: a exposição é a da avaliação inicial ({risco.exposicao} · {risco.avaliacao_exposicao}).
           </Typography>
         ) : (
-          <table style={{ borderCollapse: "collapse", width: "100%" }}>
-            <thead>
-              <tr>
-                {["Data", "P × I", "Exposição", "Fase", "Justificativa"].map((c) => (
-                  <th key={c} style={cabecalho}>
-                    {c}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            <Tabela colunas={["Data", { rotulo: "P × I", estilo: { textAlign: "center" } }, "Exposição", "Fase", "Justificativa"]}>
               {pontos.map((p, i) => (
-                <tr key={i} style={{ breakInside: "avoid" }}>
-                  <td style={{ ...celula, whiteSpace: "nowrap" }}>{data(p.data)}</td>
-                  <td style={celula}>
+                <tr key={i}>
+                  <td style={{ ...celula, whiteSpace: "nowrap" }}>{i === 0 ? `${data(p.data)} (inicial)` : data(p.data)}</td>
+                  <td style={{ ...celula, textAlign: "center", whiteSpace: "nowrap" }}>
                     {p.probabilidade} × {p.impacto}
                   </td>
                   <td style={celula}>
-                    <Etiqueta cor={faixaExposicao(p.exposicao).cor}>
-                      {p.exposicao} · {p.avaliacao}
-                    </Etiqueta>
+                    <MarcadorFaixa pontuacao={p.exposicao} />
                   </td>
-                  <td style={celula}>{rotulo(FASES_PROJETO, p.fase_projeto)}</td>
-                  <td style={celula}>{p.justificativa}</td>
+                  <td style={{ ...celula, whiteSpace: "nowrap" }}>{rotulo(FASES_PROJETO, p.fase_projeto)}</td>
+                  <td style={celula}>{p.justificativa || "—"}</td>
                 </tr>
               ))}
-            </tbody>
-          </table>
-        )}
-        {evolucao?.tendencia && pontos.length > 1 && (
-          <Typography sx={{ fontSize: 11, color: COR.suave, mt: 1 }}>
-            Tendência: exposição {evolucao.tendencia === "caindo" ? "caindo" : evolucao.tendencia === "subindo" ? "subindo" : "estável"}.
-          </Typography>
+            </Tabela>
+            {evolucao?.tendencia && (
+              <Typography sx={{ fontSize: 11, color: COR.suave, mt: 1.25 }}>
+                Tendência: exposição {evolucao.tendencia === "caindo" ? "caindo" : evolucao.tendencia === "subindo" ? "subindo" : "estável"}.
+              </Typography>
+            )}
+          </>
         )}
       </Secao>
 
       <Secao numero={5} titulo="Histórico do ciclo de vida" norma="GPR 17">
-        <table style={{ borderCollapse: "collapse", width: "100%" }}>
-          <thead>
-            <tr>
-              {["Data", "Mudança de status", "Comentário"].map((c) => (
-                <th key={c} style={cabecalho}>
-                  {c}
-                </th>
-              ))}
+        <Tabela colunas={["Data", "Mudança de status", "Comentário"]}>
+          {historico.map((h) => (
+            <tr key={h.id}>
+              <td style={{ ...celula, whiteSpace: "nowrap" }}>{dataHora(h.criado_em)}</td>
+              <td style={{ ...celula, whiteSpace: "nowrap" }}>
+                {h.status_anterior ? <span style={{ color: COR.suave }}>{rotulo(STATUS_RISCO, h.status_anterior)} → </span> : null}
+                <strong>{rotulo(STATUS_RISCO, h.status_novo)}</strong>
+              </td>
+              <td style={celula}>{h.comentario || "—"}</td>
             </tr>
-          </thead>
-          <tbody>
-            {historico.map((h) => (
-              <tr key={h.id} style={{ breakInside: "avoid" }}>
-                <td style={{ ...celula, whiteSpace: "nowrap" }}>{dataHora(h.criado_em)}</td>
-                <td style={celula}>
-                  {h.status_anterior ? `${rotulo(STATUS_RISCO, h.status_anterior)} → ` : ""}
-                  <strong>{rotulo(STATUS_RISCO, h.status_novo)}</strong>
-                </td>
-                <td style={celula}>{h.comentario ?? "—"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+          ))}
+        </Tabela>
       </Secao>
 
       <Secao numero={6} titulo="Evidências anexadas">
         {anexos.length === 0 ? (
           <Typography sx={{ fontSize: 12, color: COR.suave }}>Nenhuma evidência anexada.</Typography>
         ) : (
-          anexos.map((a) => (
-            <Typography key={a.id} sx={{ fontSize: 12 }}>
-              • {a.nome_arquivo}{" "}
-              <span style={{ color: COR.suave }}>
-                ({(a.tamanho / 1024).toFixed(0)} KB, anexado em {data(a.criado_em)})
-              </span>
-            </Typography>
-          ))
+          <Tabela colunas={["Arquivo", { rotulo: "Tamanho", estilo: { textAlign: "right" } }, "Anexado em"]}>
+            {anexos.map((a) => (
+              <tr key={a.id}>
+                <td style={celula}>{a.nome_arquivo}</td>
+                <td style={{ ...celula, textAlign: "right", whiteSpace: "nowrap" }}>{Math.max(1, Math.round(a.tamanho / 1024))} KB</td>
+                <td style={{ ...celula, whiteSpace: "nowrap" }}>{data(a.criado_em)}</td>
+              </tr>
+            ))}
+          </Tabela>
         )}
         {risco.id_conversa_origem && (
-          <Typography sx={{ fontSize: 11, color: COR.suave, mt: 1 }}>
+          <Typography sx={{ fontSize: 11, color: COR.suave, mt: 1.25 }}>
             Risco criado a partir de uma conversa com o Assistente IA (sugestão revisada pelo gerente).
           </Typography>
         )}

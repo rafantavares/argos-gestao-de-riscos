@@ -3,64 +3,244 @@ import { useNavigate } from "react-router-dom";
 import { Box, Button, GlobalStyles, Typography } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import { FAIXAS_EXPOSICAO, IMPACTOS, PROBABILIDADES, faixaExposicao } from "../constants";
 import LogoMark from "./Logo";
 
 // Peças comuns dos documentos em PDF (relatório de riscos e ficha do risco):
-// página clara A4, barra "Baixar PDF" (salvar em PDF do navegador) e cabeçalho.
+// folha A4 clara, barra "Baixar PDF" (salvar em PDF do navegador), cabeçalho,
+// seções numeradas, tabelas só com linhas horizontais e a gravidade sempre como
+// marcador + texto, igual ao sistema. As cores vêm da paleta clara do tema (a
+// classe documento-claro no <body>), inclusive a escala do modo daltônico.
 
-export const COR = { texto: "#111827", suave: "#4B5563", linha: "#D1D5DB", fundo: "#F3F4F6", marca: "#0F766E" };
+const TITULO = '"Space Grotesk", "IBM Plex Sans", sans-serif';
+export const COR = {
+  texto: "var(--argos-texto)",
+  suave: "var(--argos-texto2)",
+  fraco: "var(--argos-texto3)",
+  linha: "var(--argos-borda)",
+  linhaForte: "var(--argos-borda-forte)",
+  fundo: "var(--argos-fundo)",
+  marca: "var(--argos-marca)",
+};
+
+// Estilos de célula das tabelas (linhas horizontais, sem grade).
+export const celula = {
+  borderBottom: `1px solid ${COR.linha}`,
+  padding: "7px 8px",
+  fontSize: 11.5,
+  lineHeight: 1.45,
+  color: COR.texto,
+  verticalAlign: "top",
+  textAlign: "left",
+};
+export const cabecalho = {
+  ...celula,
+  borderBottom: `1.5px solid ${COR.linhaForte}`,
+  fontSize: 10.5,
+  fontWeight: 600,
+  color: COR.suave,
+  whiteSpace: "nowrap",
+  verticalAlign: "bottom",
+};
+const estiloTabela = { borderCollapse: "collapse", width: "100%", fontVariantNumeric: "tabular-nums" };
+
+export function Tabela({ colunas, children }) {
+  return (
+    <table style={estiloTabela}>
+      <thead>
+        <tr>
+          {colunas.map((c) => (
+            <th key={typeof c === "string" ? c : c.rotulo} style={{ ...cabecalho, ...(typeof c === "string" ? {} : c.estilo) }}>
+              {typeof c === "string" ? c : c.rotulo}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>{children}</tbody>
+    </table>
+  );
+}
 
 export function Secao({ numero, titulo, norma, children }) {
   return (
-    <Box component="section" sx={{ mt: 3.5, breakInside: "avoid-page" }}>
-      <Box sx={{ display: "flex", alignItems: "baseline", gap: 1, borderBottom: `2px solid ${COR.marca}`, pb: 0.5, mb: 1.5 }}>
-        <Typography sx={{ fontWeight: 700, fontSize: 15, color: COR.texto }}>
-          {numero}. {titulo}
+    <Box component="section" sx={{ mt: 4.5, "&:first-of-type": { mt: 3.5 } }}>
+      <Box sx={{ display: "flex", alignItems: "baseline", gap: 1.25, mb: 1.75, breakAfter: "avoid" }}>
+        {numero != null && (
+          <Typography component="span" sx={{ fontFamily: TITULO, fontSize: 13, fontWeight: 600, color: COR.marca }}>
+            {String(numero).padStart(2, "0")}
+          </Typography>
+        )}
+        <Typography component="h2" sx={{ fontFamily: TITULO, fontSize: 16, fontWeight: 600, color: COR.texto }}>
+          {titulo}
         </Typography>
-        {norma && <Typography sx={{ fontSize: 11, color: COR.suave, ml: "auto" }}>{norma}</Typography>}
+        {norma && <Typography sx={{ fontSize: 10.5, color: COR.suave, ml: "auto", whiteSpace: "nowrap" }}>{norma}</Typography>}
       </Box>
       {children}
     </Box>
   );
 }
 
-export function Indicador({ valor, rotulo: nome, cor }) {
+// Indicador numérico do resumo: número grande na cor do texto, rótulo abaixo.
+export function Indicador({ valor, rotulo: nome, detalhe }) {
   return (
-    <Box sx={{ flex: 1, border: `1px solid ${COR.linha}`, borderRadius: 1, p: 1.25, textAlign: "center" }}>
-      <Typography sx={{ fontSize: 22, fontWeight: 700, color: cor ?? COR.texto, lineHeight: 1.1 }}>{valor}</Typography>
-      <Typography sx={{ fontSize: 11, color: COR.suave }}>{nome}</Typography>
+    <Box sx={{ py: 1.25, px: 1.5, bgcolor: COR.fundo, borderRadius: 1.5, breakInside: "avoid" }}>
+      <Typography sx={{ fontFamily: TITULO, fontSize: 24, fontWeight: 600, lineHeight: 1.1, color: COR.texto, fontVariantNumeric: "tabular-nums" }}>
+        {valor}
+      </Typography>
+      <Typography sx={{ fontSize: 11, color: COR.suave, mt: 0.25 }}>{nome}</Typography>
+      {detalhe && <Box sx={{ mt: 0.5 }}>{detalhe}</Box>}
     </Box>
   );
 }
 
-export const celula = { border: `1px solid ${COR.linha}`, padding: "5px 7px", fontSize: 11, color: COR.texto, verticalAlign: "top" };
-export const cabecalho = { ...celula, background: COR.fundo, fontWeight: 700, textAlign: "left" };
+export function Indicadores({ children }) {
+  return <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 1.25 }}>{children}</Box>;
+}
 
+// Gravidade: quadradinho na cor da faixa + texto na cor do texto.
+export function MarcadorFaixa({ pontuacao, rotulo: texto }) {
+  const faixa = faixaExposicao(pontuacao);
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
+      <span style={{ width: 9, height: 9, borderRadius: 2, background: faixa.cor, flex: "none" }} />
+      {texto ?? `${pontuacao} · ${faixa.label}`}
+    </span>
+  );
+}
+
+// Compatibilidade: etiqueta de gravidade antiga vira marcador + texto.
 export function Etiqueta({ cor, children }) {
   return (
-    <span
-      style={{
-        display: "inline-block",
-        padding: "1px 6px",
-        borderRadius: 4,
-        fontSize: 10,
-        fontWeight: 700,
-        color: "#111827",
-        background: `color-mix(in srgb, ${cor} 33%, transparent)`,
-        border: `1px solid ${cor}`,
-        whiteSpace: "nowrap",
-      }}
-    >
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
+      <span style={{ width: 9, height: 9, borderRadius: 2, background: cor, flex: "none" }} />
       {children}
     </span>
   );
 }
 
-export function DocumentoPdf({ titulo, subtitulo, responsavel, children }) {
-  const navigate = useNavigate();
-  const emitido = new Date();
+// Barra empilhada com a quantidade de riscos em cada faixa, com legenda.
+export function DistribuicaoFaixas({ riscos }) {
+  const contagem = FAIXAS_EXPOSICAO.map((f) => ({ ...f, n: riscos.filter((r) => faixaExposicao(r.exposicao).indice === f.indice).length }));
+  const total = contagem.reduce((s, f) => s + f.n, 0);
+  return (
+    <Box sx={{ breakInside: "avoid" }}>
+      <Box sx={{ display: "flex", gap: "2px", height: 12, borderRadius: "3px", overflow: "hidden", bgcolor: COR.fundo }}>
+        {contagem
+          .filter((f) => f.n)
+          .map((f) => (
+            <Box key={f.label} sx={{ flex: f.n, bgcolor: f.cor }} />
+          ))}
+      </Box>
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: "4px 18px", mt: 1 }}>
+        {contagem.map((f) => (
+          <Typography key={f.label} sx={{ fontSize: 11, color: COR.suave, display: "inline-flex", alignItems: "center", gap: 0.75 }}>
+            <Box component="span" sx={{ width: 9, height: 9, borderRadius: "2px", bgcolor: f.cor }} />
+            {f.label}
+            <Box component="strong" sx={{ color: COR.texto, fontWeight: 600 }}>
+              {f.n}
+            </Box>
+            {total > 0 && <span>({Math.round((f.n / total) * 100)}%)</span>}
+          </Typography>
+        ))}
+      </Box>
+    </Box>
+  );
+}
 
-  // Documento claro para impressão (o tema do sistema é escuro).
+// Matriz 5×5 (probabilidade × impacto) com a contagem de riscos: células na cor
+// da faixa (cheia quando há riscos, bem suave quando vazia), como no sistema.
+export function MatrizPdf({ riscos }) {
+  const rotuloEixo = { fontSize: 10, color: COR.suave, padding: "0 8px", whiteSpace: "nowrap" };
+  return (
+    <Box sx={{ display: "flex", justifyContent: "center", breakInside: "avoid" }}>
+      <table style={{ borderCollapse: "separate", borderSpacing: 4 }}>
+        <tbody>
+          {[...PROBABILIDADES].reverse().map((p, linha) => (
+            <tr key={p.value}>
+              {linha === 0 && (
+                <td rowSpan={5} style={{ ...rotuloEixo, writingMode: "vertical-rl", transform: "rotate(180deg)", textAlign: "center", fontWeight: 600 }}>
+                  Probabilidade
+                </td>
+              )}
+              <td style={{ ...rotuloEixo, textAlign: "right" }}>
+                {p.value} · {p.label}
+              </td>
+              {IMPACTOS.map((i) => {
+                const n = riscos.filter((r) => r.probabilidade === p.value && r.impacto === i.value).length;
+                const faixa = faixaExposicao(p.value * i.value);
+                return (
+                  <td
+                    key={i.value}
+                    style={{
+                      width: 62,
+                      height: 34,
+                      borderRadius: 5,
+                      textAlign: "center",
+                      fontFamily: TITULO,
+                      fontWeight: 700,
+                      fontSize: 14,
+                      color: faixa.corTexto,
+                      background: n ? faixa.cor : `color-mix(in srgb, ${faixa.cor} 18%, transparent)`,
+                    }}
+                  >
+                    {n || ""}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+          <tr>
+            <td />
+            <td />
+            {IMPACTOS.map((i) => (
+              <td key={i.value} style={{ ...rotuloEixo, textAlign: "center", padding: "4px 0 0", whiteSpace: "normal", lineHeight: 1.25 }}>
+                {i.value} · {i.label}
+              </td>
+            ))}
+          </tr>
+          <tr>
+            <td />
+            <td />
+            <td colSpan={5} style={{ ...rotuloEixo, textAlign: "center", fontWeight: 600, paddingTop: 2 }}>
+              Impacto
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </Box>
+  );
+}
+
+// Par rótulo: valor em duas colunas (rótulo estreito à esquerda).
+export function Campos({ itens }) {
+  const visiveis = itens.filter(([, valor]) => valor !== undefined);
+  return (
+    <Box component="dl" sx={{ display: "grid", gridTemplateColumns: "150px minmax(0, 1fr)", columnGap: 2, rowGap: 0.9, m: 0 }}>
+      {visiveis.map(([nome, valor]) => (
+        <Box key={nome} sx={{ display: "contents" }}>
+          <Typography component="dt" sx={{ fontSize: 11, color: COR.suave, pt: "1px" }}>
+            {nome}
+          </Typography>
+          <Typography component="dd" sx={{ fontSize: 12, color: valor ? COR.texto : COR.fraco, m: 0, lineHeight: 1.5 }}>
+            {valor || "Não informado"}
+          </Typography>
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
+const CSS_PAGINA = `@page {
+  size: A4;
+  margin: 16mm 15mm 18mm;
+  @bottom-left { content: "Argos · Gestão de riscos"; font: 8pt "IBM Plex Sans", Arial, sans-serif; color: #7A8497; }
+  @bottom-right { content: "Página " counter(page) " de " counter(pages); font: 8pt "IBM Plex Sans", Arial, sans-serif; color: #7A8497; }
+}`;
+
+export function DocumentoPdf({ titulo, subtitulo, metadados = [], children }) {
+  const navigate = useNavigate();
+
+  // Documento claro para impressão, independente do modo do sistema.
   useEffect(() => {
     const anterior = document.body.style.backgroundColor;
     document.body.style.backgroundColor = "#E5E7EB";
@@ -73,61 +253,95 @@ export function DocumentoPdf({ titulo, subtitulo, responsavel, children }) {
 
   return (
     <Box sx={{ py: { xs: 0, md: 3 }, "@media print": { py: 0 } }}>
+      {/* Margens e rodapé da página impressa (número de página); CSS puro porque
+          as regras aninhadas do @page não passam bem pelo GlobalStyles. */}
+      <style>{CSS_PAGINA}</style>
       <GlobalStyles
         styles={{
-          "@page": { size: "A4", margin: "14mm" },
           "@media print": { body: { backgroundColor: "#fff !important" } },
           "*": { WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" },
+          "tr, img": { breakInside: "avoid" },
+          thead: { display: "table-header-group" },
         }}
       />
       <Box
-        sx={{ maxWidth: 820, mx: "auto", mb: 2, px: 2, display: "flex", gap: 1.5, alignItems: "center", "@media print": { display: "none" } }}
+        sx={{ maxWidth: 840, mx: "auto", mb: 2, px: 2, display: "flex", gap: 1.5, alignItems: "center", "@media print": { display: "none" } }}
       >
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} sx={{ color: "#111827" }}>
           Voltar
         </Button>
         <Typography sx={{ flexGrow: 1, fontSize: 13, color: "#374151" }}>
-          Em "Destino", escolha <strong>Salvar como PDF</strong>.
+          Em &quot;Destino&quot;, escolha <strong>Salvar como PDF</strong>. Para as cores saírem, deixe marcado &quot;Gráficos de
+          segundo plano&quot;.
         </Typography>
         <Button variant="contained" startIcon={<PictureAsPdfIcon />} onClick={() => window.print()}>
           Baixar PDF
         </Button>
       </Box>
+
       <Box
+        component="article"
         sx={{
-          maxWidth: 820,
+          maxWidth: 840,
           mx: "auto",
           bgcolor: "#FFFFFF",
           color: COR.texto,
-          p: { xs: 2.5, md: 5 },
-          boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
+          px: { xs: 2.5, md: 6 },
+          py: { xs: 3, md: 5.5 },
+          boxShadow: "0 4px 24px rgba(15,23,42,0.12)",
           "@media print": { boxShadow: "none", p: 0, maxWidth: "none" },
           "& *": { fontFamily: '"IBM Plex Sans", Arial, sans-serif' },
+          "& h1, & h2": { fontFamily: `${TITULO} !important` },
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, borderBottom: `3px solid ${COR.marca}`, pb: 1.5 }}>
-          <Box sx={{ bgcolor: "#0B0E14", borderRadius: 1, p: 0.5, display: "flex" }}>
-            <LogoMark size={34} />
+        {/* Cabeçalho do documento */}
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, mb: 3 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <LogoMark size={30} />
+            <Typography sx={{ fontFamily: `${TITULO} !important`, fontWeight: 600, fontSize: 15, letterSpacing: "0.12em" }}>ARGOS</Typography>
           </Box>
-          <Box sx={{ flexGrow: 1 }}>
-            <Typography sx={{ fontSize: 20, fontWeight: 700, lineHeight: 1.2 }}>{titulo}</Typography>
-            <Typography sx={{ fontSize: 12, color: COR.suave }}>{subtitulo}</Typography>
-          </Box>
-          <Box sx={{ textAlign: "right" }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 700, letterSpacing: 2, color: COR.marca }}>ARGOS</Typography>
-            <Typography sx={{ fontSize: 11, color: COR.suave }}>
-              Emitido em {emitido.toLocaleDateString("pt-BR")} às{" "}
-              {emitido.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-            </Typography>
-            <Typography sx={{ fontSize: 11, color: COR.suave }}>Responsável: {responsavel}</Typography>
-          </Box>
+          <Typography sx={{ fontSize: 11, color: COR.suave, textAlign: "right" }}>Gestão de riscos com análise preditiva</Typography>
         </Box>
+
+        <Typography component="h1" sx={{ fontSize: 28, fontWeight: 600, lineHeight: 1.15, letterSpacing: "-0.01em" }}>
+          {titulo}
+        </Typography>
+        {subtitulo && <Typography sx={{ fontSize: 14, color: COR.suave, mt: 0.75 }}>{subtitulo}</Typography>}
+
+        {metadados.length > 0 && (
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${Math.min(metadados.length, 4)}, minmax(0, 1fr))`,
+              gap: 2,
+              mt: 2.5,
+              pt: 1.75,
+              borderTop: `1px solid ${COR.linha}`,
+            }}
+          >
+            {metadados.map(([nome, valor]) => (
+              <Box key={nome}>
+                <Typography sx={{ fontSize: 10.5, color: COR.suave }}>{nome}</Typography>
+                <Typography sx={{ fontSize: 12, fontWeight: 600, mt: 0.25 }}>{valor}</Typography>
+              </Box>
+            ))}
+          </Box>
+        )}
+
         {children}
-        <Typography sx={{ fontSize: 10, color: COR.suave, mt: 4, pt: 1, borderTop: `1px solid ${COR.linha}`, textAlign: "center" }}>
-          Gerado pelo Argos — Sistema de Gestão de Riscos com Análise Preditiva · Base normativa: PMBOK e MR-MPS-SW:2023
-          (GPR 10, GPR 10+, GPR 17, GPC 7). As recomendações do modelo apoiam a decisão; a decisão é do gerente.
+
+        <Typography
+          sx={{ fontSize: 10, color: COR.suave, mt: 5, pt: 1.5, borderTop: `1px solid ${COR.linha}`, lineHeight: 1.5 }}
+        >
+          Gerado pelo Argos. Base normativa: PMBOK e MR-MPS-SW:2023 (GPR 10, GPR 10+, GPR 17, GPC 7). As recomendações do
+          modelo apoiam a decisão; a decisão é do gerente do projeto.
         </Typography>
       </Box>
     </Box>
   );
+}
+
+export function quando() {
+  const agora = new Date();
+  return `${agora.toLocaleDateString("pt-BR")} às ${agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
 }

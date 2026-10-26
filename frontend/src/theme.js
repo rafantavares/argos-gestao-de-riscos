@@ -187,8 +187,9 @@ const theme = createTheme({
         "[data-tema='light']": { ...variaveis("light"), colorScheme: "light" },
         "[data-tema='dark'][data-escala='daltonico']": variaveisEscala(ESCALAS.daltonico.dark),
         "[data-tema='light'][data-escala='daltonico']": variaveisEscala(ESCALAS.daltonico.light),
-        // Documentos para impressão (PDF) usam sempre a escala do modo claro.
-        ".documento-claro": variaveisEscala(ESCALAS.padrao.light),
+        // Documentos para impressão (PDF) usam sempre a paleta clara inteira (papel
+        // branco), com a escala padrão ou a do modo daltônico.
+        ".documento-claro": { ...variaveis("light"), colorScheme: "light" },
         "[data-escala='daltonico'] .documento-claro": variaveisEscala(ESCALAS.daltonico.light),
         body: {
           backgroundColor: v("fundo"),
