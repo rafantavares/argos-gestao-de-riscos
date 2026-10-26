@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   Alert,
   Box,
@@ -24,15 +24,10 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import EditNoteIcon from "@mui/icons-material/EditNote";
-import ShieldIcon from "@mui/icons-material/Shield";
-import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
-import UnarchiveOutlinedIcon from "@mui/icons-material/UnarchiveOutlined";
 import { recomendacoes as servicoRecomendacoes, riscos as servicoRiscos } from "../../services/api";
 import {
   AREAS_AFETADAS,
   CATEGORIAS,
-  CORES_CATEGORIA,
-  CORES_SEVERIDADE,
   FASES_PROJETO,
   IMPACTOS,
   NOMES_ALGORITMOS,
@@ -41,7 +36,6 @@ import {
   STATUS_RISCO,
   URGENCIAS,
   faixaExposicao,
-  nivelSeveridade,
   reducaoPercentual,
   rotulo,
 } from "../../constants";
@@ -50,9 +44,9 @@ import EvolucaoExposicao from "../../components/EvolucaoExposicao";
 import AnexosRisco from "../../components/AnexosRisco";
 import FichaRisco from "../../components/FichaRisco";
 import { useAviso, useConfirmacao } from "../../contexts/FeedbackContext";
-import { ChipArea, ChipSeveridade, ChipStatus } from "../../components/Badges";
+import { ChipArea, ChipSeveridade, ChipStatus, Marcador } from "../../components/Badges";
 
-const CORES_NIVEL_TEXTO = { 1: "var(--argos-exp-0)", 2: "var(--argos-exp-1)", 3: "var(--argos-exp-2)", 4: "var(--argos-exp-3)", 5: "var(--argos-exp-4)", baixa: "var(--argos-exp-1)", baixo: "var(--argos-exp-1)", media: "var(--argos-exp-2)", medio: "var(--argos-exp-2)", alta: "var(--argos-exp-4)", alto: "var(--argos-exp-4)" };
+const ABAS_RISCO = ["plano", "registro", "evolucao", "evidencias", "historico"];
 
 const ESCALA_PROB = { baixa: 1, media: 2, alta: 3 };
 const ESCALA_IMP = { baixo: 1, medio: 2, alto: 3 };
@@ -107,7 +101,10 @@ export default function Recomendacao() {
   const [processando, setProcessando] = useState(false);
   const [confirmacao, setConfirmacao] = useState(null); // { aceita: bool }
   const [erro, setErro] = useState("");
-  const [aba, setAba] = useState("plano");
+  // Aba aberta fica na URL (?aba=registro), para o F5 e para links diretos.
+  const [parametros, setParametros] = useSearchParams();
+  const aba = ABAS_RISCO.includes(parametros.get("aba")) ? parametros.get("aba") : "plano";
+  const setAba = (nova) => setParametros(nova === "plano" ? {} : { aba: nova }, { replace: true });
   const avisar = useAviso();
   const confirmar = useConfirmacao();
   // Evita gerar duas recomendações quando o efeito roda duas vezes (StrictMode em dev).
@@ -244,13 +241,11 @@ export default function Recomendacao() {
       <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, mt: 8 }}>
         <CircularProgress />
         <Typography variant="body2" color="text.secondary">
-          Consultando o modelo de recomendação...
+          Consultando o modelo de recomendação…
         </Typography>
       </Box>
     );
   }
-
-  const nivel = risco ? nivelSeveridade(risco.probabilidade, risco.impacto) : null;
 
   return (
     <Box sx={{ maxWidth: 1100 }}>
@@ -329,16 +324,9 @@ export default function Recomendacao() {
               sx={{
                 p: { xs: 2.5, md: 3.5 },
                 mb: 2,
-                position: "relative",
-                overflow: "hidden",
-                borderColor: "color-mix(in srgb, var(--argos-ia) 45%, transparent)",
-                background:
-                  "linear-gradient(135deg, color-mix(in srgb, var(--argos-ia) 10%, transparent) 0%, color-mix(in srgb, var(--argos-marca) 6%, transparent) 100%), var(--argos-cartao)",
+                borderColor: "color-mix(in srgb, var(--argos-ia) 40%, transparent)",
               }}
             >
-              <ShieldIcon
-                sx={{ position: "absolute", right: -20, top: -20, fontSize: 180, color: "secondary.main", opacity: 0.06 }}
-              />
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
                 <Box
                   sx={{
@@ -347,15 +335,15 @@ export default function Recomendacao() {
                     borderRadius: 2,
                     display: "grid",
                     placeItems: "center",
-                    bgcolor: "color-mix(in srgb, var(--argos-ia) 18%, transparent)",
+                    bgcolor: "color-mix(in srgb, var(--argos-ia) 14%, transparent)",
                     color: "secondary.main",
                   }}
                 >
-                  <ShieldIcon />
+                  <AutoAwesomeIcon />
                 </Box>
                 <Box>
-                  <Typography variant="overline" sx={{ color: "secondary.main", fontWeight: 700, letterSpacing: 1 }}>
-                    Plano recomendado
+                  <Typography variant="body2" sx={{ color: "secondary.main", fontWeight: 600 }}>
+                    Plano recomendado pelo modelo
                   </Typography>
                   <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
                     {NOMES_ALGORITMOS[recomendacao.algoritmo_usado] ?? recomendacao.algoritmo_usado} · acurácia{" "}
@@ -404,8 +392,7 @@ export default function Recomendacao() {
 
               {recomendacao.aceita === true && (
                 <Alert severity="success" icon={<CheckCircleIcon />}>
-                  Recomendação aceita — esse par (risco, plano) foi incorporado ao histórico de treinamento
-                  do modelo.
+                  Recomendação aceita. Esse par (risco, plano) entrou no histórico de treinamento do modelo.
                 </Alert>
               )}
 
@@ -425,21 +412,21 @@ export default function Recomendacao() {
             {risco && (
               <Paper sx={{ p: 3, mb: 2 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-                  <AutoAwesomeIcon sx={{ color: "primary.main", fontSize: 20 }} />
+                  <AutoAwesomeIcon sx={{ color: "secondary.main", fontSize: 20 }} />
                   <Typography variant="subtitle1" fontWeight={600}>
                     Por que esta recomendação?
                   </Typography>
                 </Box>
                 <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mb: 2 }}>
-                  <ChipFeature rotulo="Grupo PMBOK" valor={rotulo(CATEGORIAS, risco.categoria)} cor={CORES_CATEGORIA[risco.categoria]} />
-                  <ChipFeature rotulo="Probabilidade" valor={`${risco.probabilidade} · ${rotulo(PROBABILIDADES, risco.probabilidade)}`} cor={CORES_NIVEL_TEXTO[risco.probabilidade]} />
-                  <ChipFeature rotulo="Impacto" valor={`${risco.impacto} · ${rotulo(IMPACTOS, risco.impacto)}`} cor={CORES_NIVEL_TEXTO[risco.impacto]} />
-                  <ChipFeature rotulo="Orçamento" valor={rotulo(ORCAMENTOS_IMPACTO, risco.orcamento_impacto)} cor={CORES_NIVEL_TEXTO[risco.orcamento_impacto]} />
-                  <ChipFeature rotulo="Urgência" valor={rotulo(URGENCIAS, risco.urgencia)} cor={CORES_NIVEL_TEXTO[risco.urgencia]} />
-                  <ChipFeature rotulo="Fase" valor={rotulo(FASES_PROJETO, risco.fase_projeto)} cor="var(--argos-marca)" />
                   <ChipSeveridade probabilidade={risco.probabilidade} impacto={risco.impacto} />
+                  <ChipFeature rotulo="Grupo PMBOK" valor={rotulo(CATEGORIAS, risco.categoria)} />
+                  <ChipFeature rotulo="Probabilidade" valor={`${risco.probabilidade} · ${rotulo(PROBABILIDADES, risco.probabilidade)}`} />
+                  <ChipFeature rotulo="Impacto" valor={`${risco.impacto} · ${rotulo(IMPACTOS, risco.impacto)}`} />
+                  <ChipFeature rotulo="Orçamento" valor={rotulo(ORCAMENTOS_IMPACTO, risco.orcamento_impacto)} />
+                  <ChipFeature rotulo="Urgência" valor={rotulo(URGENCIAS, risco.urgencia)} />
+                  <ChipFeature rotulo="Fase" valor={rotulo(FASES_PROJETO, risco.fase_projeto)} />
                 </Stack>
-                <Typography variant="body1" sx={{ borderLeft: `3px solid ${CORES_SEVERIDADE[nivel]}`, pl: 2, py: 0.5 }}>
+                <Typography variant="body1" sx={{ p: 2, borderRadius: 2, bgcolor: "var(--argos-sobreposicao)" }}>
                   {explicarRecomendacao(risco, recomendacao.plano)}
                 </Typography>
                 <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1.5 }}>
@@ -500,7 +487,7 @@ export default function Recomendacao() {
             </Stack>
           ) : (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 3 }}>
-              Risco encerrado — não é possível mudar o status.
+              Risco encerrado: não é possível mudar o status.
             </Typography>
           )}
 
@@ -589,7 +576,11 @@ function ResidualEsperado({ risco, valores, campo }) {
         <Typography variant="body2" color="text.secondary">
           {residual ? (
             <>
-              {risco.exposicao} → <strong style={{ color: faixa.cor }}>{residual} · {faixa.label}</strong>
+              {risco.exposicao} →{" "}
+              <Box component="strong" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, color: "text.primary" }}>
+                <Marcador cor={faixa.cor} />
+                {residual} · {faixa.label}
+              </Box>
               {reducao > 0 ? ` (redução de ${reducao}%)` : reducao < 0 ? " (maior que a atual: revise)" : ""}
             </>
           ) : (
@@ -640,7 +631,7 @@ function RegistroRisco({ risco, aoSalvar }) {
   return (
     <Paper sx={{ p: 3, mb: 2 }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5, flexWrap: "wrap" }}>
-        <EditNoteIcon sx={{ color: "primary.main", fontSize: 22 }} />
+        <EditNoteIcon sx={{ color: "text.secondary", fontSize: 22 }} />
         <Typography variant="subtitle1" fontWeight={600}>
           Registro do risco {risco.indice}
         </Typography>
@@ -688,7 +679,7 @@ function RegistroRisco({ risco, aoSalvar }) {
         </Typography>
         <Box>
           <Button variant="contained" disabled={salvando || !alterado || !valido} onClick={salvar}>
-            {salvando ? "Salvando..." : "Salvar registro"}
+            {salvando ? "Salvando…" : "Salvar registro"}
           </Button>
         </Box>
       </Stack>
@@ -696,17 +687,20 @@ function RegistroRisco({ risco, aoSalvar }) {
   );
 }
 
-function ChipFeature({ rotulo: nome, valor, cor }) {
+// Atributo do risco que o modelo usou na decisão: neutro, só nome e valor.
+function ChipFeature({ rotulo: nome, valor }) {
   return (
     <Chip
       size="small"
       label={
         <span>
-          <span style={{ opacity: 0.7 }}>{nome}: </span>
-          <strong>{valor}</strong>
+          <Box component="span" sx={{ color: "text.secondary", fontWeight: 500 }}>
+            {nome}:{" "}
+          </Box>
+          {valor}
         </span>
       }
-      sx={{ bgcolor: `color-mix(in srgb, ${cor} 12%, transparent)`, color: cor, border: `1px solid color-mix(in srgb, ${cor} 33%, transparent)` }}
+      sx={{ bgcolor: "var(--argos-trilha)", color: "text.primary", fontWeight: 600 }}
     />
   );
 }

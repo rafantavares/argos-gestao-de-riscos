@@ -1,10 +1,11 @@
 import { Box, LinearProgress, Typography } from "@mui/material";
-import { corConfianca, rotuloConfianca } from "../constants";
+import { rotuloConfianca } from "../constants";
 
-// Barra de confiança da recomendação (probabilidade da classe prevista):
-// verde >= 80%, amarelo 60-79%, vermelho < 60%.
+// Barra de confiança da recomendação (probabilidade da classe prevista). Em
+// violeta, a cor da IA: verde/amarelo/vermelho aqui se confundiria com a escala
+// de gravidade. O nível (alta, média, baixa) vem escrito ao lado.
 export default function BarraConfianca({ confianca, compacta = false }) {
-  const cor = corConfianca(confianca);
+  const cor = "var(--argos-ia)";
   const percentual = confianca == null ? 0 : Math.round(confianca * 100);
 
   return (
@@ -14,7 +15,7 @@ export default function BarraConfianca({ confianca, compacta = false }) {
           <Typography variant="body2" color="text.secondary">
             Confiança da recomendação
           </Typography>
-          <Typography variant="body2" fontWeight={700} sx={{ color: cor }}>
+          <Typography variant="body2" fontWeight={600}>
             {confianca == null ? "—" : `${percentual}% · ${rotuloConfianca(confianca)}`}
           </Typography>
         </Box>
@@ -27,12 +28,12 @@ export default function BarraConfianca({ confianca, compacta = false }) {
             flexGrow: 1,
             height: compacta ? 6 : 10,
             borderRadius: 999,
-            backgroundColor: "var(--argos-borda)",
+            backgroundColor: "var(--argos-trilha)",
             "& .MuiLinearProgress-bar": { backgroundColor: cor, borderRadius: 999 },
           }}
         />
         {compacta && (
-          <Typography variant="caption" fontWeight={700} sx={{ color: cor, minWidth: 36, textAlign: "right" }}>
+          <Typography variant="caption" fontWeight={600} sx={{ minWidth: 36, textAlign: "right" }}>
             {confianca == null ? "—" : `${percentual}%`}
           </Typography>
         )}

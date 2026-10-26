@@ -83,7 +83,7 @@ export default function AnexosRisco({ idRisco }) {
   return (
     <Paper sx={{ p: 3, mb: 2 }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-        <AttachFileIcon sx={{ color: "primary.main", fontSize: 22 }} />
+        <AttachFileIcon sx={{ color: "text.secondary", fontSize: 22 }} />
         <Box sx={{ flexGrow: 1 }}>
           <Typography variant="subtitle1" fontWeight={600}>
             Evidências e anexos

@@ -1,4 +1,4 @@
-import { Box, Button, Paper, Typography } from "@mui/material";
+import { Box, Button, Chip, Paper, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
 import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
@@ -13,7 +13,7 @@ import {
   reducaoPercentual,
   rotulo,
 } from "../constants";
-import { ChipArea, ChipStatus, ChipUrgencia } from "./Badges";
+import { ChipArea, ChipReavaliar, ChipStatus, ChipUrgencia, Marcador } from "./Badges";
 import MiniMatriz from "./MiniMatriz";
 
 function Dado({ rotulo: nome, children }) {
@@ -36,9 +36,12 @@ export default function FichaRisco({ risco, aoArquivar }) {
   const faixa = faixaExposicao(risco.exposicao);
   const ultimaAvaliacao = new Date(risco.ultima_avaliacao_em ?? risco.criado_em);
   return (
-    <Paper sx={{ p: { xs: 2, md: 2.5 }, mb: 2, borderTop: `4px solid ${faixa.cor}` }}>
+    <Paper sx={{ p: { xs: 2, md: 2.5 }, mb: 2 }}>
       <Box sx={{ display: "flex", gap: { xs: 2, md: 3 }, alignItems: "center", flexWrap: "wrap" }}>
+        {/* Exposição como uma célula da matriz: a cor da faixa com texto legível sobre ela. */}
         <Box
+          role="img"
+          aria-label={`Exposição ${risco.exposicao}, ${faixa.label}`}
           sx={{
             width: 96,
             height: 96,
@@ -47,15 +50,15 @@ export default function FichaRisco({ risco, aoArquivar }) {
             display: "grid",
             placeItems: "center",
             textAlign: "center",
-            bgcolor: `color-mix(in srgb, ${faixa.cor} 12%, transparent)`,
-            border: `2px solid ${faixa.cor}`,
+            bgcolor: faixa.cor,
+            color: faixa.corTexto,
           }}
         >
           <Box>
-            <Typography sx={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: 38, fontWeight: 700, lineHeight: 1, color: faixa.cor }}>
+            <Typography sx={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: 38, fontWeight: 700, lineHeight: 1, color: "inherit" }}>
               {risco.exposicao}
             </Typography>
-            <Typography variant="caption" sx={{ color: faixa.cor, fontWeight: 700 }}>
+            <Typography variant="caption" sx={{ color: "inherit", fontWeight: 600 }}>
               {faixa.label}
             </Typography>
           </Box>
@@ -63,20 +66,14 @@ export default function FichaRisco({ risco, aoArquivar }) {
 
         <Box sx={{ flex: "1 1 320px", minWidth: 0 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap", mb: 0.5 }}>
-            <Typography variant="h6" sx={{ color: "primary.main", fontWeight: 700 }}>
+            <Typography variant="h6" sx={{ color: "primary.main", fontWeight: 600 }}>
               {risco.indice}
             </Typography>
             <ChipStatus status={risco.status} />
             {risco.arquivado && (
-              <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: 700 }}>
-                ARQUIVADO
-              </Typography>
+              <Chip size="small" icon={<ArchiveOutlinedIcon sx={{ fontSize: 15 }} />} label="Arquivado" sx={{ bgcolor: "var(--argos-trilha)" }} />
             )}
-            {precisaReavaliar(risco) && (
-              <Typography variant="caption" sx={{ color: "var(--argos-atencao)", fontWeight: 700 }}>
-                REAVALIAÇÃO PENDENTE
-              </Typography>
-            )}
+            {precisaReavaliar(risco) && <ChipReavaliar />}
           </Box>
           <Typography variant="h5" fontWeight={600} sx={{ lineHeight: 1.25, mb: 1.5, wordBreak: "break-word" }}>
             {risco.titulo}
@@ -98,9 +95,10 @@ export default function FichaRisco({ risco, aoArquivar }) {
             <Dado rotulo="Última avaliação">{ultimaAvaliacao.toLocaleDateString("pt-BR")}</Dado>
             {risco.exposicao_residual != null && (
               <Dado rotulo="Residual esperada">
-                <span style={{ color: faixaExposicao(risco.exposicao_residual).cor }}>
+                <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}>
+                  <Marcador cor={faixaExposicao(risco.exposicao_residual).cor} />
                   {risco.exposicao_residual} · {risco.avaliacao_exposicao_residual}
-                </span>{" "}
+                </Box>{" "}
                 <Typography component="span" variant="caption" color="text.secondary">
                   (−{reducaoPercentual(risco.exposicao, risco.exposicao_residual)}%)
                 </Typography>

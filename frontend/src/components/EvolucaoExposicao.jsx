@@ -21,6 +21,7 @@ import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import { riscos as servicoRiscos } from "../services/api";
 import { usePreferencias } from "../contexts/PreferenciasContext";
 import { FASES_PROJETO, IMPACTOS, PROBABILIDADES, faixaExposicao, rotulo } from "../constants";
+import { Marcador } from "./Badges";
 
 const TENDENCIAS = {
   subindo: { label: "Exposição subindo", cor: "var(--argos-erro)", icone: <TrendingUpIcon fontSize="small" /> },
@@ -90,7 +91,7 @@ export default function EvolucaoExposicao({ risco, aoReavaliar }) {
   return (
     <Paper sx={{ p: 3, mb: 2 }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5, flexWrap: "wrap" }}>
-        <TimelineIcon sx={{ color: "primary.main", fontSize: 22 }} />
+        <TimelineIcon sx={{ color: "text.secondary", fontSize: 22 }} />
         <Typography variant="subtitle1" fontWeight={600}>
           Evolução da exposição
         </Typography>
@@ -100,7 +101,7 @@ export default function EvolucaoExposicao({ risco, aoReavaliar }) {
             icon={tendencia.icone}
             label={tendencia.label}
             variant="outlined"
-            sx={{ color: tendencia.cor, borderColor: tendencia.cor, "& .MuiChip-icon": { color: tendencia.cor } }}
+            sx={{ fontWeight: 600, "& .MuiChip-icon": { color: tendencia.cor } }}
           />
         )}
         {evolucao && (
@@ -140,9 +141,15 @@ export default function EvolucaoExposicao({ risco, aoReavaliar }) {
             },
           ]}
           slotProps={{ legend: { hidden: true } }}
+          grid={{ horizontal: true }}
+          sx={{
+            "& .MuiChartsGrid-line": { stroke: "var(--argos-borda-suave)" },
+            "& .MuiChartsAxis-line, & .MuiChartsAxis-tick": { stroke: "var(--argos-borda)" },
+            "& .MuiChartsAxis-tickLabel, & .MuiChartsAxis-label": { fill: "var(--argos-texto2)" },
+          }}
         />
       ) : (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
           Ainda sem reavaliações: a exposição atual é a da avaliação inicial ({risco.exposicao} ·{" "}
           {risco.avaliacao_exposicao}). Cada reavaliação registrada aparece aqui como um ponto da série.
         </Typography>
@@ -186,7 +193,7 @@ export default function EvolucaoExposicao({ risco, aoReavaliar }) {
 
       {encerrado ? (
         <Typography variant="body2" color="text.secondary">
-          Risco encerrado — não é mais reavaliado.
+          Risco encerrado: não é mais reavaliado.
         </Typography>
       ) : (
         <Grid container spacing={2}>
@@ -230,11 +237,15 @@ export default function EvolucaoExposicao({ risco, aoReavaliar }) {
           </Grid>
           <Grid item xs={12} sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
             <Button variant="contained" disabled={salvando || !alterado || justificativa.trim().length < 5} onClick={registrar}>
-              {salvando ? "Registrando..." : "Registrar reavaliação"}
+              {salvando ? "Registrando…" : "Registrar reavaliação"}
             </Button>
             {alterado && (
               <Typography variant="body2" color="text.secondary">
-                Nova exposição: <strong style={{ color: faixaNova.cor }}>{exposicaoNova} · {faixaNova.label}</strong>{" "}
+                Nova exposição:{" "}
+                <Box component="strong" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, color: "text.primary" }}>
+                  <Marcador cor={faixaNova.cor} />
+                  {exposicaoNova} · {faixaNova.label}
+                </Box>{" "}
                 (atual {risco.exposicao} · {risco.avaliacao_exposicao})
               </Typography>
             )}
