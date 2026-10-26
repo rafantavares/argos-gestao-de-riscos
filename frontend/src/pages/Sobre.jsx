@@ -82,7 +82,8 @@ function InformacoesSistema() {
         </Typography>
       </Box>
       {algoritmos.length > 0 && (
-        <Table size="small">
+        <Box sx={{ overflowX: "auto" }}>
+          <Table size="small">
           <TableHead>
             <TableRow>
               <TableCell>Algoritmo</TableCell>
@@ -106,7 +107,8 @@ function InformacoesSistema() {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+          </Table>
+        </Box>
       )}
     </Secao>
   );
@@ -194,7 +196,8 @@ export default function Sobre() {
       </Secao>
 
       <Secao titulo="Base normativa: MR-MPS-SW:2023">
-        <Table size="small">
+        <Box sx={{ overflowX: "auto" }}>
+          <Table size="small">
           <TableHead>
             <TableRow>
               <TableCell>Resultado</TableCell>
@@ -211,7 +214,8 @@ export default function Sobre() {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+          </Table>
+        </Box>
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
           SOFTEX. MPS.BR – Guia Geral MPS de Software:2023. GPR = Gerência de Projetos; GPC = Gerência de Processos.
         </Typography>

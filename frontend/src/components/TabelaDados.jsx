@@ -91,7 +91,7 @@ export default function TabelaDados({
                 <TableCell
                   key={coluna.chave}
                   align={coluna.alinhar ?? "left"}
-                  sx={{ width: coluna.largura, color: "text.secondary", fontWeight: 600, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.4 }}
+                  sx={{ width: coluna.largura, color: "text.secondary", fontWeight: 600, fontSize: 12 }}
                 >
                   {coluna.rotulo}
                 </TableCell>

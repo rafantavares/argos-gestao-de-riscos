@@ -111,6 +111,8 @@ export default function PlanosContingencia() {
         estiloLinha={(p) => (p.ativo ? {} : { opacity: 0.5 })}
         filtrosExtras={
           <TextField
+            SelectProps={{ displayEmpty: true }}
+            InputLabelProps={{ shrink: true }}
             select
             size="small"
             label="Categoria"

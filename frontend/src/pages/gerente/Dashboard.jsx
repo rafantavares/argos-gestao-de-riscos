@@ -171,6 +171,8 @@ export default function Dashboard() {
         </Box>
         {meusProjetos.length > 0 && (
           <TextField
+            SelectProps={{ displayEmpty: true }}
+            InputLabelProps={{ shrink: true }}
             select
             size="small"
             label="Projeto"
@@ -291,7 +293,7 @@ export default function Dashboard() {
                     {["#", "Risco", "Severidade", "Urgência", "Status", ""].map((cabecalho, i) => (
                       <TableCell
                         key={i}
-                        sx={{ color: "text.secondary", fontWeight: 600, fontSize: 12, textTransform: "uppercase" }}
+                        sx={{ color: "text.secondary", fontWeight: 600, fontSize: 12 }}
                       >
                         {cabecalho}
                       </TableCell>
@@ -306,7 +308,9 @@ export default function Dashboard() {
                         key={risco.id}
                         hover
                         sx={{ cursor: "pointer", "&:last-child td": { borderBottom: 0 } }}
+                        tabIndex={0}
                         onClick={() => navigate(`/gerente/riscos/${risco.id}/recomendacao`)}
+                        onKeyDown={(e) => e.key === "Enter" && navigate(`/gerente/riscos/${risco.id}/recomendacao`)}
                       >
                         <TableCell sx={{ width: 40 }}>
                           <Box
@@ -507,6 +511,7 @@ export default function Dashboard() {
                           color="success"
                           disabled={ocupado}
                           onClick={() => responder(rec, true)}
+                          aria-label="Aceitar plano"
                           sx={{ border: "1px solid", borderColor: "success.main" }}
                         >
                           <CheckIcon />
@@ -519,6 +524,7 @@ export default function Dashboard() {
                           color="error"
                           disabled={ocupado}
                           onClick={() => responder(rec, false)}
+                          aria-label="Rejeitar plano"
                           sx={{ border: "1px solid", borderColor: "error.main" }}
                         >
                           <CloseIcon />

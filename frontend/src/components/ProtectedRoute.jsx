@@ -1,16 +1,12 @@
-import { Box, CircularProgress } from "@mui/material";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import TelaCarregando from "./TelaCarregando";
 
 export default function ProtectedRoute({ perfil, children }) {
   const { usuario, carregando } = useAuth();
 
   if (carregando) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <TelaCarregando mensagem="Conectando ao servidor…" />;
   }
 
   if (!usuario) {

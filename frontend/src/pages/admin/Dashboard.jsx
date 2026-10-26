@@ -210,14 +210,16 @@ export default function Dashboard() {
             Indicadores consolidados de todos os projetos administrados.
           </Typography>
         </Box>
-        <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
+        <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", flexWrap: "wrap", width: { xs: "100%", sm: "auto" } }}>
           <TextField
+            SelectProps={{ displayEmpty: true }}
+            InputLabelProps={{ shrink: true }}
             select
             size="small"
             label="Projeto do relatório"
             value={projetoExportacao}
             onChange={(e) => setProjetoExportacao(e.target.value)}
-            sx={{ minWidth: 210 }}
+            sx={{ minWidth: { xs: "100%", sm: 210 } }}
           >
             <MenuItem value="">Todos os projetos</MenuItem>
             {projetos.map((p) => (
@@ -227,12 +229,14 @@ export default function Dashboard() {
             ))}
           </TextField>
           <TextField
+            SelectProps={{ displayEmpty: true }}
+            InputLabelProps={{ shrink: true }}
             select
             size="small"
             label="Gerente do relatório"
             value={gerenteExportacao}
             onChange={(e) => setGerenteExportacao(e.target.value)}
-            sx={{ minWidth: 190 }}
+            sx={{ minWidth: { xs: "100%", sm: 190 } }}
           >
             <MenuItem value="">Todos os gerentes</MenuItem>
             {gerentes.map((g) => (
@@ -429,7 +433,7 @@ export default function Dashboard() {
                 {["Risco", "Projeto", "Plano recomendado", "Algoritmo", "Confiança", "Aceite", "Data"].map((cabecalho) => (
                   <TableCell
                     key={cabecalho}
-                    sx={{ color: "text.secondary", fontWeight: 600, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.4 }}
+                    sx={{ color: "text.secondary", fontWeight: 600, fontSize: 12 }}
                   >
                     {cabecalho}
                   </TableCell>

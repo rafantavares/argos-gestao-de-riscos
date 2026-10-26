@@ -615,7 +615,15 @@ function TabelaRiscos({ riscos, projetoPorId, recomendacaoPorRisco, aoAbrir }) {
           {riscos.map((risco) => {
             const rec = recomendacaoPorRisco.get(risco.id);
             return (
-              <TableRow key={risco.id} hover onClick={() => aoAbrir(risco)} sx={{ cursor: "pointer" }}>
+              <TableRow
+                key={risco.id}
+                hover
+                tabIndex={0}
+                aria-label={`Abrir ${risco.indice} ${risco.titulo}`}
+                onClick={() => aoAbrir(risco)}
+                onKeyDown={(e) => e.key === "Enter" && aoAbrir(risco)}
+                sx={{ cursor: "pointer" }}
+              >
                 <TableCell sx={{ color: "primary.main", fontWeight: 600 }}>{risco.indice}</TableCell>
                 <TableCell sx={{ maxWidth: 320 }}>
                   <Typography variant="body2" fontWeight={600} noWrap>

@@ -3,6 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0B0E14" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -11,9 +13,16 @@
       rel="stylesheet"
     />
     <title>Argos</title>
+    <style>
+      html, body { background: #0B0E14; }
+      .splash { min-height: 100vh; display: grid; place-items: center; }
+      .splash img { width: 56px; height: 56px; animation: respirar 1.6s ease-in-out infinite; }
+      @keyframes respirar { 50% { opacity: 0.45; } }
+      @media (prefers-reduced-motion: reduce) { .splash img { animation: none; } }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="splash"><img src="/favicon.svg" alt="Carregando o Argos" /></div></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

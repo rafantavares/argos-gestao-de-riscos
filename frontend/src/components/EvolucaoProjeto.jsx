@@ -61,7 +61,7 @@ export default function EvolucaoProjeto({ idProjeto }) {
             showMark: false,
           }))}
           slotProps={{ legend: { direction: "row", position: { vertical: "top", horizontal: "right" }, itemMarkWidth: 10, itemMarkHeight: 10, labelStyle: { fontSize: 11 } } }}
-          sx={{ "& .MuiAreaElement-root": { fillOpacity: 0.55 } }}
+          sx={{ "& .MuiAreaElement-root": { fillOpacity: 0.3 }, "& .MuiLineElement-root": { strokeWidth: 2 } }}
         />
       )}
     </Paper>

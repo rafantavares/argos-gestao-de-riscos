@@ -142,6 +142,8 @@ export default function Riscos() {
         filtrosExtras={
           <>
             <TextField
+              SelectProps={{ displayEmpty: true }}
+              InputLabelProps={{ shrink: true }}
               select
               size="small"
               label="Projeto"
@@ -157,6 +159,8 @@ export default function Riscos() {
               ))}
             </TextField>
             <TextField
+              SelectProps={{ displayEmpty: true }}
+              InputLabelProps={{ shrink: true }}
               select
               size="small"
               label="Status"

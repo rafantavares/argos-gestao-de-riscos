@@ -30,7 +30,7 @@ import { riscos as servicoRiscos } from "../services/api";
 import { VERSAO_SISTEMA, iniciais, precisaReavaliar } from "../constants";
 import { Logo } from "./Logo";
 
-const LARGURA_MENU = 248;
+const LARGURA_MENU = { xs: 68, md: 252 };
 
 const ITENS_ADMIN = [
   {
@@ -120,16 +120,46 @@ export default function AppLayout({ children }) {
 
   return (
     <Box sx={{ display: "flex" }}>
+      <Box
+        component="a"
+        href="#conteudo"
+        sx={{
+          position: "fixed",
+          left: 12,
+          top: -48,
+          zIndex: (t) => t.zIndex.tooltip,
+          px: 2,
+          py: 1,
+          borderRadius: 2,
+          bgcolor: "primary.main",
+          color: "primary.contrastText",
+          fontWeight: 600,
+          textDecoration: "none",
+          "&:focus": { top: 12 },
+        }}
+      >
+        Pular para o conteúdo
+      </Box>
       <AppBar position="fixed" sx={{ zIndex: (tema) => tema.zIndex.drawer + 1 }}>
-        <Toolbar sx={{ gap: 2 }}>
-          <Box sx={{ flexGrow: 1 }}>
-            <Logo size={26} fontSize={18} />
+        <Toolbar sx={{ gap: 1, minHeight: { xs: 60 }, px: { xs: 2, md: 3 } }}>
+          <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center" }}>
+            <Logo size={26} fontSize={17} />
           </Box>
           <Tooltip title="Meu perfil">
             <Button
               color="inherit"
               onClick={() => navigate("/perfil")}
-              sx={{ textTransform: "none", gap: 1, px: 1, color: "text.secondary" }}
+              sx={{
+                gap: 1,
+                pl: 0.75,
+                pr: { xs: 0.75, sm: 1.5 },
+                py: 0.5,
+                color: "text.primary",
+                border: 1,
+                borderColor: "divider",
+                borderRadius: 999,
+                "&:hover": { borderColor: "text.secondary", bgcolor: "action.hover" },
+              }}
             >
               <Avatar
                 sx={{
@@ -143,14 +173,14 @@ export default function AppLayout({ children }) {
               >
                 {iniciais(usuario.nome)}
               </Avatar>
-              <Box component="span" sx={{ display: { xs: "none", sm: "inline" }, fontSize: 14 }}>
+              <Box component="span" sx={{ display: { xs: "none", sm: "inline" }, fontSize: 13, fontWeight: 500 }}>
                 {usuario.nome}
               </Box>
             </Button>
           </Tooltip>
           <Tooltip title="Sair da conta">
-            <IconButton color="inherit" onClick={sair} aria-label="Sair">
-              <LogoutIcon />
+            <IconButton onClick={sair} aria-label="Sair" sx={{ color: "text.secondary", "&:hover": { color: "text.primary" } }}>
+              <LogoutIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         </Toolbar>
@@ -169,14 +199,29 @@ export default function AppLayout({ children }) {
           },
         }}
       >
-        <Toolbar />
+        <Toolbar sx={{ minHeight: { xs: 60 } }} />
 
         {/* Perfil do usuário logado */}
-        <Box sx={{ px: 2, pt: 2.5, pb: 2, display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Box
+          sx={{
+            mx: 1.5,
+            mt: 2,
+            mb: 1,
+            p: 1.25,
+            display: { xs: "none", md: "flex" },
+            alignItems: "center",
+            gap: 1.25,
+            borderRadius: 2,
+            bgcolor: "background.paper",
+            border: 1,
+            borderColor: "divider",
+          }}
+        >
           <Avatar
             sx={{
-              width: 42,
-              height: 42,
+              width: 36,
+              height: 36,
+              fontSize: 14,
               bgcolor: ehAdmin ? "secondary.main" : "primary.main",
               color: "#0B0E14",
               fontWeight: 700,
@@ -194,33 +239,47 @@ export default function AppLayout({ children }) {
             </Typography>
           </Box>
         </Box>
-        <Divider />
 
-        <List sx={{ px: 1.5, py: 1.5, flexGrow: 1 }}>
+        <Typography
+          variant="overline"
+          sx={{ display: { xs: "none", md: "block" }, px: 3, pt: 1.5, color: "text.disabled" }}
+        >
+          Navegação
+        </Typography>
+        <List sx={{ px: 1.5, py: { xs: 1.5, md: 0.5 }, flexGrow: 1 }}>
           {itens.map((item) => (
             <Tooltip key={item.caminho} title={item.dica} placement="right" arrow enterDelay={500}>
               <ListItemButton
                 selected={localizacao.pathname === item.caminho}
                 onClick={() => navigate(item.caminho)}
-                sx={{ mb: 0.5 }}
+                aria-label={item.rotulo}
+                sx={{ mb: 0.5, py: 0.9, justifyContent: { xs: "center", md: "flex-start" } }}
               >
-                <ListItemIcon>{item.icone}</ListItemIcon>
-                <ListItemText primary={item.rotulo} primaryTypographyProps={{ fontSize: 14, fontWeight: 500 }} />
+                <ListItemIcon sx={{ minWidth: { xs: 0, md: 36 } }}>{item.icone}</ListItemIcon>
+                <ListItemText
+                  primary={item.rotulo}
+                  primaryTypographyProps={{ fontSize: 14, fontWeight: 500 }}
+                  sx={{ display: { xs: "none", md: "block" } }}
+                />
                 {item.caminho === "/gerente/riscos" && pendentesReavaliacao > 0 && (
                   <Tooltip title={`${pendentesReavaliacao} risco(s) sem reavaliação há 30 dias ou mais`} placement="right">
                     <Box
                       component="span"
                       sx={{
                         minWidth: 22,
-                        height: 22,
+                        height: 20,
                         px: 0.75,
-                        borderRadius: 11,
-                        bgcolor: "#FB923C",
-                        color: "#0B0E14",
-                        fontSize: 12,
+                        borderRadius: 10,
+                        bgcolor: "rgba(251, 146, 60, 0.16)",
+                        border: "1px solid rgba(251, 146, 60, 0.45)",
+                        color: "#FDBA74",
+                        fontSize: 11,
                         fontWeight: 700,
                         display: "grid",
                         placeItems: "center",
+                        position: { xs: "absolute", md: "static" },
+                        top: { xs: 2 },
+                        right: { xs: 4 },
                       }}
                     >
                       {pendentesReavaliacao}
@@ -243,8 +302,9 @@ export default function AppLayout({ children }) {
             alignItems: "center",
             gap: 0.75,
             width: "100%",
-            px: 2,
-            py: 1.5,
+            px: { xs: 0, md: 2.5 },
+            py: 1.75,
+            justifyContent: { xs: "center", md: "flex-start" },
             border: 0,
             bgcolor: "transparent",
             cursor: "pointer",
@@ -255,16 +315,18 @@ export default function AppLayout({ children }) {
           }}
         >
           <InfoOutlinedIcon sx={{ fontSize: 15 }} />
-          <span>Sobre o Argos</span>
-          <Box component="span" sx={{ ml: "auto", opacity: 0.7 }}>
+          <Box component="span" sx={{ display: { xs: "none", md: "inline" } }}>
+            Sobre o Argos
+          </Box>
+          <Box component="span" sx={{ ml: "auto", opacity: 0.7, display: { xs: "none", md: "inline" } }}>
             v{VERSAO_SISTEMA}
           </Box>
         </Box>
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 3, minWidth: 0 }}>
-        <Toolbar />
-        {children}
+      <Box component="main" id="conteudo" tabIndex={-1} sx={{ flexGrow: 1, minWidth: 0, px: { xs: 2, sm: 3, lg: 4 }, pb: 4 }}>
+        <Toolbar sx={{ minHeight: { xs: 60 } }} />
+        <Box sx={{ maxWidth: 1440, mx: "auto", pt: { xs: 2, md: 3 } }}>{children}</Box>
       </Box>
     </Box>
   );

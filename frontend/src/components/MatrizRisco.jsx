@@ -1,5 +1,5 @@
 import { Box, Paper, Tooltip, Typography } from "@mui/material";
-import { IMPACTOS, PROBABILIDADES, faixaExposicao } from "../constants";
+import { IMPACTOS, PROBABILIDADES, FAIXAS_EXPOSICAO, faixaExposicao } from "../constants";
 
 const MAXIMO_TITULOS_NA_DICA = 5;
 
@@ -44,18 +44,34 @@ export default function MatrizRisco({ riscos, aoClicarCelula }) {
 
   return (
     <Box>
-      <Box sx={{ display: "grid", gridTemplateColumns: "88px repeat(5, 1fr)", gap: 0.8 }}>
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "28px repeat(5, minmax(0, 1fr))", sm: "92px repeat(5, minmax(0, 1fr))" }, gap: 0.75 }}>
         <Box />
         {IMPACTOS.map((impacto) => (
-          <Typography key={impacto.value} variant="caption" align="center" fontWeight={600} sx={{ lineHeight: 1.2 }}>
-            {impacto.value} · {impacto.label}
+          <Typography
+            key={impacto.value}
+            variant="caption"
+            align="center"
+            sx={{ lineHeight: 1.2, color: "text.secondary", fontWeight: 500, fontSize: { xs: 10, sm: 12 }, pb: 0.5 }}
+          >
+            {impacto.value}
+            <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+              {" · "}
+              {impacto.label}
+            </Box>
           </Typography>
         ))}
 
         {probabilidadesDesc.map((probabilidade) => (
           <Box key={probabilidade.value} sx={{ display: "contents" }}>
-            <Typography variant="caption" fontWeight={600} sx={{ alignSelf: "center", lineHeight: 1.2 }}>
-              {probabilidade.value} · {probabilidade.label}
+            <Typography
+              variant="caption"
+              sx={{ alignSelf: "center", lineHeight: 1.2, color: "text.secondary", fontWeight: 500, fontSize: { xs: 10, sm: 12 }, textAlign: "right", pr: 1 }}
+            >
+              {probabilidade.value}
+              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                {" · "}
+                {probabilidade.label}
+              </Box>
             </Typography>
             {IMPACTOS.map((impacto) => {
               const faixa = faixaExposicao(probabilidade.value * impacto.value);
@@ -72,19 +88,26 @@ export default function MatrizRisco({ riscos, aoClicarCelula }) {
                     elevation={0}
                     onClick={aoClicarCelula ? () => aoClicarCelula(probabilidade.value, impacto.value) : undefined}
                     sx={{
-                      backgroundColor: quantidade === 0 ? "transparent" : faixa.cor,
-                      border: quantidade === 0 ? `1px dashed ${faixa.cor}66` : "none",
-                      color: quantidade === 0 ? "text.secondary" : "#0B0E14",
-                      height: 52,
+                      backgroundColor: quantidade === 0 ? `${faixa.cor}14` : faixa.cor,
+                      border: "1px solid",
+                      borderColor: quantidade === 0 ? `${faixa.cor}26` : `${faixa.cor}`,
+                      boxShadow: quantidade === 0 ? "none" : `inset 0 0 0 1px rgba(255,255,255,0.18)`,
+                      color: quantidade === 0 ? "rgba(232, 236, 243, 0.22)" : "#0B0E14",
+                      borderRadius: 1.5,
+                      height: { xs: 40, sm: 50 },
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       cursor: quantidade > 0 ? "pointer" : "default",
-                      transition: "transform 0.15s ease, box-shadow 0.15s ease",
-                      "&:hover": quantidade > 0 ? { transform: "scale(1.04)", boxShadow: 3 } : {},
+                      transition: "transform 150ms ease, box-shadow 150ms ease",
+                      "&:hover": quantidade > 0 ? { transform: "translateY(-1px)", boxShadow: `0 6px 18px ${faixa.cor}40` } : {},
                     }}
                   >
-                    <Typography variant="h6">{quantidade}</Typography>
+                    <Typography
+                      sx={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: quantidade ? 700 : 500, fontSize: { xs: 15, sm: 18 }, fontVariantNumeric: "tabular-nums" }}
+                    >
+                      {quantidade}
+                    </Typography>
                   </Paper>
                 </Tooltip>
               );
@@ -92,7 +115,17 @@ export default function MatrizRisco({ riscos, aoClicarCelula }) {
           </Box>
         ))}
       </Box>
-      <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mt: 2 }}>
+        {FAIXAS_EXPOSICAO.map((f) => (
+          <Box key={f.label} sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+            <Box sx={{ width: 10, height: 10, borderRadius: 0.5, bgcolor: f.cor }} />
+            <Typography variant="caption" color="text.secondary">
+              {f.label}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+      <Typography variant="caption" color="text.secondary" sx={{ mt: 0.75, display: "block", opacity: 0.8 }}>
         Linhas: probabilidade · Colunas: impacto · Cor: faixa da exposição (probabilidade × impacto)
       </Typography>
     </Box>

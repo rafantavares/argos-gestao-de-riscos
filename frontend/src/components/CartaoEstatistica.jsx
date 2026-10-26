@@ -16,17 +16,28 @@ export default function CartaoEstatistica({ titulo, valor, icone, tendencia, cor
   const corTendencia = delta === null || delta === 0 ? "#8A93A6" : delta > 0 ? "#4ADE80" : "#F87171";
 
   return (
-    <Paper sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column", gap: 1 }}>
+    <Paper
+      sx={{
+        p: 2.25,
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        gap: 1.25,
+        transition: "border-color 150ms ease",
+        "&:hover": { borderColor: "#343E50" },
+      }}
+    >
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, fontSize: 13 }}>
           {titulo}
         </Typography>
         {icone && (
           <Box
             sx={{
-              width: 32,
-              height: 32,
+              width: 34,
+              height: 34,
               borderRadius: 2,
+              border: `1px solid ${cor}33`,
               display: "grid",
               placeItems: "center",
               color: cor,
@@ -41,7 +52,11 @@ export default function CartaoEstatistica({ titulo, valor, icone, tendencia, cor
 
       <Box sx={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 1 }}>
         <Box>
-          <Typography variant="h4" fontWeight={600} sx={{ lineHeight: 1.1 }}>
+          <Typography
+            variant="h4"
+            fontWeight={600}
+            sx={{ lineHeight: 1.05, fontSize: { xs: 28, md: 32 }, fontVariantNumeric: "tabular-nums" }}
+          >
             {valor}
           </Typography>
           {tendencia && (

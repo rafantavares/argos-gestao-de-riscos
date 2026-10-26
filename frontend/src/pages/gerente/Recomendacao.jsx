@@ -253,7 +253,7 @@ export default function Recomendacao() {
   const nivel = risco ? nivelSeveridade(risco.probabilidade, risco.impacto) : null;
 
   return (
-    <Box sx={{ maxWidth: 860 }}>
+    <Box sx={{ maxWidth: 1100 }}>
       <Button startIcon={<ArrowBackIcon />} size="small" onClick={() => navigate("/gerente/riscos")} sx={{ mb: 1 }}>
         Voltar para riscos
       </Button>

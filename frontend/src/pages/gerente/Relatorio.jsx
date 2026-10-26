@@ -139,8 +139,9 @@ export default function Relatorio() {
           bgcolor: "#FFFFFF",
           color: COR.texto,
           p: { xs: 2.5, md: 5 },
+          overflowX: "auto",
           boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
-          "@media print": { boxShadow: "none", p: 0, maxWidth: "none" },
+          "@media print": { boxShadow: "none", p: 0, maxWidth: "none", overflowX: "visible" },
           "& *": { fontFamily: '"IBM Plex Sans", Arial, sans-serif' },
         }}
       >
