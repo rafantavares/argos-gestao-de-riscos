@@ -327,6 +327,11 @@ export default function Riscos() {
       setFiltros({ ...FILTROS_PADRAO, celula: localizacao.state.celula });
       navigate(localizacao.pathname, { replace: true, state: null });
     }
+    // Vindo de Projetos ("Ver riscos"): já filtra pelo projeto.
+    if (localizacao.state?.projeto) {
+      setFiltros({ ...FILTROS_PADRAO, projeto: localizacao.state.projeto });
+      navigate(localizacao.pathname, { replace: true, state: null });
+    }
     if (localizacao.state?.rascunho) {
       setRascunho(localizacao.state.rascunho);
       setDialogoAberto(true);

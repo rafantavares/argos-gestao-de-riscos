@@ -12,7 +12,7 @@ services:
       - key: JWT_ALGORITMO
         value: HS256
       - key: JWT_EXPIRACAO_MINUTOS
-        value: 60
+        value: 480
       - key: CORS_ORIGINS
         value: https://argos-ti.vercel.app,https://gestao-risco.vercel.app,http://localhost:5173
     rootDir: backend
