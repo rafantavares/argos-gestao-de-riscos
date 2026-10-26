@@ -34,7 +34,7 @@ import {
   AREAS_AFETADAS,
   CATEGORIAS,
   CORES_ALGORITMOS,
-  CORES_CATEGORIA,
+  CORES_SERIE_CATEGORIA,
   CORES_SEVERIDADE,
   FASES_PROJETO,
   IMPACTOS,
@@ -143,7 +143,7 @@ export default function Dashboard() {
   const projetosComRiscos = projetos.filter((p) => riscos.some((r) => r.id_projeto === p.id));
   const seriesCategoriaProjeto = CATEGORIAS.map((categoria) => ({
     label: categoria.label,
-    color: CORES_CATEGORIA[categoria.value],
+    color: CORES_SERIE_CATEGORIA[categoria.value],
     stack: "total",
     data: projetosComRiscos.map(
       (p) => riscos.filter((r) => r.id_projeto === p.id && r.categoria === categoria.value).length
@@ -267,7 +267,7 @@ export default function Dashboard() {
             valor={projetos.length}
             icone={<AccountTreeIcon />}
             tendencia={tendenciaProjetos}
-            cor="#2DD4BF"
+            cor="var(--argos-marca)"
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
@@ -276,7 +276,7 @@ export default function Dashboard() {
             valor={gerentes.length}
             icone={<ManageAccountsIcon />}
             tendencia={tendenciaGerentes}
-            cor="#A78BFA"
+            cor="var(--argos-ia)"
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
@@ -285,7 +285,7 @@ export default function Dashboard() {
             valor={riscos.length}
             icone={<ReportProblemOutlinedIcon />}
             tendencia={tendenciaRiscos}
-            cor="#FBBF24"
+            cor="var(--argos-atencao)"
             rodape={
               <Box component="span" sx={{ display: "inline-flex", gap: 1 }}>
                 {["baixo", "medio", "alto"].map((nivel) => (
@@ -303,7 +303,7 @@ export default function Dashboard() {
             valor={taxaAceitacao === null ? "—" : `${taxaAceitacao}%`}
             icone={<ThumbUpAltOutlinedIcon />}
             tendencia={respondidas.length > 0 ? tendenciaAceite : null}
-            cor="#4ADE80"
+            cor="var(--argos-sucesso)"
             rodape={`${respondidas.length} recomendações respondidas`}
           />
         </Grid>
@@ -341,7 +341,7 @@ export default function Dashboard() {
                 series={[
                   {
                     data: importancia.features.map((f) => Math.round(f.importancia * 1000) / 10),
-                    color: "#2DD4BF",
+                    color: "var(--argos-marca)",
                     valueFormatter: (v) => `${v.toFixed(1)}%`,
                   },
                 ]}
@@ -515,12 +515,12 @@ function MatrizConfusao({ nome, cor, dados }) {
                 const grave = Math.abs(i - j) > 1;
                 const intensidade = valor / maximo;
                 const fundo = acerto
-                  ? `rgba(45, 212, 191, ${0.12 + intensidade * 0.6})`
+                  ? `color-mix(in srgb, var(--argos-marca) ${Math.round((0.12 + intensidade * 0.6) * 100)}%, transparent)`
                   : valor === 0
                     ? "transparent"
                     : grave
-                      ? `rgba(248, 113, 113, ${0.25 + intensidade * 0.6})`
-                      : `rgba(251, 191, 36, ${0.15 + intensidade * 0.6})`;
+                      ? `color-mix(in srgb, var(--argos-erro) ${Math.round((0.25 + intensidade * 0.6) * 100)}%, transparent)`
+                      : `color-mix(in srgb, var(--argos-atencao) ${Math.round((0.15 + intensidade * 0.6) * 100)}%, transparent)`;
                 return (
                   <Box
                     component="td"

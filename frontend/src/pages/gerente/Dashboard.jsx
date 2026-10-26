@@ -48,8 +48,6 @@ import BarraConfianca from "../../components/BarraConfianca";
 import { ChipCategoria, ChipSeveridade, ChipStatus, ChipUrgencia } from "../../components/Badges";
 import {
   CATEGORIAS,
-  CORES_CATEGORIA,
-  CORES_SEVERIDADE,
   nivelSeveridade,
   pontuacaoSeveridade,
   precisaReavaliar,
@@ -122,10 +120,10 @@ export default function Dashboard() {
     .map((risco) => {
       const rec = ultimaRecomendacao.get(risco.id);
       const motivos = [];
-      if (risco.exposicao >= 16 && rec?.aceita !== true) motivos.push({ texto: "Grave sem plano aceito", cor: "#F87171" });
-      if (precisaReavaliar(risco)) motivos.push({ texto: "Reavaliação pendente", cor: "#FB923C" });
+      if (risco.exposicao >= 16 && rec?.aceita !== true) motivos.push({ texto: "Grave sem plano aceito", cor: "var(--argos-erro)" });
+      if (precisaReavaliar(risco)) motivos.push({ texto: "Reavaliação pendente", cor: "var(--argos-atencao)" });
       if (rec && rec.aceita === null && Date.now() - new Date(rec.criado_em) > 7 * 86400000) {
-        motivos.push({ texto: "Recomendação parada há 7+ dias", cor: "#A78BFA" });
+        motivos.push({ texto: "Recomendação parada há 7+ dias", cor: "var(--argos-ia)" });
       }
       return { risco, motivos };
     })
@@ -214,7 +212,6 @@ export default function Dashboard() {
             valor={riscosDoFiltro.length}
             icone={<ReportProblemOutlinedIcon />}
             tendencia={tendenciaRiscos}
-            cor="#FBBF24"
             rodape={`${contagemAlta} de severidade alta`}
           />
         </Grid>
@@ -223,8 +220,9 @@ export default function Dashboard() {
             titulo="Decisões pendentes"
             valor={acoesPendentes.length}
             icone={<PendingActionsIcon />}
-            cor={acoesPendentes.length > 0 ? "#F87171" : "#4ADE80"}
-            rodape="recomendações aguardando aceite"
+            cor="var(--argos-ia)"
+            destaque={acoesPendentes.length > 0}
+            rodape="sugestões da IA aguardando você"
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
@@ -240,11 +238,10 @@ export default function Dashboard() {
                     px: 1.2,
                     py: 0.4,
                     borderRadius: 999,
-                    bgcolor: `${CORES_CATEGORIA[c.value]}1A`,
-                    border: `1px solid ${CORES_CATEGORIA[c.value]}55`,
-                    color: CORES_CATEGORIA[c.value],
+                    bgcolor: "var(--argos-trilha)",
+                    color: "text.primary",
                     fontSize: 12,
-                    fontWeight: 600,
+                    fontWeight: 500,
                   }}
                 >
                   {c.label} {contagemPorCategoria[i]}
@@ -302,7 +299,6 @@ export default function Dashboard() {
                 </TableHead>
                 <TableBody>
                   {riscosCriticos.map((risco, indice) => {
-                    const nivel = nivelSeveridade(risco.probabilidade, risco.impacto);
                     return (
                       <TableRow
                         key={risco.id}
@@ -312,22 +308,10 @@ export default function Dashboard() {
                         onClick={() => navigate(`/gerente/riscos/${risco.id}/recomendacao`)}
                         onKeyDown={(e) => e.key === "Enter" && navigate(`/gerente/riscos/${risco.id}/recomendacao`)}
                       >
-                        <TableCell sx={{ width: 40 }}>
-                          <Box
-                            sx={{
-                              width: 26,
-                              height: 26,
-                              borderRadius: "50%",
-                              display: "grid",
-                              placeItems: "center",
-                              bgcolor: CORES_SEVERIDADE[nivel],
-                              color: "#0B0E14",
-                              fontWeight: 700,
-                              fontSize: 12,
-                            }}
-                          >
-                            {indice + 1}
-                          </Box>
+                        <TableCell sx={{ width: 56 }}>
+                          <Typography variant="body2" sx={{ color: "primary.main", fontWeight: 600 }}>
+                            {risco.indice}
+                          </Typography>
                         </TableCell>
                         <TableCell sx={{ maxWidth: 260 }}>
                           <Typography variant="body2" fontWeight={500} noWrap>
@@ -363,14 +347,14 @@ export default function Dashboard() {
 
       <Paper sx={{ p: 2, mb: 3 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-          <NotificationImportantOutlinedIcon sx={{ color: "#FB923C" }} />
+          <NotificationImportantOutlinedIcon sx={{ color: "var(--argos-atencao)" }} />
           <Box sx={{ flexGrow: 1 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <Typography variant="subtitle1" fontWeight={600}>
                 Precisam de atenção
               </Typography>
               {precisamAtencao.length > 0 && (
-                <Chip size="small" label={precisamAtencao.length} sx={{ bgcolor: "rgba(251, 146, 60, 0.15)", color: "#FB923C" }} />
+                <Chip size="small" label={precisamAtencao.length} sx={{ bgcolor: "color-mix(in srgb, var(--argos-atencao) 15%, transparent)", color: "var(--argos-atencao)" }} />
               )}
             </Box>
             <Typography variant="caption" color="text.secondary">
@@ -417,7 +401,7 @@ export default function Dashboard() {
                     key={m.texto}
                     size="small"
                     label={m.texto}
-                    sx={{ bgcolor: `${m.cor}22`, color: m.cor, fontWeight: 600 }}
+                    sx={{ bgcolor: `color-mix(in srgb, ${m.cor} 13%, transparent)`, color: m.cor, fontWeight: 600 }}
                   />
                 ))}
                 <ChevronRightIcon sx={{ color: "text.secondary" }} />
@@ -485,8 +469,7 @@ export default function Dashboard() {
                     p: 2,
                     borderRadius: 2,
                     border: "1px solid",
-                    borderColor: "divider",
-                    borderLeft: "4px solid #A78BFA",
+                    borderColor: "color-mix(in srgb, var(--argos-ia) 30%, transparent)",
                     bgcolor: "background.default",
                   }}
                 >

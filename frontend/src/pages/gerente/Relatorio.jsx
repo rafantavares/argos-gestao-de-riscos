@@ -48,8 +48,10 @@ export default function Relatorio() {
   useEffect(() => {
     const anterior = document.body.style.backgroundColor;
     document.body.style.backgroundColor = "#E5E7EB";
+    document.body.classList.add("documento-claro");
     return () => {
       document.body.style.backgroundColor = anterior;
+      document.body.classList.remove("documento-claro");
     };
   }, []);
 
@@ -215,7 +217,7 @@ export default function Relatorio() {
                           textAlign: "center",
                           fontWeight: 700,
                           fontSize: 13,
-                          background: n ? `${cor}AA` : `${cor}26`,
+                          background: n ? `color-mix(in srgb, ${cor} 67%, transparent)` : `color-mix(in srgb, ${cor} 15%, transparent)`,
                         }}
                       >
                         {n || ""}

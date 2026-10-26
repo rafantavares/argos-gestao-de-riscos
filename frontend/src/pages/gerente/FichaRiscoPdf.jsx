@@ -96,7 +96,7 @@ export default function FichaRiscoPdf() {
             height: 92,
             borderRadius: 1.5,
             border: `2px solid ${faixa.cor}`,
-            bgcolor: `${faixa.cor}33`,
+            bgcolor: `color-mix(in srgb, ${faixa.cor} 20%, transparent)`,
             display: "grid",
             placeItems: "center",
             textAlign: "center",

@@ -47,7 +47,7 @@ export default function FichaRisco({ risco, aoArquivar }) {
             display: "grid",
             placeItems: "center",
             textAlign: "center",
-            bgcolor: `${faixa.cor}1F`,
+            bgcolor: `color-mix(in srgb, ${faixa.cor} 12%, transparent)`,
             border: `2px solid ${faixa.cor}`,
           }}
         >
@@ -73,7 +73,7 @@ export default function FichaRisco({ risco, aoArquivar }) {
               </Typography>
             )}
             {precisaReavaliar(risco) && (
-              <Typography variant="caption" sx={{ color: "#FB923C", fontWeight: 700 }}>
+              <Typography variant="caption" sx={{ color: "var(--argos-atencao)", fontWeight: 700 }}>
                 REAVALIAÇÃO PENDENTE
               </Typography>
             )}

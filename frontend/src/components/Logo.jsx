@@ -2,7 +2,8 @@
 // gigante de cem olhos que nunca dormia) e a estrela violeta que, no sistema,
 // sinaliza inteligência artificial. Vetorizada a partir da arte final; as
 // mesmas formas estão em public/favicon.svg e docs/argos-logo.svg.
-export const CORES_MARCA = { ciano: "#2DD4BF", violeta: "#A78BFA", fundo: "#0B0E14" };
+// Cores do tema (mudam com o modo claro/escuro); a pupila usa a cor do fundo.
+export const CORES_MARCA = { ciano: "var(--argos-marca)", violeta: "var(--argos-ia)", fundo: "var(--argos-menu)" };
 
 export function FormasMarca({ estrela = true }) {
   const { ciano, violeta, fundo } = CORES_MARCA;
@@ -44,7 +45,7 @@ export default function LogoMark({ size = 28, estrela = true }) {
   );
 }
 
-export function Logo({ size = 28, fontSize = 20, color = "#E6E9F0" }) {
+export function Logo({ size = 28, fontSize = 20, color = "var(--argos-texto)" }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
       <LogoMark size={size} />

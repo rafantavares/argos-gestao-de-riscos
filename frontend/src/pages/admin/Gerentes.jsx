@@ -42,7 +42,7 @@ export default function Gerentes() {
       rotulo: "Gerente",
       render: (g) => (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <Avatar sx={{ width: 34, height: 34, bgcolor: "primary.main", color: "#0B0E14", fontSize: 13, fontWeight: 700 }}>
+          <Avatar sx={{ width: 34, height: 34, bgcolor: "primary.main", color: "var(--argos-sobre-tom)", fontSize: 13, fontWeight: 700 }}>
             {iniciais(g.nome)}
           </Avatar>
           <Box>

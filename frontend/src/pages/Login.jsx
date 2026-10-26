@@ -102,8 +102,8 @@ export default function Login() {
           p: { xs: 3, md: 6 },
           minHeight: { xs: 320, md: "100vh" },
           background:
-            "radial-gradient(1200px 600px at 20% 10%, rgba(45, 212, 191, 0.10), transparent 60%), radial-gradient(900px 500px at 90% 90%, rgba(167, 139, 250, 0.10), transparent 60%), #0B0E14",
-          borderRight: { md: "1px solid #262D3B" },
+            "radial-gradient(1200px 600px at 20% 10%, color-mix(in srgb, var(--argos-marca) 10%, transparent), transparent 60%), radial-gradient(900px 500px at 90% 90%, color-mix(in srgb, var(--argos-ia) 10%, transparent), transparent 60%), var(--argos-fundo)",
+          borderRight: { md: "1px solid var(--argos-borda)" },
         }}
       >
         <Box className="surgir">

@@ -118,7 +118,7 @@ export default function TabelaDados({
                 sx={{
                   "& .acoes-linha": { opacity: 0, transition: "opacity 0.15s ease" },
                   "&:hover .acoes-linha, &:focus-within .acoes-linha": { opacity: 1 },
-                  "&:hover": { backgroundColor: "rgba(45, 212, 191, 0.06) !important" },
+                  "&:hover": { backgroundColor: "color-mix(in srgb, var(--argos-marca) 6%, transparent) !important" },
                   "&:last-child td": { borderBottom: 0 },
                   ...(estiloLinha ? estiloLinha(linha) : {}),
                 }}

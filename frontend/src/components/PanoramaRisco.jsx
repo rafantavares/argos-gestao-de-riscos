@@ -1,7 +1,7 @@
 import { Box, Grid, Paper, Typography } from "@mui/material";
 import { Gauge, gaugeClasses } from "@mui/x-charts/Gauge";
 import { AREAS_AFETADAS, exposicaoResidual, faixaExposicao, reducaoPercentual } from "../constants";
-import { IconeArea } from "./Badges";
+import { IconeArea, Marcador } from "./Badges";
 
 // Panorama do risco do projeto: o "termômetro" (exposição média dos riscos
 // ativos) e onde a exposição se concentra, por área afetada.
@@ -46,20 +46,26 @@ export default function PanoramaRisco({ riscos }) {
               text={({ value }) => (riscos.length ? `${value}` : "—")}
               sx={{
                 [`& .${gaugeClasses.valueText}`]: { fontSize: 34, fontWeight: 700, fontFamily: '"Space Grotesk", sans-serif' },
-                [`& .${gaugeClasses.valueText} text`]: { fill: faixaMedia.cor },
+                [`& .${gaugeClasses.valueText} text`]: { fill: "var(--argos-texto)" },
                 [`& .${gaugeClasses.valueArc}`]: { fill: faixaMedia.cor },
-                [`& .${gaugeClasses.referenceArc}`]: { fill: "rgba(255,255,255,0.08)" },
+                [`& .${gaugeClasses.referenceArc}`]: { fill: "var(--argos-trilha)" },
               }}
             />
           </Box>
-          <Typography variant="body2" align="center" sx={{ color: faixaMedia.cor, fontWeight: 700 }}>
-            {riscos.length ? `Nível ${faixaMedia.label}` : "Sem riscos ativos"}
+          <Typography variant="body2" align="center" component="div" sx={{ fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 0.75 }}>
+            {riscos.length ? (
+              <>
+                <Marcador cor={faixaMedia.cor} /> Nível {faixaMedia.label}
+              </>
+            ) : (
+              "Sem riscos ativos"
+            )}
           </Typography>
           <Typography variant="caption" align="center" color="text.secondary">
             {riscos.length} riscos ativos · {graves} graves ou muito graves
           </Typography>
           {comResidual > 0 && (
-            <Typography variant="caption" align="center" sx={{ mt: 0.5, color: "#4ADE80", fontWeight: 600 }}>
+            <Typography variant="caption" align="center" sx={{ mt: 0.5, color: "text.secondary", fontWeight: 500 }}>
               Com as mitigações: −{reducao}% de exposição esperada ({comResidual} riscos com residual)
             </Typography>
           )}
@@ -72,7 +78,7 @@ export default function PanoramaRisco({ riscos }) {
             Exposição por área afetada
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
-            Soma da exposição dos riscos ativos de cada área; a cor indica o risco mais grave dela
+            Soma da exposição dos riscos ativos de cada área; à direita, o risco mais grave dela
           </Typography>
           {porArea.length === 0 ? (
             <Typography variant="body2" color="text.secondary">
@@ -81,22 +87,28 @@ export default function PanoramaRisco({ riscos }) {
           ) : (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1.1 }}>
               {porArea.map((area) => {
-                const cor = faixaExposicao(area.maior).cor;
+                const pior = faixaExposicao(area.maior);
                 return (
                   <Box key={area.value} sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                     <IconeArea area={area.value} sx={{ fontSize: 18, color: "text.secondary" }} />
-                    <Typography variant="body2" sx={{ width: 170, flexShrink: 0 }} noWrap>
+                    <Typography variant="body2" sx={{ width: { xs: 110, sm: 170 }, flexShrink: 0 }} noWrap>
                       {area.label}
                     </Typography>
-                    <Box sx={{ flex: 1, height: 12, borderRadius: 6, bgcolor: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
-                      <Box sx={{ width: `${(area.total / maiorTotal) * 100}%`, height: "100%", bgcolor: cor, borderRadius: 6 }} />
+                    <Box sx={{ flex: 1, minWidth: 40, height: 10, borderRadius: 5, bgcolor: "var(--argos-trilha)", overflow: "hidden" }}>
+                      <Box sx={{ width: `${(area.total / maiorTotal) * 100}%`, height: "100%", bgcolor: "color-mix(in srgb, var(--argos-texto2) 60%, transparent)", borderRadius: 5 }} />
                     </Box>
                     <Typography variant="body2" fontWeight={700} sx={{ width: 34, textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
                       {area.total}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ width: 64 }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ width: 64, display: { xs: "none", sm: "block" } }}>
                       {area.quantidade} {area.quantidade === 1 ? "risco" : "riscos"}
                     </Typography>
+                    <Box sx={{ width: 104, display: "flex", alignItems: "center", gap: 0.75, flexShrink: 0 }}>
+                      <Marcador cor={pior.cor} />
+                      <Typography variant="caption" color="text.secondary" noWrap>
+                        {pior.label}
+                      </Typography>
+                    </Box>
                   </Box>
                 );
               })}

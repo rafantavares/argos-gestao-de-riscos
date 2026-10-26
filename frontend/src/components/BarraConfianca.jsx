@@ -27,7 +27,7 @@ export default function BarraConfianca({ confianca, compacta = false }) {
             flexGrow: 1,
             height: compacta ? 6 : 10,
             borderRadius: 999,
-            backgroundColor: "#262D3B",
+            backgroundColor: "var(--argos-borda)",
             "& .MuiLinearProgress-bar": { backgroundColor: cor, borderRadius: 999 },
           }}
         />

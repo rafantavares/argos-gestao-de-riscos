@@ -18,7 +18,7 @@ export default function MiniMatriz({ probabilidade, impacto, tamanho = 7, folga 
             borderRadius: tamanho > 10 ? 0.75 : 0.25,
             bgcolor: cor,
             opacity: atual ? 1 : 0.18,
-            outline: atual ? "2px solid #E6E9F0" : "none",
+            outline: atual ? "2px solid var(--argos-texto)" : "none",
             outlineOffset: 0,
           }}
         />

@@ -71,8 +71,8 @@ function Mensagem({ mensagem, acao }) {
             py: 1.25,
             maxWidth: "75%",
             borderRadius: 2,
-            bgcolor: "rgba(45, 212, 191, 0.10)",
-            borderColor: "rgba(45, 212, 191, 0.35)",
+            bgcolor: "color-mix(in srgb, var(--argos-marca) 10%, transparent)",
+            borderColor: "color-mix(in srgb, var(--argos-marca) 35%, transparent)",
             whiteSpace: "pre-wrap",
             wordBreak: "break-word",
           }}
@@ -92,7 +92,7 @@ function Mensagem({ mensagem, acao }) {
           flexShrink: 0,
           display: "grid",
           placeItems: "center",
-          bgcolor: "rgba(167, 139, 250, 0.15)",
+          bgcolor: "color-mix(in srgb, var(--argos-ia) 15%, transparent)",
           color: "secondary.main",
         }}
       >
@@ -334,8 +334,8 @@ export default function Assistente() {
                       mb: 0.5,
                       borderRadius: 1.5,
                       cursor: "pointer",
-                      bgcolor: ativa ? "rgba(45, 212, 191, 0.12)" : "transparent",
-                      "&:hover": { bgcolor: ativa ? "rgba(45, 212, 191, 0.16)" : "rgba(255,255,255,0.04)" },
+                      bgcolor: ativa ? "color-mix(in srgb, var(--argos-marca) 12%, transparent)" : "transparent",
+                      "&:hover": { bgcolor: ativa ? "color-mix(in srgb, var(--argos-marca) 16%, transparent)" : "var(--argos-sobreposicao)" },
                       "&:hover .acoes": { opacity: 1 },
                     }}
                   >
@@ -431,7 +431,7 @@ export default function Assistente() {
                       mb: 2,
                       display: "grid",
                       placeItems: "center",
-                      bgcolor: "rgba(167, 139, 250, 0.15)",
+                      bgcolor: "color-mix(in srgb, var(--argos-ia) 15%, transparent)",
                       color: "secondary.main",
                     }}
                   >

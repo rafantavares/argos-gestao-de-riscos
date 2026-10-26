@@ -3,8 +3,7 @@ import {
   AppBar,
   Avatar,
   Box,
-  Button,
-  Divider,
+  ButtonBase,
   Drawer,
   IconButton,
   List,
@@ -17,88 +16,112 @@ import {
 } from "@mui/material";
 import LogoutIcon from "@mui/icons-material/Logout";
 import InsightsIcon from "@mui/icons-material/Insights";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
-import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
+import ManageAccountsOutlinedIcon from "@mui/icons-material/ManageAccountsOutlined";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import SpaceDashboardOutlinedIcon from "@mui/icons-material/SpaceDashboardOutlined";
-import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
+import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
+import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { usePreferencias } from "../contexts/PreferenciasContext";
 import { riscos as servicoRiscos } from "../services/api";
 import { VERSAO_SISTEMA, iniciais, precisaReavaliar } from "../constants";
+import { misturar, v } from "../theme";
 import { Logo } from "./Logo";
+import LogoMark from "./Logo";
 
-const LARGURA_MENU = { xs: 68, md: 252 };
+const LARGURA_MENU = { xs: 68, md: 248 };
+const ALTURA_TOPO = 64;
 
-const ITENS_ADMIN = [
+// Menu em grupos: acompanhar (ver a situação), decidir (IA) e gerenciar
+// (cadastros). `ia: true` pinta o item de violeta, a cor da IA no Argos.
+const MENU_ADMIN = [
   {
-    rotulo: "Visão geral",
-    dica: "Indicadores, performance dos algoritmos e últimas recomendações",
-    caminho: "/admin",
-    icone: <InsightsIcon />,
+    titulo: "Acompanhar",
+    itens: [
+      { rotulo: "Visão geral", dica: "Indicadores, desempenho dos algoritmos e últimas recomendações", caminho: "/admin", icone: <InsightsIcon /> },
+      { rotulo: "Riscos", dica: "Visão consolidada dos riscos de todos os projetos", caminho: "/admin/riscos", icone: <ReportProblemOutlinedIcon /> },
+    ],
   },
   {
-    rotulo: "Projetos",
-    dica: "Cadastro de projetos e vínculo de gerentes",
-    caminho: "/admin/projetos",
-    icone: <AccountTreeIcon />,
-  },
-  {
-    rotulo: "Gerentes",
-    dica: "Usuários com perfil de gerente de projetos",
-    caminho: "/admin/gerentes",
-    icone: <ManageAccountsIcon />,
-  },
-  {
-    rotulo: "Riscos",
-    dica: "Visão consolidada dos riscos de todos os projetos",
-    caminho: "/admin/riscos",
-    icone: <ReportProblemOutlinedIcon />,
-  },
-  {
-    rotulo: "Planos de contingência",
-    dica: "Catálogo de planos que o modelo pode recomendar",
-    caminho: "/admin/planos",
-    icone: <ShieldOutlinedIcon />,
+    titulo: "Gerenciar",
+    itens: [
+      { rotulo: "Projetos", dica: "Cadastro de projetos e vínculo de gerentes", caminho: "/admin/projetos", icone: <AccountTreeOutlinedIcon /> },
+      { rotulo: "Gerentes", dica: "Usuários com perfil de gerente de projetos", caminho: "/admin/gerentes", icone: <ManageAccountsOutlinedIcon /> },
+      { rotulo: "Planos de contingência", dica: "Catálogo de planos que o modelo pode recomendar", caminho: "/admin/planos", icone: <ShieldOutlinedIcon /> },
+    ],
   },
 ];
 
-const ITENS_GERENTE = [
+const MENU_GERENTE = [
   {
-    rotulo: "Visão geral",
-    dica: "Matriz de risco, riscos críticos e ações pendentes",
-    caminho: "/gerente",
-    icone: <SpaceDashboardOutlinedIcon />,
+    titulo: "Acompanhar",
+    itens: [
+      { rotulo: "Visão geral", dica: "Matriz de risco, riscos críticos e ações pendentes", caminho: "/gerente", icone: <SpaceDashboardOutlinedIcon /> },
+      { rotulo: "Riscos", dica: "Cadastro e acompanhamento dos riscos dos seus projetos", caminho: "/gerente/riscos", icone: <ReportProblemOutlinedIcon /> },
+    ],
   },
   {
-    rotulo: "Projetos",
-    dica: "Seus projetos — crie novos ou edite os existentes",
-    caminho: "/gerente/projetos",
-    icone: <AccountTreeIcon />,
+    titulo: "Decidir",
+    itens: [
+      {
+        rotulo: "Assistente IA",
+        dica: "Descreva um problema e receba sugestões de registro e tratamento do risco",
+        caminho: "/gerente/assistente",
+        icone: <AutoAwesomeOutlinedIcon />,
+        ia: true,
+      },
+    ],
   },
   {
-    rotulo: "Riscos",
-    dica: "Cadastro e acompanhamento dos riscos dos seus projetos",
-    caminho: "/gerente/riscos",
-    icone: <ReportProblemOutlinedIcon />,
-  },
-  {
-    rotulo: "Assistente IA",
-    dica: "Descreva um problema e receba sugestões de registro e tratamento do risco",
-    caminho: "/gerente/assistente",
-    icone: <ForumOutlinedIcon />,
+    titulo: "Gerenciar",
+    itens: [{ rotulo: "Projetos", dica: "Seus projetos: crie novos ou edite os existentes", caminho: "/gerente/projetos", icone: <AccountTreeOutlinedIcon /> }],
   },
 ];
+
+const PAGINAS_EXTRAS = [
+  { caminho: "/configuracoes", titulo: "Configurações", grupo: "Conta" },
+  { caminho: "/perfil", titulo: "Meu perfil", grupo: "Conta" },
+  { caminho: "/sobre", titulo: "Sobre o Argos", grupo: "Ajuda" },
+];
+
+// Item ativo: a raiz (/gerente, /admin) só na própria página; os demais
+// também nas subpáginas (ex.: /gerente/riscos/12/recomendacao).
+function estaAtivo(caminho, pathname) {
+  if (caminho === "/gerente" || caminho === "/admin") return pathname === caminho;
+  return pathname === caminho || pathname.startsWith(`${caminho}/`);
+}
+
+function ItemRodape({ icone, rotulo, ativo, onClick, extra }) {
+  return (
+    <Tooltip title={rotulo} placement="right" enterDelay={500}>
+      <ListItemButton
+        selected={ativo}
+        onClick={onClick}
+        aria-label={rotulo}
+        sx={{ py: 0.75, justifyContent: { xs: "center", md: "flex-start" } }}
+      >
+        <ListItemIcon sx={{ minWidth: { xs: 0, md: 36 } }}>{icone}</ListItemIcon>
+        <ListItemText primary={rotulo} primaryTypographyProps={{ fontSize: 14, fontWeight: 500 }} sx={{ display: { xs: "none", md: "block" } }} />
+        {extra}
+      </ListItemButton>
+    </Tooltip>
+  );
+}
 
 export default function AppLayout({ children }) {
   const { usuario, sair } = useAuth();
+  const { escuro, alternarModo } = usePreferencias();
   const navigate = useNavigate();
-  const localizacao = useLocation();
+  const { pathname } = useLocation();
 
   const [pendentesReavaliacao, setPendentesReavaliacao] = useState(0);
-
 
   // Badge de riscos que precisam de reavaliação: carrega ao entrar e a cada
   // 5 minutos (não a cada troca de página, para não pesar na API).
@@ -115,8 +138,13 @@ export default function AppLayout({ children }) {
   }, [usuario.perfil]);
 
   const ehAdmin = usuario.perfil === "admin";
-  const itens = ehAdmin ? ITENS_ADMIN : ITENS_GERENTE;
+  const menu = ehAdmin ? MENU_ADMIN : MENU_GERENTE;
   const cargo = ehAdmin ? "Administrador" : "Gerente de projetos";
+
+  // Título da barra superior: o item do menu (ou página extra) que está aberto.
+  const atual =
+    menu.flatMap((g) => g.itens.map((i) => ({ titulo: i.rotulo, grupo: g.titulo, caminho: i.caminho }))).find((i) => estaAtivo(i.caminho, pathname)) ??
+    PAGINAS_EXTRAS.find((p) => pathname.startsWith(p.caminho));
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -140,51 +168,6 @@ export default function AppLayout({ children }) {
       >
         Pular para o conteúdo
       </Box>
-      <AppBar position="fixed" sx={{ zIndex: (tema) => tema.zIndex.drawer + 1 }}>
-        <Toolbar sx={{ gap: 1, minHeight: { xs: 60 }, px: { xs: 2, md: 3 } }}>
-          <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center" }}>
-            <Logo size={26} fontSize={17} />
-          </Box>
-          <Tooltip title="Meu perfil">
-            <Button
-              color="inherit"
-              onClick={() => navigate("/perfil")}
-              sx={{
-                gap: 1,
-                pl: 0.75,
-                pr: { xs: 0.75, sm: 1.5 },
-                py: 0.5,
-                color: "text.primary",
-                border: 1,
-                borderColor: "divider",
-                borderRadius: 999,
-                "&:hover": { borderColor: "text.secondary", bgcolor: "action.hover" },
-              }}
-            >
-              <Avatar
-                sx={{
-                  width: 28,
-                  height: 28,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  bgcolor: ehAdmin ? "secondary.main" : "primary.main",
-                  color: "#0B0E14",
-                }}
-              >
-                {iniciais(usuario.nome)}
-              </Avatar>
-              <Box component="span" sx={{ display: { xs: "none", sm: "inline" }, fontSize: 13, fontWeight: 500 }}>
-                {usuario.nome}
-              </Box>
-            </Button>
-          </Tooltip>
-          <Tooltip title="Sair da conta">
-            <IconButton onClick={sair} aria-label="Sair" sx={{ color: "text.secondary", "&:hover": { color: "text.primary" } }}>
-              <LogoutIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Toolbar>
-      </AppBar>
 
       <Drawer
         variant="permanent"
@@ -196,137 +179,189 @@ export default function AppLayout({ children }) {
             boxSizing: "border-box",
             display: "flex",
             flexDirection: "column",
+            px: 1.5,
           },
         }}
       >
-        <Toolbar sx={{ minHeight: { xs: 60 } }} />
-
-        {/* Perfil do usuário logado */}
-        <Box
-          sx={{
-            mx: 1.5,
-            mt: 2,
-            mb: 1,
-            p: 1.25,
-            display: { xs: "none", md: "flex" },
-            alignItems: "center",
-            gap: 1.25,
-            borderRadius: 2,
-            bgcolor: "background.paper",
-            border: 1,
-            borderColor: "divider",
-          }}
-        >
-          <Avatar
-            sx={{
-              width: 36,
-              height: 36,
-              fontSize: 14,
-              bgcolor: ehAdmin ? "secondary.main" : "primary.main",
-              color: "#0B0E14",
-              fontWeight: 700,
-              fontFamily: '"Space Grotesk", sans-serif',
-            }}
-          >
-            {iniciais(usuario.nome)}
-          </Avatar>
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant="body2" fontWeight={600} noWrap>
-              {usuario.nome}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>
-              {cargo}
-            </Typography>
+        <Box sx={{ height: ALTURA_TOPO, display: "flex", alignItems: "center", px: { xs: 0, md: 1.5 }, justifyContent: { xs: "center", md: "flex-start" } }}>
+          <Box sx={{ display: { xs: "none", md: "block" } }}>
+            <Logo size={28} fontSize={18} />
+          </Box>
+          <Box sx={{ display: { xs: "flex", md: "none" } }}>
+            <LogoMark size={30} />
           </Box>
         </Box>
 
-        <Typography
-          variant="overline"
-          sx={{ display: { xs: "none", md: "block" }, px: 3, pt: 1.5, color: "text.disabled" }}
-        >
-          Navegação
-        </Typography>
-        <List sx={{ px: 1.5, py: { xs: 1.5, md: 0.5 }, flexGrow: 1 }}>
-          {itens.map((item) => (
-            <Tooltip key={item.caminho} title={item.dica} placement="right" arrow enterDelay={500}>
-              <ListItemButton
-                selected={localizacao.pathname === item.caminho}
-                onClick={() => navigate(item.caminho)}
-                aria-label={item.rotulo}
-                sx={{ mb: 0.5, py: 0.9, justifyContent: { xs: "center", md: "flex-start" } }}
+        <Box component="nav" aria-label="Menu principal" sx={{ flexGrow: 1, overflowY: "auto", pt: 1 }}>
+          {menu.map((grupo) => (
+            <Box key={grupo.titulo} sx={{ mb: 2 }}>
+              <Typography
+                component="div"
+                sx={{ display: { xs: "none", md: "block" }, px: 1.5, pb: 0.75, fontSize: 12, fontWeight: 600, color: "text.disabled" }}
               >
-                <ListItemIcon sx={{ minWidth: { xs: 0, md: 36 } }}>{item.icone}</ListItemIcon>
-                <ListItemText
-                  primary={item.rotulo}
-                  primaryTypographyProps={{ fontSize: 14, fontWeight: 500 }}
-                  sx={{ display: { xs: "none", md: "block" } }}
-                />
-                {item.caminho === "/gerente/riscos" && pendentesReavaliacao > 0 && (
-                  <Tooltip title={`${pendentesReavaliacao} risco(s) sem reavaliação há 30 dias ou mais`} placement="right">
-                    <Box
-                      component="span"
-                      sx={{
-                        minWidth: 22,
-                        height: 20,
-                        px: 0.75,
-                        borderRadius: 10,
-                        bgcolor: "rgba(251, 146, 60, 0.16)",
-                        border: "1px solid rgba(251, 146, 60, 0.45)",
-                        color: "#FDBA74",
-                        fontSize: 11,
-                        fontWeight: 700,
-                        display: "grid",
-                        placeItems: "center",
-                        position: { xs: "absolute", md: "static" },
-                        top: { xs: 2 },
-                        right: { xs: 4 },
-                      }}
-                    >
-                      {pendentesReavaliacao}
-                    </Box>
-                  </Tooltip>
-                )}
-              </ListItemButton>
-            </Tooltip>
+                {grupo.titulo}
+              </Typography>
+              <List disablePadding>
+                {grupo.itens.map((item) => {
+                  const ativo = estaAtivo(item.caminho, pathname);
+                  const badge = item.caminho === "/gerente/riscos" && pendentesReavaliacao > 0 ? pendentesReavaliacao : null;
+                  return (
+                    <Tooltip key={item.caminho} title={item.dica} placement="right" arrow enterDelay={500}>
+                      <ListItemButton
+                        selected={ativo}
+                        onClick={() => navigate(item.caminho)}
+                        aria-label={item.rotulo}
+                        aria-current={ativo ? "page" : undefined}
+                        sx={{
+                          mb: 0.25,
+                          py: 0.85,
+                          justifyContent: { xs: "center", md: "flex-start" },
+                          ...(item.ia && {
+                            "& .MuiListItemIcon-root": { color: v("ia") },
+                            "&.Mui-selected": { backgroundColor: misturar(v("ia"), 12) },
+                            "&.Mui-selected::before": { backgroundColor: v("ia") },
+                            "&.Mui-selected .MuiListItemIcon-root": { color: v("ia") },
+                          }),
+                        }}
+                      >
+                        <ListItemIcon sx={{ minWidth: { xs: 0, md: 36 } }}>{item.icone}</ListItemIcon>
+                        <ListItemText
+                          primary={item.rotulo}
+                          primaryTypographyProps={{ fontSize: 14, fontWeight: ativo ? 600 : 500 }}
+                          sx={{ display: { xs: "none", md: "block" } }}
+                        />
+                        {badge && (
+                          <Tooltip title={`${badge} risco(s) sem reavaliação há 30 dias ou mais`} placement="right">
+                            <Box
+                              component="span"
+                              sx={{
+                                minWidth: 20,
+                                height: 20,
+                                px: 0.75,
+                                borderRadius: 10,
+                                bgcolor: misturar(v("atencao"), 16),
+                                color: v("atencao"),
+                                fontSize: 12,
+                                fontWeight: 600,
+                                display: "grid",
+                                placeItems: "center",
+                                position: { xs: "absolute", md: "static" },
+                                top: { xs: 2 },
+                                right: { xs: 4 },
+                              }}
+                            >
+                              {badge}
+                            </Box>
+                          </Tooltip>
+                        )}
+                      </ListItemButton>
+                    </Tooltip>
+                  );
+                })}
+              </List>
+            </Box>
           ))}
-        </List>
+        </Box>
 
-        {/* Sobre o sistema (glossário, base normativa e informações do modelo) */}
-        <Divider />
-        <Box
-          component="button"
-          type="button"
-          onClick={() => navigate("/sobre")}
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 0.75,
-            width: "100%",
-            px: { xs: 0, md: 2.5 },
-            py: 1.75,
-            justifyContent: { xs: "center", md: "flex-start" },
-            border: 0,
-            bgcolor: "transparent",
-            cursor: "pointer",
-            font: "inherit",
-            fontSize: 12,
-            color: localizacao.pathname === "/sobre" ? "text.primary" : "text.secondary",
-            "&:hover": { color: "text.primary" },
-          }}
-        >
-          <InfoOutlinedIcon sx={{ fontSize: 15 }} />
-          <Box component="span" sx={{ display: { xs: "none", md: "inline" } }}>
-            Sobre o Argos
-          </Box>
-          <Box component="span" sx={{ ml: "auto", opacity: 0.7, display: { xs: "none", md: "inline" } }}>
-            v{VERSAO_SISTEMA}
+        {/* Rodapé do menu: configurações, sobre e o cartão de perfil */}
+        <Box sx={{ borderTop: 1, borderColor: "divider", pt: 1, pb: 1.5 }}>
+          <List disablePadding>
+            <ItemRodape
+              icone={<SettingsOutlinedIcon />}
+              rotulo="Configurações"
+              ativo={pathname === "/configuracoes"}
+              onClick={() => navigate("/configuracoes")}
+            />
+            <ItemRodape
+              icone={<InfoOutlinedIcon />}
+              rotulo="Sobre o Argos"
+              ativo={pathname === "/sobre"}
+              onClick={() => navigate("/sobre")}
+              extra={
+                <Typography component="span" sx={{ display: { xs: "none", md: "inline" }, fontSize: 12, color: "text.disabled" }}>
+                  v{VERSAO_SISTEMA}
+                </Typography>
+              }
+            />
+          </List>
+          <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 0.5, flexDirection: { xs: "column", md: "row" } }}>
+            <ButtonBase
+              onClick={() => navigate("/perfil")}
+              aria-label={`Meu perfil: ${usuario.nome}, ${cargo}`}
+              sx={{
+                flex: 1,
+                minWidth: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: { xs: "center", md: "flex-start" },
+                gap: 1.25,
+                p: { xs: 0.5, md: 1 },
+                borderRadius: 2.5,
+                border: { md: 1 },
+                borderColor: { md: pathname === "/perfil" ? misturar(v("marca"), 45) : "divider" },
+                bgcolor: { md: "background.paper" },
+                textAlign: "left",
+                "&:hover": { borderColor: { md: "text.disabled" } },
+              }}
+            >
+              <Avatar
+                sx={{
+                  width: 34,
+                  height: 34,
+                  fontSize: 13,
+                  bgcolor: misturar(ehAdmin ? v("ia") : v("marca"), 16),
+                  color: ehAdmin ? v("ia") : v("marca"),
+                }}
+              >
+                {iniciais(usuario.nome)}
+              </Avatar>
+              <Box sx={{ minWidth: 0, flex: 1, display: { xs: "none", md: "block" } }}>
+                <Typography variant="body2" fontWeight={600} noWrap>
+                  {usuario.nome}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>
+                  {cargo}
+                </Typography>
+              </Box>
+              <ChevronRightIcon fontSize="small" sx={{ color: "text.secondary", display: { xs: "none", md: "block" } }} />
+            </ButtonBase>
+            <Tooltip title="Sair da conta">
+              <IconButton onClick={sair} aria-label="Sair da conta" size="small" sx={{ color: "text.secondary", "&:hover": { color: "text.primary" } }}>
+                <LogoutIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </Box>
         </Box>
       </Drawer>
 
-      <Box component="main" id="conteudo" tabIndex={-1} sx={{ flexGrow: 1, minWidth: 0, px: { xs: 2, sm: 3, lg: 4 }, pb: 4 }}>
-        <Toolbar sx={{ minHeight: { xs: 60 } }} />
-        <Box sx={{ maxWidth: 1440, mx: "auto", pt: { xs: 2, md: 3 } }}>{children}</Box>
+      <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+        <AppBar position="sticky">
+          <Toolbar sx={{ gap: 2, minHeight: { xs: ALTURA_TOPO }, px: { xs: 2, sm: 3, lg: 4 } }}>
+            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+              {atual?.grupo && (
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", lineHeight: 1.2 }}>
+                  {atual.grupo}
+                </Typography>
+              )}
+              <Typography component="p" variant="h6" noWrap sx={{ lineHeight: 1.3 }}>
+                {atual?.titulo ?? "Argos"}
+              </Typography>
+            </Box>
+            <Tooltip title={escuro ? "Usar modo claro" : "Usar modo escuro"}>
+              <IconButton
+                onClick={alternarModo}
+                aria-label={escuro ? "Usar modo claro" : "Usar modo escuro"}
+                sx={{ border: 1, borderColor: "divider", bgcolor: "background.paper", width: 40, height: 40 }}
+              >
+                {escuro ? <LightModeOutlinedIcon fontSize="small" /> : <DarkModeOutlinedIcon fontSize="small" />}
+              </IconButton>
+            </Tooltip>
+          </Toolbar>
+        </AppBar>
+
+        <Box component="main" id="conteudo" tabIndex={-1} sx={{ px: { xs: 2, sm: 3, lg: 4 }, pb: 4 }}>
+          <Box sx={{ maxWidth: 1440, mx: "auto", pt: { xs: 2, md: 3 } }}>{children}</Box>
+        </Box>
       </Box>
     </Box>
   );

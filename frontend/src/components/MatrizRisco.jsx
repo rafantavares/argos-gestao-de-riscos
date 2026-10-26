@@ -1,4 +1,4 @@
-import { Box, Paper, Tooltip, Typography } from "@mui/material";
+import { Box, Tooltip, Typography } from "@mui/material";
 import { IMPACTOS, PROBABILIDADES, FAIXAS_EXPOSICAO, faixaExposicao } from "../constants";
 
 const MAXIMO_TITULOS_NA_DICA = 5;
@@ -84,31 +84,35 @@ export default function MatrizRisco({ riscos, aoClicarCelula }) {
                   arrow
                   placement="top"
                 >
-                  <Paper
-                    elevation={0}
-                    onClick={aoClicarCelula ? () => aoClicarCelula(probabilidade.value, impacto.value) : undefined}
+                  <Box
+                    component={aoClicarCelula && quantidade > 0 ? "button" : "div"}
+                    type={aoClicarCelula && quantidade > 0 ? "button" : undefined}
+                    aria-label={`Probabilidade ${probabilidade.value}, impacto ${impacto.value}: ${quantidade} ${quantidade === 1 ? "risco" : "riscos"}, ${faixa.label.toLowerCase()}`}
+                    onClick={aoClicarCelula && quantidade > 0 ? () => aoClicarCelula(probabilidade.value, impacto.value) : undefined}
                     sx={{
-                      backgroundColor: quantidade === 0 ? `${faixa.cor}14` : faixa.cor,
-                      border: "1px solid",
-                      borderColor: quantidade === 0 ? `${faixa.cor}26` : `${faixa.cor}`,
-                      boxShadow: quantidade === 0 ? "none" : `inset 0 0 0 1px rgba(255,255,255,0.18)`,
-                      color: quantidade === 0 ? "rgba(232, 236, 243, 0.22)" : "#0B0E14",
+                      // Célula vazia: a cor da faixa bem suave; ocupada: a cor cheia.
+                      backgroundColor: quantidade === 0 ? `color-mix(in srgb, ${faixa.cor} 20%, transparent)` : faixa.cor,
+                      color: faixa.corTexto,
+                      border: 0,
                       borderRadius: 1.5,
                       height: { xs: 40, sm: 50 },
+                      width: "100%",
+                      p: 0,
+                      font: "inherit",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      cursor: quantidade > 0 ? "pointer" : "default",
-                      transition: "transform 150ms ease, box-shadow 150ms ease",
-                      "&:hover": quantidade > 0 ? { transform: "translateY(-1px)", boxShadow: `0 6px 18px ${faixa.cor}40` } : {},
+                      cursor: aoClicarCelula && quantidade > 0 ? "pointer" : "default",
+                      transition: "box-shadow 150ms ease",
+                      "&:hover": quantidade > 0 ? { boxShadow: "0 0 0 2px var(--argos-cartao), 0 0 0 4px var(--argos-texto)" } : {},
                     }}
                   >
-                    <Typography
-                      sx={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: quantidade ? 700 : 500, fontSize: { xs: 15, sm: 18 }, fontVariantNumeric: "tabular-nums" }}
-                    >
-                      {quantidade}
-                    </Typography>
-                  </Paper>
+                    {quantidade > 0 && (
+                      <Typography sx={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 700, fontSize: { xs: 15, sm: 18 }, fontVariantNumeric: "tabular-nums" }}>
+                        {quantidade}
+                      </Typography>
+                    )}
+                  </Box>
                 </Tooltip>
               );
             })}
@@ -118,7 +122,7 @@ export default function MatrizRisco({ riscos, aoClicarCelula }) {
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mt: 2 }}>
         {FAIXAS_EXPOSICAO.map((f) => (
           <Box key={f.label} sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-            <Box sx={{ width: 10, height: 10, borderRadius: 0.5, bgcolor: f.cor }} />
+            <Box sx={{ width: 10, height: 10, borderRadius: "3px", bgcolor: f.cor }} />
             <Typography variant="caption" color="text.secondary">
               {f.label}
             </Typography>

@@ -32,7 +32,7 @@ export default function EvolucaoProjeto({ idProjeto }) {
           Evolução da exposição
         </Typography>
         {variacao != null && (
-          <Typography variant="caption" sx={{ color: variacao > 0 ? "#F87171" : "#4ADE80", fontWeight: 700 }}>
+          <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: 600 }}>
             {variacao > 0 ? "▲" : variacao < 0 ? "▼" : "■"} {Math.abs(variacao)}% no período
           </Typography>
         )}
@@ -51,7 +51,8 @@ export default function EvolucaoProjeto({ idProjeto }) {
           height={250}
           margin={{ left: 50, right: 20, top: 40, bottom: 30 }}
           xAxis={[{ data: rotulos, scaleType: "point" }]}
-          series={FAIXAS_EXPOSICAO.map((faixa) => ({
+          // Faixa mais grave na base do empilhamento, para ficar fácil de comparar.
+          series={[...FAIXAS_EXPOSICAO].reverse().map((faixa) => ({
             id: faixa.label,
             label: faixa.label,
             data: pontos.map((p) => p.por_faixa[faixa.label] ?? 0),
@@ -60,8 +61,18 @@ export default function EvolucaoProjeto({ idProjeto }) {
             stack: "total",
             showMark: false,
           }))}
-          slotProps={{ legend: { direction: "row", position: { vertical: "top", horizontal: "right" }, itemMarkWidth: 10, itemMarkHeight: 10, labelStyle: { fontSize: 11 } } }}
-          sx={{ "& .MuiAreaElement-root": { fillOpacity: 0.3 }, "& .MuiLineElement-root": { strokeWidth: 2 } }}
+          grid={{ horizontal: true }}
+          tooltip={{ trigger: "axis" }}
+          axisHighlight={{ x: "line" }}
+          slotProps={{ legend: { direction: "row", position: { vertical: "top", horizontal: "right" }, itemMarkWidth: 10, itemMarkHeight: 10, labelStyle: { fontSize: 12, fill: "var(--argos-texto2)" } } }}
+          sx={{
+            "& .MuiAreaElement-root": { fillOpacity: 0.9 },
+            // Linha na cor do cartão: separa as faixas com um vão de 2px.
+            "& .MuiLineElement-root": { stroke: "var(--argos-cartao)", strokeWidth: 2 },
+            "& .MuiChartsGrid-line": { stroke: "var(--argos-borda-suave)" },
+            "& .MuiChartsAxis-line, & .MuiChartsAxis-tick": { stroke: "var(--argos-borda)" },
+            "& .MuiChartsAxis-tickLabel": { fill: "var(--argos-texto2)" },
+          }}
         />
       )}
     </Paper>

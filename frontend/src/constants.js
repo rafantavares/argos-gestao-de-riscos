@@ -1,5 +1,6 @@
 // Valores devem bater exatamente com os enums do backend (app/models/enums.py).
 import pacote from "../package.json";
+import { corExposicao, textoExposicao, v } from "./theme";
 
 export const VERSAO_SISTEMA = pacote.version;
 
@@ -10,11 +11,21 @@ export const CATEGORIAS = [
   { value: "pessoal", label: "Pessoal" },
 ];
 
+// Categorias não têm cor própria (ícone + rótulo bastam; quatro cores
+// distintas não passam no teste de daltonismo).
 export const CORES_CATEGORIA = {
-  tecnico: "#60A5FA",
-  organizacional: "#A78BFA",
-  externo: "#F472B6",
-  pessoal: "#FB923C",
+  tecnico: v("texto2"),
+  organizacional: v("texto2"),
+  externo: v("texto2"),
+  pessoal: v("texto2"),
+};
+
+// Só para gráficos que separam séries por categoria (ex.: barras empilhadas).
+export const CORES_SERIE_CATEGORIA = {
+  tecnico: v("serie0"),
+  organizacional: v("serie1"),
+  externo: v("serie2"),
+  pessoal: v("serie3"),
 };
 
 // Escalas do registro de riscos (MR-MPS-SW / PMBOK): notas de 1 a 5.
@@ -65,13 +76,14 @@ export const AREAS_AFETADAS = [
 ];
 
 // Faixas da exposição (pontuação = probabilidade x impacto, de 1 a 25).
+// As cores vêm do tema (escala padrão ou a do modo daltônico, claro ou escuro).
 export const FAIXAS_EXPOSICAO = [
-  { ate: 3, label: "Muito Leve", cor: "#4ADE80" },
-  { ate: 10, label: "Leve", cor: "#A3E635" },
-  { ate: 15, label: "Moderado", cor: "#FBBF24" },
-  { ate: 20, label: "Grave", cor: "#FB923C" },
-  { ate: 25, label: "Muito Grave", cor: "#F87171" },
-];
+  { ate: 3, label: "Muito Leve" },
+  { ate: 10, label: "Leve" },
+  { ate: 15, label: "Moderado" },
+  { ate: 20, label: "Grave" },
+  { ate: 25, label: "Muito Grave" },
+].map((faixa, indice) => ({ ...faixa, indice, cor: corExposicao(indice), corTexto: textoExposicao(indice) }));
 
 export function faixaExposicao(pontuacao) {
   return FAIXAS_EXPOSICAO.find((faixa) => pontuacao <= faixa.ate) ?? FAIXAS_EXPOSICAO[FAIXAS_EXPOSICAO.length - 1];
@@ -101,9 +113,15 @@ const ESCALA_PROBABILIDADE = { baixa: 1, media: 2, alta: 3 };
 const ESCALA_IMPACTO = { baixo: 1, medio: 2, alto: 3 };
 
 export const CORES_SEVERIDADE = {
-  baixo: "#4ADE80",
-  medio: "#FBBF24",
-  alto: "#F87171",
+  baixo: corExposicao(1),
+  medio: corExposicao(2),
+  alto: corExposicao(4),
+};
+
+export const TEXTO_SEVERIDADE = {
+  baixo: textoExposicao(1),
+  medio: textoExposicao(2),
+  alto: textoExposicao(4),
 };
 
 export const ROTULOS_SEVERIDADE = {
@@ -123,11 +141,11 @@ export const STATUS_RISCO = [
 // Cores do ciclo de vida do risco (independentes da cor de severidade, pra
 // não confundir "em que fase o risco está" com "quão grave ele é").
 export const CORES_STATUS = {
-  identificado: "#8A93A6",
-  em_tratamento: "#2DD4BF",
-  em_monitoramento: "#FBBF24",
-  mitigado: "#4ADE80",
-  encerrado: "#A78BFA",
+  identificado: v("texto2"),
+  em_tratamento: v("marca"),
+  em_monitoramento: v("info"),
+  mitigado: v("sucesso"),
+  encerrado: v("texto3"),
 };
 
 export const NOMES_ALGORITMOS = {
@@ -137,9 +155,9 @@ export const NOMES_ALGORITMOS = {
 };
 
 export const CORES_ALGORITMOS = {
-  knn: "#2DD4BF",
-  arvore_decisao: "#60A5FA",
-  random_forest: "#A78BFA",
+  knn: v("marca"),
+  arvore_decisao: v("info"),
+  random_forest: v("ia"),
 };
 
 export const ALGORITMOS = ["knn", "arvore_decisao", "random_forest"];
@@ -168,10 +186,10 @@ export function pontuacaoSeveridade(probabilidade, impacto) {
 
 // Faixas de confiança da recomendação (probabilidade da classe prevista).
 export function corConfianca(confianca) {
-  if (confianca == null) return "#8A93A6";
-  if (confianca >= 0.8) return CORES_SEVERIDADE.baixo;
-  if (confianca >= 0.6) return CORES_SEVERIDADE.medio;
-  return CORES_SEVERIDADE.alto;
+  if (confianca == null) return v("texto3");
+  if (confianca >= 0.8) return v("sucesso");
+  if (confianca >= 0.6) return v("atencao");
+  return v("erro");
 }
 
 export function rotuloConfianca(confianca) {

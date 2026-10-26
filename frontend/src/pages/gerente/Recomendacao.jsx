@@ -52,7 +52,7 @@ import FichaRisco from "../../components/FichaRisco";
 import { useAviso, useConfirmacao } from "../../contexts/FeedbackContext";
 import { ChipArea, ChipSeveridade, ChipStatus } from "../../components/Badges";
 
-const CORES_NIVEL_TEXTO = { 1: "#4ADE80", 2: "#A3E635", 3: "#FBBF24", 4: "#FB923C", 5: "#F87171", baixa: "#4ADE80", baixo: "#4ADE80", media: "#FBBF24", medio: "#FBBF24", alta: "#F87171", alto: "#F87171" };
+const CORES_NIVEL_TEXTO = { 1: "var(--argos-exp-0)", 2: "var(--argos-exp-1)", 3: "var(--argos-exp-2)", 4: "var(--argos-exp-3)", 5: "var(--argos-exp-4)", baixa: "var(--argos-exp-1)", baixo: "var(--argos-exp-1)", media: "var(--argos-exp-2)", medio: "var(--argos-exp-2)", alta: "var(--argos-exp-4)", alto: "var(--argos-exp-4)" };
 
 const ESCALA_PROB = { baixa: 1, media: 2, alta: 3 };
 const ESCALA_IMP = { baixo: 1, medio: 2, alto: 3 };
@@ -290,7 +290,7 @@ export default function Recomendacao() {
               mb: 2,
               textAlign: "center",
               borderColor: confirmacao.aceita ? "success.main" : "warning.main",
-              bgcolor: confirmacao.aceita ? "rgba(74, 222, 128, 0.08)" : "rgba(251, 191, 36, 0.08)",
+              bgcolor: confirmacao.aceita ? "color-mix(in srgb, var(--argos-sucesso) 8%, transparent)" : "color-mix(in srgb, var(--argos-atencao) 8%, transparent)",
             }}
           >
             {confirmacao.aceita ? (
@@ -331,9 +331,9 @@ export default function Recomendacao() {
                 mb: 2,
                 position: "relative",
                 overflow: "hidden",
-                borderColor: "rgba(167, 139, 250, 0.45)",
+                borderColor: "color-mix(in srgb, var(--argos-ia) 45%, transparent)",
                 background:
-                  "linear-gradient(135deg, rgba(167, 139, 250, 0.10) 0%, rgba(45, 212, 191, 0.06) 100%), #12161F",
+                  "linear-gradient(135deg, color-mix(in srgb, var(--argos-ia) 10%, transparent) 0%, color-mix(in srgb, var(--argos-marca) 6%, transparent) 100%), var(--argos-cartao)",
               }}
             >
               <ShieldIcon
@@ -347,7 +347,7 @@ export default function Recomendacao() {
                     borderRadius: 2,
                     display: "grid",
                     placeItems: "center",
-                    bgcolor: "rgba(167, 139, 250, 0.18)",
+                    bgcolor: "color-mix(in srgb, var(--argos-ia) 18%, transparent)",
                     color: "secondary.main",
                   }}
                 >
@@ -436,7 +436,7 @@ export default function Recomendacao() {
                   <ChipFeature rotulo="Impacto" valor={`${risco.impacto} · ${rotulo(IMPACTOS, risco.impacto)}`} cor={CORES_NIVEL_TEXTO[risco.impacto]} />
                   <ChipFeature rotulo="Orçamento" valor={rotulo(ORCAMENTOS_IMPACTO, risco.orcamento_impacto)} cor={CORES_NIVEL_TEXTO[risco.orcamento_impacto]} />
                   <ChipFeature rotulo="Urgência" valor={rotulo(URGENCIAS, risco.urgencia)} cor={CORES_NIVEL_TEXTO[risco.urgencia]} />
-                  <ChipFeature rotulo="Fase" valor={rotulo(FASES_PROJETO, risco.fase_projeto)} cor="#2DD4BF" />
+                  <ChipFeature rotulo="Fase" valor={rotulo(FASES_PROJETO, risco.fase_projeto)} cor="var(--argos-marca)" />
                   <ChipSeveridade probabilidade={risco.probabilidade} impacto={risco.impacto} />
                 </Stack>
                 <Typography variant="body1" sx={{ borderLeft: `3px solid ${CORES_SEVERIDADE[nivel]}`, pl: 2, py: 0.5 }}>
@@ -706,7 +706,7 @@ function ChipFeature({ rotulo: nome, valor, cor }) {
           <strong>{valor}</strong>
         </span>
       }
-      sx={{ bgcolor: `${cor}1F`, color: cor, border: `1px solid ${cor}55` }}
+      sx={{ bgcolor: `color-mix(in srgb, ${cor} 12%, transparent)`, color: cor, border: `1px solid color-mix(in srgb, ${cor} 33%, transparent)` }}
     />
   );
 }

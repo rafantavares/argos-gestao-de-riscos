@@ -1,50 +1,161 @@
-import { alpha, createTheme } from "@mui/material/styles";
+import { createTheme } from "@mui/material/styles";
 
 // Identidade visual do Argos (design system). As cores da marca vêm da logo:
-// ciano #2DD4BF (marca/ações), violeta #A78BFA (inteligência artificial) e o
-// fundo #0B0E14. Ver docs/identidade-visual.md para o uso de cada token.
-export const tokens = {
-  marca: { main: "#2DD4BF", light: "#5EEAD4", dark: "#14B8A6" },
-  ia: { main: "#A78BFA", light: "#C4B5FD", dark: "#8B5CF6" },
-  // Superfícies em camadas: fundo < menu < cartão < elevado (menus, diálogos).
-  superficie: {
+// ciano (marca/ações), violeta (inteligência artificial). Há dois modos, escuro
+// (padrão) e claro; cada token vira uma variável CSS `--argos-*` trocada pelo
+// atributo `data-tema` no <html>, então mudar de modo não re-renderiza nada.
+// Ver docs/identidade-visual.md para o uso de cada token.
+export const PALETAS = {
+  dark: {
+    marca: "#2DD4BF",
+    marcaClara: "#5EEAD4",
+    marcaEscura: "#14B8A6",
+    ia: "#A78BFA",
+    iaClara: "#C4B5FD",
+    iaEscura: "#8B5CF6",
+    // Superfícies em camadas: fundo < menu < cartão < elevada (menus, diálogos).
     fundo: "#0B0E14",
     menu: "#0E121A",
     cartao: "#11161F",
     elevada: "#171D28",
     hover: "#1B2230",
+    bordaSuave: "#1F2633",
+    borda: "#262E3D",
+    bordaForte: "#343E50",
+    texto: "#E8ECF3",
+    texto2: "#97A2B6",
+    texto3: "#5E6879",
+    sobreTom: "#0B0E14",
+    sobreposicao: "rgba(255, 255, 255, 0.04)",
+    trilha: "rgba(255, 255, 255, 0.06)",
+    sucesso: "#6CCB8B",
+    atencao: "#F0CE65",
+    erro: "#E5717A",
+    info: "#6EA8FE",
+    sombra: "rgba(0, 0, 0, 0.5)",
+    // Séries de gráficos por categoria (ordem validada para daltonismo em barras empilhadas).
+    serie0: "#3987E5",
+    serie1: "#D95926",
+    serie2: "#199E70",
+    serie3: "#C98500",
   },
-  borda: { suave: "#1F2633", padrao: "#262E3D", forte: "#343E50" },
-  texto: { primario: "#E8ECF3", secundario: "#97A2B6", desabilitado: "#5E6879" },
-  semantica: { sucesso: "#4ADE80", atencao: "#FBBF24", erro: "#F87171", info: "#60A5FA" },
-  raio: { pequeno: 6, medio: 8, grande: 12 },
+  light: {
+    marca: "#0F766E",
+    marcaClara: "#14B8A6",
+    marcaEscura: "#115E59",
+    ia: "#7C3AED",
+    iaClara: "#8B5CF6",
+    iaEscura: "#6D28D9",
+    fundo: "#F6F8FB",
+    menu: "#FFFFFF",
+    cartao: "#FFFFFF",
+    elevada: "#FFFFFF",
+    hover: "#EEF2F7",
+    bordaSuave: "#EDF1F6",
+    borda: "#E2E7EF",
+    bordaForte: "#CBD3DF",
+    texto: "#0F172A",
+    texto2: "#556074",
+    texto3: "#94A3B8",
+    sobreTom: "#FFFFFF",
+    sobreposicao: "rgba(15, 23, 42, 0.04)",
+    trilha: "rgba(15, 23, 42, 0.06)",
+    sucesso: "#15803D",
+    atencao: "#B45309",
+    erro: "#B91C1C",
+    info: "#1D4ED8",
+    sombra: "rgba(15, 23, 42, 0.12)",
+    serie0: "#2A78D6",
+    serie1: "#EB6834",
+    serie2: "#1BAF7A",
+    serie3: "#EDA100",
+  },
 };
 
-const { marca, ia, superficie, borda, texto, semantica, raio } = tokens;
-const fonteTitulo = '"Space Grotesk", "IBM Plex Sans", sans-serif';
-const transicao = "background-color 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease";
-const anelFoco = `0 0 0 3px ${alpha(marca.main, 0.22)}`;
-
-const theme = createTheme({
-  palette: {
-    mode: "dark",
-    primary: { ...marca, contrastText: superficie.fundo },
-    secondary: { ...ia, contrastText: superficie.fundo },
-    success: { main: semantica.sucesso, contrastText: superficie.fundo },
-    warning: { main: semantica.atencao, contrastText: superficie.fundo },
-    error: { main: semantica.erro, contrastText: superficie.fundo },
-    info: { main: semantica.info, contrastText: superficie.fundo },
-    background: { default: superficie.fundo, paper: superficie.cartao },
-    text: { primary: texto.primario, secondary: texto.secundario, disabled: texto.desabilitado },
-    divider: borda.padrao,
-    action: {
-      hover: alpha("#FFFFFF", 0.04),
-      selected: alpha(marca.main, 0.1),
-      focus: alpha(marca.main, 0.14),
-      disabled: texto.desabilitado,
-      disabledBackground: alpha("#FFFFFF", 0.06),
+// Escala de exposição (Muito leve → Muito grave). Padrão: tradicional (verde →
+// vermelho) em tons sóbrios, validada para daltonismo entre faixas vizinhas.
+// "daltonico": uma família só (âmbar → carmim) em degraus de claridade, para o
+// modo daltônico das configurações. `texto` = cor legível sobre cada faixa.
+export const ESCALAS = {
+  padrao: {
+    dark: {
+      cores: ["#3A8357", "#83B567", "#F0CE65", "#E48233", "#B93C4A"],
+      texto: ["#FFFFFF", "#14180F", "#1A1606", "#1A0E06", "#FFFFFF"],
+    },
+    light: {
+      cores: ["#1B683E", "#689D48", "#E6B22D", "#CF630D", "#A52932"],
+      texto: ["#FFFFFF", "#14180F", "#1A1606", "#1A0E06", "#FFFFFF"],
     },
   },
+  daltonico: {
+    dark: {
+      cores: ["#7B4F29", "#AE602C", "#DB6F3D", "#FE8160", "#FFA295"],
+      texto: ["#FFFFFF", "#FFFFFF", "#1A0E08", "#1A0E08", "#1A0E08"],
+    },
+    light: {
+      cores: ["#DFA779", "#D67F46", "#C75619", "#AF2F02", "#8D0C0D"],
+      texto: ["#1A1206", "#1A1206", "#FFFFFF", "#FFFFFF", "#FFFFFF"],
+    },
+  },
+};
+
+const kebab = (nome) => nome.replace(/[A-Z]/g, (l) => `-${l.toLowerCase()}`);
+
+/** Referência a um token do tema: v("cartao") → "var(--argos-cartao)". */
+export const v = (nome) => `var(--argos-${kebab(nome)})`;
+
+/** Cor da faixa de exposição (0 = Muito leve … 4 = Muito grave). */
+export const corExposicao = (indice) => `var(--argos-exp-${indice})`;
+export const textoExposicao = (indice) => `var(--argos-exp-texto-${indice})`;
+
+/** Cor translúcida a partir de qualquer cor, inclusive variáveis CSS. */
+export const misturar = (cor, porcento) => `color-mix(in srgb, ${cor} ${porcento}%, transparent)`;
+
+function variaveisEscala({ cores, texto }) {
+  const vars = {};
+  cores.forEach((cor, i) => {
+    vars[`--argos-exp-${i}`] = cor;
+    vars[`--argos-exp-texto-${i}`] = texto[i];
+  });
+  return vars;
+}
+
+function variaveis(modo) {
+  const vars = {};
+  Object.entries(PALETAS[modo]).forEach(([nome, valor]) => {
+    vars[`--argos-${kebab(nome)}`] = valor;
+  });
+  return { ...vars, ...variaveisEscala(ESCALAS.padrao[modo]) };
+}
+
+function paletaMui(p, modo) {
+  return {
+    mode: modo,
+    primary: { main: p.marca, light: p.marcaClara, dark: p.marcaEscura, contrastText: p.sobreTom },
+    secondary: { main: p.ia, light: p.iaClara, dark: p.iaEscura, contrastText: p.sobreTom },
+    success: { main: p.sucesso, contrastText: p.sobreTom },
+    warning: { main: p.atencao, contrastText: p.sobreTom },
+    error: { main: p.erro, contrastText: p.sobreTom },
+    info: { main: p.info, contrastText: p.sobreTom },
+    background: { default: p.fundo, paper: p.cartao },
+    text: { primary: p.texto, secondary: p.texto2, disabled: p.texto3 },
+    divider: p.borda,
+  };
+}
+
+const raio = { pequeno: 6, medio: 8, grande: 12 };
+const fonteTitulo = '"Space Grotesk", "IBM Plex Sans", sans-serif';
+const transicao = "background-color 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease";
+const marca = v("marca");
+const ia = v("ia");
+
+const theme = createTheme({
+  cssVariables: { colorSchemeSelector: "data-tema" },
+  colorSchemes: {
+    dark: { palette: paletaMui(PALETAS.dark, "dark") },
+    light: { palette: paletaMui(PALETAS.light, "light") },
+  },
+  defaultColorScheme: "dark",
   shape: { borderRadius: raio.medio },
   spacing: 8,
   typography: {
@@ -67,22 +178,29 @@ const theme = createTheme({
   components: {
     MuiCssBaseline: {
       styleOverrides: {
+        ":root, [data-tema='dark']": { ...variaveis("dark"), colorScheme: "dark" },
+        "[data-tema='light']": { ...variaveis("light"), colorScheme: "light" },
+        "[data-tema='dark'][data-escala='daltonico']": variaveisEscala(ESCALAS.daltonico.dark),
+        "[data-tema='light'][data-escala='daltonico']": variaveisEscala(ESCALAS.daltonico.light),
+        // Documentos para impressão (PDF) usam sempre a escala do modo claro.
+        ".documento-claro": variaveisEscala(ESCALAS.padrao.light),
+        "[data-escala='daltonico'] .documento-claro": variaveisEscala(ESCALAS.daltonico.light),
         body: {
-          backgroundColor: superficie.fundo,
+          backgroundColor: v("fundo"),
           WebkitFontSmoothing: "antialiased",
           MozOsxFontSmoothing: "grayscale",
           // Números alinhados em tabelas, indicadores e notas.
           fontVariantNumeric: "tabular-nums",
         },
-        "::selection": { backgroundColor: alpha(marca.main, 0.3) },
+        "::selection": { backgroundColor: misturar(marca, 30) },
         "*::-webkit-scrollbar": { width: 10, height: 10 },
         "*::-webkit-scrollbar-thumb": {
-          backgroundColor: borda.forte,
+          backgroundColor: v("bordaForte"),
           borderRadius: 8,
-          border: `2px solid ${superficie.fundo}`,
+          border: `2px solid ${v("fundo")}`,
         },
         "*::-webkit-scrollbar-track": { backgroundColor: "transparent" },
-        ":focus-visible": { outline: `2px solid ${marca.main}`, outlineOffset: 2 },
+        ":focus-visible": { outline: `2px solid ${marca}`, outlineOffset: 2 },
         "@media (prefers-reduced-motion: reduce)": {
           "*, *::before, *::after": { transitionDuration: "0.01ms !important", animationDuration: "0.01ms !important" },
         },
@@ -93,7 +211,7 @@ const theme = createTheme({
     MuiPaper: {
       defaultProps: { elevation: 0 },
       styleOverrides: {
-        root: { backgroundImage: "none", border: `1px solid ${borda.padrao}` },
+        root: { backgroundImage: "none", border: `1px solid ${v("borda")}` },
         rounded: { borderRadius: raio.grande },
       },
     },
@@ -101,40 +219,40 @@ const theme = createTheme({
       defaultProps: { elevation: 0 },
       styleOverrides: {
         root: {
-          backgroundColor: alpha(superficie.fundo, 0.82),
+          backgroundColor: misturar(v("fundo"), 85),
           backdropFilter: "saturate(140%) blur(10px)",
-          color: texto.primario,
+          color: v("texto"),
           border: 0,
-          borderBottom: `1px solid ${borda.suave}`,
+          borderBottom: `1px solid ${v("bordaSuave")}`,
           borderRadius: 0,
         },
       },
     },
     MuiDrawer: {
       styleOverrides: {
-        paper: { backgroundColor: superficie.menu, border: 0, borderRight: `1px solid ${borda.suave}`, borderRadius: 0 },
+        paper: { backgroundColor: v("menu"), border: 0, borderRight: `1px solid ${v("bordaSuave")}`, borderRadius: 0 },
       },
     },
-    MuiDivider: { styleOverrides: { root: { borderColor: borda.suave } } },
+    MuiDivider: { styleOverrides: { root: { borderColor: v("bordaSuave") } } },
     MuiDialog: {
       styleOverrides: {
         paper: {
-          backgroundColor: superficie.elevada,
-          border: `1px solid ${borda.forte}`,
+          backgroundColor: v("elevada"),
+          border: `1px solid ${v("bordaForte")}`,
           borderRadius: 14,
-          boxShadow: "0 24px 64px rgba(0,0,0,0.55)",
+          boxShadow: `0 24px 64px ${v("sombra")}`,
         },
       },
     },
     MuiDialogTitle: { styleOverrides: { root: { fontFamily: fonteTitulo, fontWeight: 600, fontSize: "1.125rem" } } },
     MuiPopover: {
       styleOverrides: {
-        paper: { backgroundColor: superficie.elevada, border: `1px solid ${borda.forte}`, boxShadow: "0 12px 32px rgba(0,0,0,0.45)" },
+        paper: { backgroundColor: v("elevada"), border: `1px solid ${v("bordaForte")}`, boxShadow: `0 12px 32px ${v("sombra")}` },
       },
     },
     MuiMenu: {
       styleOverrides: {
-        paper: { backgroundColor: superficie.elevada, border: `1px solid ${borda.forte}`, boxShadow: "0 12px 32px rgba(0,0,0,0.45)" },
+        paper: { backgroundColor: v("elevada"), border: `1px solid ${v("bordaForte")}`, boxShadow: `0 12px 32px ${v("sombra")}` },
         list: { padding: 4 },
       },
     },
@@ -144,26 +262,26 @@ const theme = createTheme({
           borderRadius: raio.pequeno,
           margin: "1px 0",
           fontSize: "0.875rem",
-          "&.Mui-selected": { backgroundColor: alpha(marca.main, 0.12) },
-          "&.Mui-selected:hover": { backgroundColor: alpha(marca.main, 0.18) },
+          "&.Mui-selected": { backgroundColor: misturar(marca, 12) },
+          "&.Mui-selected:hover": { backgroundColor: misturar(marca, 18) },
         },
       },
     },
 
     // ---------- navegação ----------
-    MuiListItemIcon: { styleOverrides: { root: { color: texto.secundario, minWidth: 36, transition: transicao } } },
+    MuiListItemIcon: { styleOverrides: { root: { color: v("texto2"), minWidth: 36, transition: transicao } } },
     MuiListItemButton: {
       styleOverrides: {
         root: {
           position: "relative",
           borderRadius: raio.medio,
-          color: texto.secundario,
+          color: v("texto2"),
           transition: transicao,
-          "&:hover": { backgroundColor: alpha("#FFFFFF", 0.04), color: texto.primario },
+          "&:hover": { backgroundColor: v("sobreposicao"), color: v("texto") },
           "&.Mui-selected": {
-            backgroundColor: alpha(marca.main, 0.1),
-            color: texto.primario,
-            "& .MuiListItemIcon-root": { color: marca.main },
+            backgroundColor: misturar(marca, 10),
+            color: v("texto"),
+            "& .MuiListItemIcon-root": { color: marca },
             "&::before": {
               content: '""',
               position: "absolute",
@@ -172,9 +290,9 @@ const theme = createTheme({
               bottom: 8,
               width: 3,
               borderRadius: 3,
-              backgroundColor: marca.main,
+              backgroundColor: marca,
             },
-            "&:hover": { backgroundColor: alpha(marca.main, 0.14) },
+            "&:hover": { backgroundColor: misturar(marca, 14) },
           },
         },
       },
@@ -191,9 +309,9 @@ const theme = createTheme({
           textTransform: "none",
           fontWeight: 600,
           minHeight: 44,
-          color: texto.secundario,
+          color: v("texto2"),
           transition: transicao,
-          "&:hover": { color: texto.primario },
+          "&:hover": { color: v("texto") },
         },
       },
     },
@@ -204,19 +322,19 @@ const theme = createTheme({
       styleOverrides: {
         root: { borderRadius: raio.medio, transition: transicao, paddingInline: 14 },
         sizeSmall: { paddingInline: 10 },
-        containedPrimary: { "&:hover": { backgroundColor: marca.light } },
-        containedSecondary: { "&:hover": { backgroundColor: ia.light } },
+        containedPrimary: { "&:hover": { backgroundColor: v("marcaClara") } },
+        containedSecondary: { "&:hover": { backgroundColor: v("iaClara") } },
         outlined: {
-          borderColor: borda.forte,
-          "&:hover": { borderColor: texto.secundario, backgroundColor: alpha("#FFFFFF", 0.03) },
+          borderColor: v("bordaForte"),
+          "&:hover": { borderColor: v("texto2"), backgroundColor: v("sobreposicao") },
         },
         outlinedPrimary: {
-          borderColor: alpha(marca.main, 0.45),
-          "&:hover": { borderColor: marca.main, backgroundColor: alpha(marca.main, 0.08) },
+          borderColor: misturar(marca, 45),
+          "&:hover": { borderColor: marca, backgroundColor: misturar(marca, 8) },
         },
         outlinedSecondary: {
-          borderColor: alpha(ia.main, 0.45),
-          "&:hover": { borderColor: ia.main, backgroundColor: alpha(ia.main, 0.08) },
+          borderColor: misturar(ia, 45),
+          "&:hover": { borderColor: ia, backgroundColor: misturar(ia, 8) },
         },
       },
     },
@@ -227,12 +345,12 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           textTransform: "none",
-          borderColor: borda.forte,
-          color: texto.secundario,
+          borderColor: v("bordaForte"),
+          color: v("texto2"),
           "&.Mui-selected": {
-            backgroundColor: alpha(marca.main, 0.12),
-            color: marca.main,
-            "&:hover": { backgroundColor: alpha(marca.main, 0.18) },
+            backgroundColor: misturar(marca, 12),
+            color: marca,
+            "&:hover": { backgroundColor: misturar(marca, 18) },
           },
         },
       },
@@ -243,19 +361,19 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: raio.medio,
-          backgroundColor: alpha("#FFFFFF", 0.02),
+          backgroundColor: v("sobreposicao"),
           transition: transicao,
-          "& .MuiOutlinedInput-notchedOutline": { borderColor: borda.forte, transition: transicao },
-          "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#46526A" },
-          "&.Mui-focused": { boxShadow: anelFoco, backgroundColor: alpha("#FFFFFF", 0.03) },
-          "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: marca.main, borderWidth: 1 },
-          "&.Mui-error.Mui-focused": { boxShadow: `0 0 0 3px ${alpha(semantica.erro, 0.2)}` },
+          "& .MuiOutlinedInput-notchedOutline": { borderColor: v("bordaForte"), transition: transicao },
+          "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: v("texto3") },
+          "&.Mui-focused": { boxShadow: `0 0 0 3px ${misturar(marca, 22)}`, backgroundColor: "transparent" },
+          "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: marca, borderWidth: 1 },
+          "&.Mui-error.Mui-focused": { boxShadow: `0 0 0 3px ${misturar(v("erro"), 20)}` },
         },
-        input: { "&::placeholder": { color: texto.desabilitado, opacity: 1 } },
+        input: { "&::placeholder": { color: v("texto3"), opacity: 1 } },
       },
     },
     MuiInputLabel: {
-      styleOverrides: { root: { color: texto.secundario, "&.Mui-focused": { color: marca.main } } },
+      styleOverrides: { root: { color: v("texto2"), "&.Mui-focused": { color: marca } } },
     },
     MuiFormHelperText: { styleOverrides: { root: { marginLeft: 2, fontSize: "0.75rem" } } },
 
@@ -264,20 +382,20 @@ const theme = createTheme({
       styleOverrides: {
         root: { borderRadius: raio.pequeno, fontWeight: 600 },
         sizeSmall: { height: 24, fontSize: "0.75rem" },
-        outlined: { borderColor: borda.forte },
+        outlined: { borderColor: v("bordaForte") },
       },
     },
     MuiTableContainer: { styleOverrides: { root: { borderRadius: raio.grande } } },
     MuiTableCell: {
       styleOverrides: {
-        root: { borderBottom: `1px solid ${borda.suave}`, paddingTop: 10, paddingBottom: 10 },
+        root: { borderBottom: `1px solid ${v("bordaSuave")}`, paddingTop: 10, paddingBottom: 10 },
         head: {
-          color: texto.secundario,
+          color: v("texto2"),
           fontSize: "0.75rem",
           fontWeight: 600,
           letterSpacing: 0,
-          backgroundColor: alpha("#FFFFFF", 0.02),
-          borderBottom: `1px solid ${borda.padrao}`,
+          backgroundColor: v("sobreposicao"),
+          borderBottom: `1px solid ${v("borda")}`,
           whiteSpace: "nowrap",
         },
       },
@@ -286,7 +404,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           transition: transicao,
-          "&.MuiTableRow-hover:hover": { backgroundColor: alpha("#FFFFFF", 0.03) },
+          "&.MuiTableRow-hover:hover": { backgroundColor: v("sobreposicao") },
           "&:last-of-type td": { borderBottom: 0 },
         },
       },
@@ -294,31 +412,31 @@ const theme = createTheme({
     MuiTooltip: {
       styleOverrides: {
         tooltip: {
-          backgroundColor: superficie.hover,
-          border: `1px solid ${borda.forte}`,
-          color: texto.primario,
+          backgroundColor: v("hover"),
+          border: `1px solid ${v("bordaForte")}`,
+          color: v("texto"),
           fontSize: "0.75rem",
           fontWeight: 500,
           padding: "6px 10px",
-          boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+          boxShadow: `0 8px 24px ${v("sombra")}`,
         },
-        arrow: { color: superficie.hover },
+        arrow: { color: v("hover") },
       },
     },
     MuiAlert: {
       styleOverrides: {
         root: { borderRadius: raio.medio, alignItems: "center" },
-        standardSuccess: { border: `1px solid ${alpha(semantica.sucesso, 0.3)}` },
-        standardWarning: { border: `1px solid ${alpha(semantica.atencao, 0.3)}` },
-        standardError: { border: `1px solid ${alpha(semantica.erro, 0.3)}` },
-        standardInfo: { border: `1px solid ${alpha(semantica.info, 0.3)}` },
-        filled: { boxShadow: "0 12px 32px rgba(0,0,0,0.45)" },
+        standardSuccess: { border: `1px solid ${misturar(v("sucesso"), 30)}` },
+        standardWarning: { border: `1px solid ${misturar(v("atencao"), 30)}` },
+        standardError: { border: `1px solid ${misturar(v("erro"), 30)}` },
+        standardInfo: { border: `1px solid ${misturar(v("info"), 30)}` },
+        filled: { boxShadow: `0 12px 32px ${v("sombra")}` },
       },
     },
     MuiLinearProgress: {
-      styleOverrides: { root: { borderRadius: 4, backgroundColor: alpha("#FFFFFF", 0.06) } },
+      styleOverrides: { root: { borderRadius: 4, backgroundColor: v("trilha") } },
     },
-    MuiSkeleton: { styleOverrides: { root: { backgroundColor: alpha("#FFFFFF", 0.06) } } },
+    MuiSkeleton: { styleOverrides: { root: { backgroundColor: v("trilha") } } },
     MuiAvatar: { styleOverrides: { root: { fontFamily: fonteTitulo, fontWeight: 700 } } },
   },
 });

@@ -10,11 +10,12 @@ import { SparkLineChart } from "@mui/x-charts/SparkLineChart";
  *
  * `tendencia`: { atual, anterior, serie: number[] } -- opcional.
  */
-export default function CartaoEstatistica({ titulo, valor, icone, tendencia, cor = "#2DD4BF", rodape }) {
+export default function CartaoEstatistica({ titulo, valor, icone, tendencia, cor = "var(--argos-texto2)", destaque = false, rodape }) {
   const delta = tendencia ? tendencia.atual - tendencia.anterior : null;
   const IconeTendencia = delta === null || delta === 0 ? TrendingFlatIcon : delta > 0 ? TrendingUpIcon : TrendingDownIcon;
-  const corTendencia = delta === null || delta === 0 ? "#8A93A6" : delta > 0 ? "#4ADE80" : "#F87171";
 
+  // Indicador neutro por padrão; com `destaque`, a borda e o rodapé ganham a cor
+  // (ex.: decisões pendentes em violeta, a cor da IA).
   return (
     <Paper
       sx={{
@@ -23,31 +24,16 @@ export default function CartaoEstatistica({ titulo, valor, icone, tendencia, cor
         display: "flex",
         flexDirection: "column",
         gap: 1.25,
+        borderColor: destaque ? `color-mix(in srgb, ${cor} 40%, transparent)` : undefined,
         transition: "border-color 150ms ease",
-        "&:hover": { borderColor: "#343E50" },
+        "&:hover": { borderColor: destaque ? cor : "var(--argos-borda-forte)" },
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: cor, "& svg": { fontSize: 18 } }}>
+        {icone}
         <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, fontSize: 13 }}>
           {titulo}
         </Typography>
-        {icone && (
-          <Box
-            sx={{
-              width: 34,
-              height: 34,
-              borderRadius: 2,
-              border: `1px solid ${cor}33`,
-              display: "grid",
-              placeItems: "center",
-              color: cor,
-              backgroundColor: `${cor}1A`,
-              "& svg": { fontSize: 18 },
-            }}
-          >
-            {icone}
-          </Box>
-        )}
       </Box>
 
       <Box sx={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 1 }}>
@@ -60,9 +46,9 @@ export default function CartaoEstatistica({ titulo, valor, icone, tendencia, cor
             {valor}
           </Typography>
           {tendencia && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5, color: corTendencia }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.75, color: "text.secondary" }}>
               <IconeTendencia sx={{ fontSize: 16 }} />
-              <Typography variant="caption" sx={{ color: "inherit", fontWeight: 600 }}>
+              <Typography variant="caption" sx={{ color: "text.primary", fontWeight: 600 }}>
                 {delta > 0 ? `+${delta}` : delta}
               </Typography>
               <Typography variant="caption" color="text.secondary">
@@ -71,7 +57,7 @@ export default function CartaoEstatistica({ titulo, valor, icone, tendencia, cor
             </Box>
           )}
           {rodape && (
-            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+            <Typography variant="caption" sx={{ display: "block", mt: 0.5, color: destaque ? cor : "text.secondary" }}>
               {rodape}
             </Typography>
           )}
@@ -82,10 +68,10 @@ export default function CartaoEstatistica({ titulo, valor, icone, tendencia, cor
               data={tendencia.serie}
               height={36}
               width={96}
-              colors={[cor]}
+              colors={["var(--argos-texto2)"]}
               area
               curve="natural"
-              sx={{ "& .MuiAreaElement-root": { fillOpacity: 0.18 } }}
+              sx={{ "& .MuiAreaElement-root": { fillOpacity: 0.14 } }}
             />
           </Box>
         )}

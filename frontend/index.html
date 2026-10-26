@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="dark light" />
     <meta name="theme-color" content="#0B0E14" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -13,8 +13,20 @@
       rel="stylesheet"
     />
     <title>Argos</title>
+    <script>
+      // Aplica o modo (claro/escuro) e a escala salvos antes de desenhar a página.
+      try {
+        var modo = localStorage.getItem("mui-mode");
+        if (modo === "system") modo = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        document.documentElement.setAttribute("data-tema", modo === "light" ? "light" : "dark");
+        if (localStorage.getItem("argos.escala") === "daltonico") document.documentElement.setAttribute("data-escala", "daltonico");
+      } catch (e) {
+        document.documentElement.setAttribute("data-tema", "dark");
+      }
+    </script>
     <style>
       html, body { background: #0B0E14; }
+      html[data-tema="light"], html[data-tema="light"] body { background: #F6F8FB; }
       .splash { min-height: 100vh; display: grid; place-items: center; }
       .splash img { width: 56px; height: 56px; animation: respirar 1.6s ease-in-out infinite; }
       @keyframes respirar { 50% { opacity: 0.45; } }

@@ -128,7 +128,7 @@ export default function Perfil() {
             fontWeight: 700,
             fontFamily: '"Space Grotesk", sans-serif',
             bgcolor: ehAdmin ? "secondary.main" : "primary.main",
-            color: "#0B0E14",
+            color: "var(--argos-sobre-tom)",
           }}
         >
           {iniciais(usuario.nome)}

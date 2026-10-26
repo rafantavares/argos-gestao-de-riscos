@@ -630,7 +630,7 @@ function TabelaRiscos({ riscos, projetoPorId, recomendacaoPorRisco, aoAbrir }) {
                     {risco.titulo}
                   </Typography>
                   {precisaReavaliar(risco) && (
-                    <Typography variant="caption" sx={{ color: "#FB923C", fontWeight: 600 }}>
+                    <Typography variant="caption" sx={{ color: "var(--argos-atencao)", fontWeight: 600 }}>
                       Reavaliar
                     </Typography>
                   )}
@@ -698,7 +698,7 @@ function CartaoRisco({ risco, projeto, recomendacao, aoAbrir }) {
               <Chip
                 size="small"
                 label="Reavaliar"
-                sx={{ bgcolor: "rgba(251, 146, 60, 0.15)", color: "#FB923C", fontWeight: 600 }}
+                sx={{ bgcolor: "color-mix(in srgb, var(--argos-atencao) 15%, transparent)", color: "var(--argos-atencao)", fontWeight: 600 }}
               />
             </Tooltip>
           )}
@@ -785,7 +785,7 @@ function CampoSelect({ label, value, onChange, opcoes, renderOpcao, ...props }) 
 function IconeProgressoFase({ progresso }) {
   return (
     <Box sx={{ display: "inline-flex", alignItems: "center", gap: 1, mr: 1.2 }}>
-      <Box sx={{ width: 44, height: 6, borderRadius: 999, bgcolor: "#262D3B", overflow: "hidden" }}>
+      <Box sx={{ width: 44, height: 6, borderRadius: 999, bgcolor: "var(--argos-borda)", overflow: "hidden" }}>
         <Box sx={{ width: `${progresso}%`, height: "100%", bgcolor: "primary.main" }} />
       </Box>
     </Box>
@@ -828,7 +828,7 @@ function PainelAssistente({ analise, carregando, notasAtuais, aoUsarArea, aoApli
   return (
     <Paper
       variant="outlined"
-      sx={{ p: 1.5, borderColor: "rgba(167, 139, 250, 0.45)", bgcolor: "rgba(167, 139, 250, 0.06)" }}
+      sx={{ p: 1.5, borderColor: "color-mix(in srgb, var(--argos-ia) 45%, transparent)", bgcolor: "color-mix(in srgb, var(--argos-ia) 6%, transparent)" }}
     >
       <Box sx={{ display: "flex", alignItems: "center", gap: 0.8, mb: 1 }}>
         <AutoAwesomeIcon sx={{ fontSize: 18, color: "secondary.main" }} />

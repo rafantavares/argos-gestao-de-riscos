@@ -46,7 +46,7 @@ export function Etiqueta({ cor, children }) {
         fontSize: 10,
         fontWeight: 700,
         color: "#111827",
-        background: `${cor}55`,
+        background: `color-mix(in srgb, ${cor} 33%, transparent)`,
         border: `1px solid ${cor}`,
         whiteSpace: "nowrap",
       }}
@@ -64,8 +64,10 @@ export function DocumentoPdf({ titulo, subtitulo, responsavel, children }) {
   useEffect(() => {
     const anterior = document.body.style.backgroundColor;
     document.body.style.backgroundColor = "#E5E7EB";
+    document.body.classList.add("documento-claro");
     return () => {
       document.body.style.backgroundColor = anterior;
+      document.body.classList.remove("documento-claro");
     };
   }, []);
 

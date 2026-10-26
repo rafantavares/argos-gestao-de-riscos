@@ -22,9 +22,9 @@ import { riscos as servicoRiscos } from "../services/api";
 import { FASES_PROJETO, IMPACTOS, PROBABILIDADES, faixaExposicao, rotulo } from "../constants";
 
 const TENDENCIAS = {
-  subindo: { label: "Exposição subindo", cor: "#F87171", icone: <TrendingUpIcon fontSize="small" /> },
-  caindo: { label: "Exposição caindo", cor: "#4ADE80", icone: <TrendingDownIcon fontSize="small" /> },
-  estavel: { label: "Exposição estável", cor: "#8A93A6", icone: <TrendingFlatIcon fontSize="small" /> },
+  subindo: { label: "Exposição subindo", cor: "var(--argos-erro)", icone: <TrendingUpIcon fontSize="small" /> },
+  caindo: { label: "Exposição caindo", cor: "var(--argos-sucesso)", icone: <TrendingDownIcon fontSize="small" /> },
+  estavel: { label: "Exposição estável", cor: "var(--argos-texto2)", icone: <TrendingFlatIcon fontSize="small" /> },
 };
 
 // Reavaliação do risco conforme o andamento do projeto (MR-MPS-SW:2023, GPR 17): o
@@ -132,7 +132,7 @@ export default function EvolucaoExposicao({ risco, aoReavaliar }) {
             {
               data: pontos.map((p) => p.exposicao),
               label: "Exposição",
-              color: "#2DD4BF",
+              color: "var(--argos-marca)",
               showMark: true,
               valueFormatter: (valor) => `${valor} · ${faixaExposicao(valor).label}`,
             },

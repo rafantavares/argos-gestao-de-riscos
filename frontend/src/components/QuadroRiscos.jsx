@@ -48,7 +48,7 @@ export default function QuadroRiscos({ riscos, projetoPorId, aoAbrir, aoMudarSta
               borderRadius: 2,
               p: 1,
               minHeight: 320,
-              bgcolor: colunaAlvo === coluna.value ? `${cor}1A` : "rgba(255,255,255,0.02)",
+              bgcolor: colunaAlvo === coluna.value ? `color-mix(in srgb, ${cor} 10%, transparent)` : "var(--argos-sobreposicao)",
               border: "1px dashed",
               borderColor: colunaAlvo === coluna.value ? cor : "transparent",
               transition: "background-color 0.15s, border-color 0.15s",
@@ -105,7 +105,7 @@ export default function QuadroRiscos({ riscos, projetoPorId, aoAbrir, aoMudarSta
                     <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mt: 1, flexWrap: "wrap" }}>
                       <ChipSeveridade probabilidade={risco.probabilidade} impacto={risco.impacto} />
                       {precisaReavaliar(risco) && (
-                        <Typography variant="caption" sx={{ color: "#FB923C", fontWeight: 700 }}>
+                        <Typography variant="caption" sx={{ color: "var(--argos-atencao)", fontWeight: 700 }}>
                           Reavaliar
                         </Typography>
                       )}
