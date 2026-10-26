@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AppBar,
   Avatar,
@@ -20,17 +20,23 @@ import PsychologyOutlinedIcon from "@mui/icons-material/PsychologyOutlined";
 import SpaceDashboardOutlinedIcon from "@mui/icons-material/SpaceDashboardOutlined";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import SearchIcon from "@mui/icons-material/Search";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Link as LinkRouter, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { usePreferencias } from "../contexts/PreferenciasContext";
-import { riscos as servicoRiscos } from "../services/api";
+import { recomendacoes as servicoRecomendacoes, riscos as servicoRiscos } from "../services/api";
 import { iniciais, precisaReavaliar } from "../constants";
 import { misturar, v } from "../theme";
 import { Logo } from "./Logo";
 import LogoMark from "./Logo";
+import BuscaGlobal, { ATALHO } from "./BuscaGlobal";
+import Notificacoes, { itensPendentes } from "./Notificacoes";
 
 const LARGURA_MENU = { xs: 68, md: 248 };
 const ALTURA_TOPO = 64;
@@ -72,9 +78,19 @@ const MENU = [
 ];
 
 const PAGINAS_EXTRAS = [
-  { caminho: "/configuracoes", titulo: "Configurações", grupo: "Conta" },
-  { caminho: "/perfil", titulo: "Meu perfil", grupo: "Conta" },
+  { caminho: "/configuracoes", titulo: "Configurações", grupo: "Conta", icone: <SettingsOutlinedIcon /> },
+  { caminho: "/perfil", titulo: "Meu perfil", grupo: "Conta", icone: <PersonOutlineIcon /> },
 ];
+
+// Páginas oferecidas na busca global (Ctrl+K).
+const PAGINAS_BUSCA = [
+  ...MENU.flatMap((g) => g.itens.map((i) => ({ caminho: i.caminho, titulo: i.rotulo, grupo: g.titulo, icone: i.icone }))),
+  ...PAGINAS_EXTRAS,
+  { caminho: "/configuracoes?aba=sobre", titulo: "Sobre o Argos", grupo: "Conta", icone: <InfoOutlinedIcon /> },
+].map((p) => ({ ...p, icone: <Box sx={{ display: "grid", "& svg": { fontSize: 18 } }}>{p.icone}</Box> }));
+
+// Subpáginas que ganham um terceiro nível no caminho da barra superior.
+const SUBPAGINAS = [{ padrao: /^\/gerente\/riscos\/\d+/, titulo: "Ficha do risco" }];
 
 // Item ativo: a raiz (/gerente) só na própria página; os demais
 // também nas subpáginas (ex.: /gerente/riscos/12/recomendacao).
@@ -106,28 +122,46 @@ export default function AppLayout({ children }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
-  const [pendentesReavaliacao, setPendentesReavaliacao] = useState(0);
+  const [riscos, setRiscos] = useState([]);
+  const [recomendacoes, setRecomendacoes] = useState([]);
+  const [buscaAberta, setBuscaAberta] = useState(false);
 
-  // Badge de riscos que precisam de reavaliação: carrega ao entrar e a cada
-  // 5 minutos (não a cada troca de página, para não pesar na API).
+  // Riscos e recomendações para o badge do menu, as notificações e a busca:
+  // carrega ao entrar e a cada 5 minutos (não a cada troca de página).
   useEffect(() => {
-    const atualizar = () =>
-      servicoRiscos
-        .listarMeus()
-        .then((lista) => setPendentesReavaliacao(lista.filter(precisaReavaliar).length))
-        .catch(() => {});
+    const atualizar = () => {
+      servicoRiscos.listarMeus().then(setRiscos).catch(() => {});
+      servicoRecomendacoes.listarMinhas().then(setRecomendacoes).catch(() => {});
+    };
     atualizar();
     const intervalo = setInterval(atualizar, 5 * 60 * 1000);
     return () => clearInterval(intervalo);
   }, []);
+
+  // Ctrl+K (ou Cmd+K) abre a busca de qualquer página.
+  useEffect(() => {
+    const aoTeclar = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setBuscaAberta((aberta) => !aberta);
+      }
+    };
+    window.addEventListener("keydown", aoTeclar);
+    return () => window.removeEventListener("keydown", aoTeclar);
+  }, []);
+
+  const pendentesReavaliacao = useMemo(() => riscos.filter((r) => !r.arquivado && precisaReavaliar(r)).length, [riscos]);
+  const pendencias = useMemo(() => itensPendentes(riscos, recomendacoes), [riscos, recomendacoes]);
 
   const menu = MENU;
   const cargo = "Gerente de projetos";
 
   // Título da barra superior: o item do menu (ou página extra) que está aberto.
   const atual =
-    menu.flatMap((g) => g.itens.map((i) => ({ titulo: i.rotulo, grupo: g.titulo, caminho: i.caminho }))).find((i) => estaAtivo(i.caminho, pathname)) ??
-    PAGINAS_EXTRAS.find((p) => pathname.startsWith(p.caminho));
+    menu
+      .flatMap((g) => g.itens.map((i) => ({ titulo: i.rotulo, grupo: g.titulo, caminho: i.caminho, icone: i.icone, ia: i.ia })))
+      .find((i) => estaAtivo(i.caminho, pathname)) ?? PAGINAS_EXTRAS.find((p) => pathname.startsWith(p.caminho));
+  const subpagina = SUBPAGINAS.find((s) => s.padrao.test(pathname));
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -303,17 +337,95 @@ export default function AppLayout({ children }) {
 
       <Box sx={{ flexGrow: 1, minWidth: 0 }}>
         <AppBar position="sticky">
-          <Toolbar sx={{ gap: 2, minHeight: { xs: ALTURA_TOPO }, px: { xs: 2, sm: 3, lg: 4 } }}>
-            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-              {atual?.grupo && (
-                <Typography variant="caption" color="text.secondary" sx={{ display: "block", lineHeight: 1.2 }}>
-                  {atual.grupo}
-                </Typography>
+          <Toolbar sx={{ gap: { xs: 1, sm: 1.5 }, minHeight: { xs: ALTURA_TOPO }, px: { xs: 2, sm: 3, lg: 4 } }}>
+            {/* Página atual: ícone da seção + caminho (grupo › página › subpágina) */}
+            <Box sx={{ flexGrow: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 1.5 }}>
+              {atual?.icone && (
+                <Box
+                  aria-hidden="true"
+                  sx={{
+                    width: 38,
+                    height: 38,
+                    flex: "none",
+                    borderRadius: 2,
+                    display: { xs: "none", sm: "grid" },
+                    placeItems: "center",
+                    color: atual.ia ? v("ia") : v("marca"),
+                    bgcolor: misturar(atual.ia ? v("ia") : v("marca"), 12),
+                    border: `1px solid ${misturar(atual.ia ? v("ia") : v("marca"), 25)}`,
+                    "& svg": { fontSize: 20 },
+                  }}
+                >
+                  {atual.icone}
+                </Box>
               )}
-              <Typography component="p" variant="h6" noWrap sx={{ lineHeight: 1.3 }}>
-                {atual?.titulo ?? "Argos"}
-              </Typography>
+              <Box sx={{ minWidth: 0 }}>
+                <Box
+                  component="nav"
+                  aria-label="Caminho"
+                  sx={{ display: "flex", alignItems: "center", gap: 0.25, color: "text.secondary", fontSize: 12, lineHeight: 1.3 }}
+                >
+                  <span>{atual?.grupo ?? "Argos"}</span>
+                  {subpagina && atual && (
+                    <>
+                      <NavigateNextIcon sx={{ fontSize: 14 }} />
+                      <Box
+                        component={LinkRouter}
+                        to={atual.caminho}
+                        sx={{ color: "inherit", textDecoration: "none", "&:hover": { color: "text.primary", textDecoration: "underline" } }}
+                      >
+                        {atual.titulo}
+                      </Box>
+                    </>
+                  )}
+                </Box>
+                <Typography component="p" variant="h6" noWrap sx={{ lineHeight: 1.25 }}>
+                  {subpagina ? subpagina.titulo : atual?.titulo ?? "Argos"}
+                </Typography>
+              </Box>
             </Box>
+
+            {/* Busca global */}
+            <ButtonBase
+              onClick={() => setBuscaAberta(true)}
+              aria-label={`Buscar riscos, projetos e páginas (${ATALHO})`}
+              sx={{
+                display: { xs: "none", md: "flex" },
+                alignItems: "center",
+                gap: 1.25,
+                width: { md: 260, lg: 320 },
+                height: 40,
+                px: 1.5,
+                borderRadius: 2,
+                border: 1,
+                borderColor: "divider",
+                bgcolor: "background.paper",
+                color: "text.secondary",
+                fontSize: 14,
+                transition: "border-color 150ms ease",
+                "&:hover": { borderColor: v("texto3") },
+              }}
+            >
+              <SearchIcon fontSize="small" />
+              <Box component="span" sx={{ flex: 1, textAlign: "left" }}>
+                Buscar…
+              </Box>
+              <Box component="kbd" sx={{ fontFamily: "inherit", fontSize: 11, border: 1, borderColor: "divider", borderRadius: 1, px: 0.75, py: 0.1 }}>
+                {ATALHO}
+              </Box>
+            </ButtonBase>
+            <Tooltip title={`Buscar (${ATALHO})`}>
+              <IconButton
+                onClick={() => setBuscaAberta(true)}
+                aria-label="Buscar riscos, projetos e páginas"
+                sx={{ display: { xs: "inline-flex", md: "none" }, border: 1, borderColor: "divider", bgcolor: "background.paper", width: 40, height: 40 }}
+              >
+                <SearchIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+
+            <Notificacoes itens={pendencias} />
+
             <Tooltip title={escuro ? "Usar modo claro" : "Usar modo escuro"}>
               <IconButton
                 onClick={alternarModo}
@@ -325,6 +437,8 @@ export default function AppLayout({ children }) {
             </Tooltip>
           </Toolbar>
         </AppBar>
+
+        <BuscaGlobal aberta={buscaAberta} aoFechar={() => setBuscaAberta(false)} riscos={riscos} paginas={PAGINAS_BUSCA} />
 
         <Box component="main" id="conteudo" tabIndex={-1} sx={{ px: { xs: 2, sm: 3, lg: 4 }, pb: 4 }}>
           <Box sx={{ maxWidth: 1440, mx: "auto", pt: { xs: 2, md: 3 } }}>{children}</Box>

@@ -10,14 +10,11 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
-import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { useAuth } from "../contexts/AuthContext";
 import { Logo } from "../components/Logo";
 import PainelLogin from "../components/PainelLogin";
-import { usePreferencias } from "../contexts/PreferenciasContext";
 import { VERSAO_SISTEMA } from "../constants";
 import { api } from "../services/api";
 
@@ -26,7 +23,6 @@ const TENTATIVAS_LOGIN = 10; // ~1 min no total, o tempo de o servidor acordar
 
 export default function Login() {
   const { usuario, carregando, entrar, cadastrar } = useAuth();
-  const { escuro, alternarModo } = usePreferencias();
   // "entrar" ou "criar" (cadastro aberto: a conta nasce como gerente de projetos).
   const [modo, setModo] = useState("entrar");
   const [nome, setNome] = useState("");
@@ -98,9 +94,13 @@ export default function Login() {
     }
   }
 
+  // A tela de login fica sempre na paleta escura da marca, qualquer que seja
+  // o modo escolhido no sistema (data-tema="dark" vale só para este bloco).
   return (
     <Box
+      data-tema="dark"
       sx={{
+        colorScheme: "dark",
         height: { md: "100vh" },
         minHeight: "100vh",
         display: "flex",
@@ -208,15 +208,6 @@ export default function Login() {
           <Typography variant="caption" color="text.secondary">
             TCC · Engenharia de Software · v{VERSAO_SISTEMA}
           </Typography>
-          <Tooltip title={escuro ? "Usar modo claro" : "Usar modo escuro"}>
-            <IconButton
-              onClick={alternarModo}
-              aria-label={escuro ? "Usar modo claro" : "Usar modo escuro"}
-              sx={{ border: 1, borderColor: "divider" }}
-            >
-              {escuro ? <LightModeOutlinedIcon fontSize="small" /> : <DarkModeOutlinedIcon fontSize="small" />}
-            </IconButton>
-          </Tooltip>
         </Box>
       </Box>
 
