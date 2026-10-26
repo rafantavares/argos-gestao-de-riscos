@@ -159,10 +159,7 @@ export default function Dashboard() {
   return (
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2, mb: 3 }}>
-        <Box>
-          <Typography variant="h5" fontWeight={600}>
-            Visão geral
-          </Typography>
+        <Box sx={{ mr: "auto" }}>
           <Typography variant="body2" color="text.secondary">
             Exposição dos seus projetos e o que precisa da sua decisão.
           </Typography>

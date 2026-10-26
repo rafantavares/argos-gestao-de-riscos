@@ -10,7 +10,6 @@ import Login from "./pages/Login";
 // Páginas baixadas sob demanda: o primeiro acesso só carrega o login.
 const Perfil = lazy(() => import("./pages/Perfil"));
 const Configuracoes = lazy(() => import("./pages/Configuracoes"));
-const Sobre = lazy(() => import("./pages/Sobre"));
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
 const Gerentes = lazy(() => import("./pages/admin/Gerentes"));
 const PlanosContingencia = lazy(() => import("./pages/admin/PlanosContingencia"));
@@ -150,14 +149,7 @@ export default function App() {
           }
         />
 
-        <Route
-          path="/sobre"
-          element={
-            <PaginaProtegida>
-              <Sobre />
-            </PaginaProtegida>
-          }
-        />
+        <Route path="/sobre" element={<Navigate to="/configuracoes?aba=sobre" replace />} />
 
         <Route
           path="/perfil"
@@ -177,7 +169,7 @@ export default function App() {
           }
         />
 
-        <Route path="/ajuda" element={<Navigate to="/sobre" replace />} />
+        <Route path="/ajuda" element={<Navigate to="/configuracoes?aba=sobre" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>

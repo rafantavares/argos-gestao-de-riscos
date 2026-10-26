@@ -14,7 +14,6 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import LogoutIcon from "@mui/icons-material/Logout";
 import InsightsIcon from "@mui/icons-material/Insights";
 import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
 import ManageAccountsOutlinedIcon from "@mui/icons-material/ManageAccountsOutlined";
@@ -22,7 +21,6 @@ import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import SpaceDashboardOutlinedIcon from "@mui/icons-material/SpaceDashboardOutlined";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
@@ -31,7 +29,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { usePreferencias } from "../contexts/PreferenciasContext";
 import { riscos as servicoRiscos } from "../services/api";
-import { VERSAO_SISTEMA, iniciais, precisaReavaliar } from "../constants";
+import { iniciais, precisaReavaliar } from "../constants";
 import { misturar, v } from "../theme";
 import { Logo } from "./Logo";
 import LogoMark from "./Logo";
@@ -88,7 +86,6 @@ const MENU_GERENTE = [
 const PAGINAS_EXTRAS = [
   { caminho: "/configuracoes", titulo: "Configurações", grupo: "Conta" },
   { caminho: "/perfil", titulo: "Meu perfil", grupo: "Conta" },
-  { caminho: "/sobre", titulo: "Sobre o Argos", grupo: "Ajuda" },
 ];
 
 // Item ativo: a raiz (/gerente, /admin) só na própria página; os demais
@@ -116,7 +113,7 @@ function ItemRodape({ icone, rotulo, ativo, onClick, extra }) {
 }
 
 export default function AppLayout({ children }) {
-  const { usuario, sair } = useAuth();
+  const { usuario } = useAuth();
   const { escuro, alternarModo } = usePreferencias();
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -263,28 +260,17 @@ export default function AppLayout({ children }) {
           ))}
         </Box>
 
-        {/* Rodapé do menu: configurações, sobre e o cartão de perfil */}
+        {/* Rodapé do menu: configurações (inclui Sobre e Segurança) e o perfil */}
         <Box sx={{ borderTop: 1, borderColor: "divider", pt: 1, pb: 1.5 }}>
           <List disablePadding>
             <ItemRodape
               icone={<SettingsOutlinedIcon />}
               rotulo="Configurações"
-              ativo={pathname === "/configuracoes"}
+              ativo={pathname === "/configuracoes" || pathname === "/sobre"}
               onClick={() => navigate("/configuracoes")}
             />
-            <ItemRodape
-              icone={<InfoOutlinedIcon />}
-              rotulo="Sobre o Argos"
-              ativo={pathname === "/sobre"}
-              onClick={() => navigate("/sobre")}
-              extra={
-                <Typography component="span" sx={{ display: { xs: "none", md: "inline" }, fontSize: 12, color: "text.disabled" }}>
-                  v{VERSAO_SISTEMA}
-                </Typography>
-              }
-            />
           </List>
-          <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 0.5, flexDirection: { xs: "column", md: "row" } }}>
+          <Box sx={{ mt: 1, display: "flex" }}>
             <ButtonBase
               onClick={() => navigate("/perfil")}
               aria-label={`Meu perfil: ${usuario.nome}, ${cargo}`}
@@ -325,11 +311,6 @@ export default function AppLayout({ children }) {
               </Box>
               <ChevronRightIcon fontSize="small" sx={{ color: "text.secondary", display: { xs: "none", md: "block" } }} />
             </ButtonBase>
-            <Tooltip title="Sair da conta">
-              <IconButton onClick={sair} aria-label="Sair da conta" size="small" sx={{ color: "text.secondary", "&:hover": { color: "text.primary" } }}>
-                <LogoutIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
           </Box>
         </Box>
       </Drawer>

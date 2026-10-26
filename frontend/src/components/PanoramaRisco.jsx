@@ -43,7 +43,7 @@ export default function PanoramaRisco({ riscos }) {
               innerRadius="72%"
               outerRadius="100%"
               height={170}
-              text={({ value }) => (riscos.length ? `${value}` : "—")}
+              text={({ value }) => (riscos.length ? value.toLocaleString("pt-BR") : "—")}
               sx={{
                 [`& .${gaugeClasses.valueText}`]: { fontSize: 34, fontWeight: 700, fontFamily: '"Space Grotesk", sans-serif' },
                 [`& .${gaugeClasses.valueText} text`]: { fill: "var(--argos-texto)" },
