@@ -111,11 +111,32 @@ def semear_planos_contingencia(sessao: Session) -> None:
     sessao.commit()
 
 
+IDS_PLANOS_DO_MODELO = [plano["id"] for plano in PLANOS_INICIAIS]
+
+
+def sincronizar_textos_planos(sessao: Session) -> int:
+    """Deixa os 12 planos do modelo com o texto oficial deste arquivo (corrige,
+    por exemplo, textos gravados sem acento). O catálogo não é mais editado pela
+    tela, então este arquivo é a fonte da verdade. Idempotente; devolve quantos
+    planos mudaram."""
+    alterados = 0
+    for dados in PLANOS_INICIAIS:
+        plano = sessao.get(PlanoContingencia, dados["id"])
+        if plano is not None and (plano.descricao != dados["descricao"] or not plano.ativo):
+            plano.descricao = dados["descricao"]
+            plano.ativo = True
+            alterados += 1
+    if alterados:
+        sessao.commit()
+    return alterados
+
+
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)
     sessao_cli = SessaoLocal()
     try:
         semear_planos_contingencia(sessao_cli)
+        sincronizar_textos_planos(sessao_cli)
         print(f"{len(PLANOS_INICIAIS)} planos de contingência verificados/inseridos.")
     finally:
         sessao_cli.close()

@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { Box, Chip, Grid, Paper, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
 import MemoryIcon from "@mui/icons-material/Memory";
-import { ml as servicoMl } from "../services/api";
+import { ml as servicoMl, planos as servicoPlanos } from "../services/api";
+import { ChipCategoria, Marcador } from "../components/Badges";
 import {
   ALGORITMOS,
   AREAS_AFETADAS,
   CATEGORIAS,
   CORES_ALGORITMOS,
+  CORES_SEVERIDADE,
   FAIXAS_EXPOSICAO,
   IMPACTOS,
   NOMES_ALGORITMOS,
@@ -114,6 +116,75 @@ function InformacoesSistema() {
   );
 }
 
+// Os 12 planos que o modelo recomenda: um por grupo PMBOK e nível de severidade
+// (o modelo prevê o nível do risco e devolve o plano daquele grupo e nível).
+const NIVEIS_PLANO = [
+  { valor: "baixa", rotulo: "Nível baixo", cor: CORES_SEVERIDADE.baixo },
+  { valor: "media", rotulo: "Nível médio", cor: CORES_SEVERIDADE.medio },
+  { valor: "alta", rotulo: "Nível alto", cor: CORES_SEVERIDADE.alto },
+];
+
+function PlanosDoModelo() {
+  const [planos, setPlanos] = useState(null);
+
+  useEffect(() => {
+    servicoPlanos.listar().then(setPlanos).catch(() => setPlanos([]));
+  }, []);
+
+  const plano = (categoria, nivel) => planos?.find((p) => p.categoria === categoria && p.probabilidade === nivel);
+
+  return (
+    <Secao titulo="Planos que o modelo recomenda">
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2, maxWidth: 760 }}>
+        O catálogo tem 12 planos de contingência: um para cada grupo PMBOK em cada nível de severidade. O modelo prevê o
+        nível do risco a partir das notas, do orçamento, da urgência e da fase do projeto, e recomenda o plano daquele grupo
+        e nível.
+      </Typography>
+      {planos === null ? (
+        <Typography variant="body2" color="text.secondary">
+          Carregando os planos…
+        </Typography>
+      ) : planos.length === 0 ? (
+        <Typography variant="body2" color="text.secondary">
+          Não foi possível carregar o catálogo agora.
+        </Typography>
+      ) : (
+        <Box sx={{ overflowX: "auto" }}>
+          <Table size="small" sx={{ minWidth: 720, "& td": { verticalAlign: "top" } }}>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ width: 160 }}>Grupo PMBOK</TableCell>
+                {NIVEIS_PLANO.map((n) => (
+                  <TableCell key={n.valor}>
+                    <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}>
+                      <Marcador cor={n.cor} />
+                      {n.rotulo}
+                    </Box>
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {CATEGORIAS.map((c) => (
+                <TableRow key={c.value}>
+                  <TableCell>
+                    <ChipCategoria categoria={c.value} />
+                  </TableCell>
+                  {NIVEIS_PLANO.map((n) => (
+                    <TableCell key={n.valor}>
+                      <Typography variant="body2">{plano(c.value, n.valor)?.descricao ?? "—"}</Typography>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Box>
+      )}
+    </Secao>
+  );
+}
+
 export default function Sobre() {
   return (
     <Box sx={{ maxWidth: 1000 }}>
@@ -191,6 +262,8 @@ export default function Sobre() {
           o gerente.
         </Typography>
       </Secao>
+
+      <PlanosDoModelo />
 
       <Secao titulo="Base normativa: MR-MPS-SW:2023">
         <Box sx={{ overflowX: "auto" }}>

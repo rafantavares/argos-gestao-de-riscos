@@ -114,11 +114,7 @@ export const ml = {
   importanciaFeatures: () => api.get("/ml/feature-importance").then((r) => r.data),
 };
 
-// --- planos de contingência (catálogo que o modelo recomenda) ---
+// --- planos de contingência (catálogo que o modelo recomenda; só consulta) ---
 export const planos = {
   listar: () => api.get("/planos").then((r) => r.data),
-  criar: (dados) => api.post("/planos", dados).then((r) => r.data),
-  editar: (id, dados) => api.put(`/planos/${id}`, dados).then((r) => r.data),
-  alternarAtivo: (id, ativo) =>
-    api.patch(`/planos/${id}/ativo?ativo=${ativo}`).then((r) => r.data),
 };

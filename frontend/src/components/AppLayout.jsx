@@ -16,7 +16,6 @@ import {
 } from "@mui/material";
 import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import PsychologyOutlinedIcon from "@mui/icons-material/PsychologyOutlined";
 import SpaceDashboardOutlinedIcon from "@mui/icons-material/SpaceDashboardOutlined";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
@@ -68,15 +67,7 @@ const MENU = [
   },
   {
     titulo: "Gerenciar",
-    itens: [
-      { rotulo: "Projetos", dica: "Seus projetos: crie novos ou edite os existentes", caminho: "/gerente/projetos", icone: <AccountTreeOutlinedIcon /> },
-      {
-        rotulo: "Planos de contingência",
-        dica: "Catálogo de planos que o modelo pode recomendar",
-        caminho: "/gerente/planos",
-        icone: <ShieldOutlinedIcon />,
-      },
-    ],
+    itens: [{ rotulo: "Projetos", dica: "Seus projetos: crie novos ou edite os existentes", caminho: "/gerente/projetos", icone: <AccountTreeOutlinedIcon /> }],
   },
 ];
 

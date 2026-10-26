@@ -12,9 +12,12 @@ inicial), pensadas para aprofundar a avaliação técnica do TCC II (DSR).
 >   `projetos.id_admin` continua no banco, mas significa "quem criou"
 >   (`Projeto.id_criador` no código). Saíram a listagem geral e o vínculo de
 >   gerentes pelo admin.
-> - **Herdados pelo gerente:** catálogo de planos (`/planos`, página Planos de
->   contingência) e o painel do modelo (`/ml/feature-importance`,
+> - **Herdado pelo gerente:** o painel do modelo (`/ml/feature-importance`,
 >   `/recomendacoes/metricas-historico`, página Modelo de IA).
+> - **Catálogo de planos só para consulta:** o modelo só recomenda os 12 planos
+>   fixos (grupo PMBOK × nível), então criar, editar e desativar planos saiu.
+>   `GET /planos` lista os 12, mostrados em Configurações > Sobre o Argos. Ao
+>   iniciar, a API alinha os textos com `app/core/seed.py` (corrigiu acentos).
 > - **Removidos:** visão cross-projeto (`/riscos/admin/todos`,
 >   `/recomendacoes/admin/todas`) e o relatório CSV do admin (`/relatorio/riscos`);
 >   o gerente exporta CSV e PDF pela página Riscos.
