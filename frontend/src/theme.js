@@ -22,6 +22,9 @@ export const PALETAS = {
     bordaSuave: "#1F2633",
     borda: "#262E3D",
     bordaForte: "#343E50",
+    // Contorno de campos de formulário: 3:1 sobre cartão e diálogo (WCAG 1.4.11).
+    bordaCampo: "#606B80",
+    campoFundo: "rgba(255, 255, 255, 0.02)",
     texto: "#E8ECF3",
     texto2: "#97A2B6",
     texto3: "#5E6879",
@@ -54,6 +57,8 @@ export const PALETAS = {
     bordaSuave: "#EDF1F6",
     borda: "#E2E7EF",
     bordaForte: "#CBD3DF",
+    bordaCampo: "#8A94A6",
+    campoFundo: "#FFFFFF",
     texto: "#0F172A",
     texto2: "#556074",
     texto3: "#94A3B8",
@@ -361,10 +366,10 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: raio.medio,
-          backgroundColor: v("sobreposicao"),
+          backgroundColor: v("campoFundo"),
           transition: transicao,
-          "& .MuiOutlinedInput-notchedOutline": { borderColor: v("bordaForte"), transition: transicao },
-          "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: v("texto3") },
+          "& .MuiOutlinedInput-notchedOutline": { borderColor: v("bordaCampo"), transition: transicao },
+          "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: v("texto2") },
           "&.Mui-focused": { boxShadow: `0 0 0 3px ${misturar(marca, 22)}`, backgroundColor: "transparent" },
           "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: marca, borderWidth: 1 },
           "&.Mui-error.Mui-focused": { boxShadow: `0 0 0 3px ${misturar(v("erro"), 20)}` },
