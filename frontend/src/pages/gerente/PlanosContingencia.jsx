@@ -83,10 +83,7 @@ export default function PlanosContingencia() {
   return (
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-        <Box>
-          <Typography variant="h5" fontWeight={600}>
-            Planos de contingência
-          </Typography>
+        <Box sx={{ mr: 2 }}>
           <Typography variant="body2" color="text.secondary">
             Catálogo de respostas que o modelo pode recomendar: três níveis por categoria PMBOK.
           </Typography>

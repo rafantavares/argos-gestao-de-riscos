@@ -8,7 +8,6 @@ from app.schemas.plano_contingencia import (
     PlanoContingenciaResposta,
 )
 from app.schemas.recomendacao import RecomendacaoBase, RecomendacaoResposta, RecomendacaoAtualizar
-from app.schemas.projeto_gerente import VincularGerenteRequisicao, ProjetoGerenteResposta
 from app.schemas.auth import LoginRequisicao, TokenResposta
 
 __all__ = [
@@ -28,8 +27,6 @@ __all__ = [
     "RecomendacaoBase",
     "RecomendacaoResposta",
     "RecomendacaoAtualizar",
-    "VincularGerenteRequisicao",
-    "ProjetoGerenteResposta",
     "LoginRequisicao",
     "TokenResposta",
 ]

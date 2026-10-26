@@ -42,7 +42,7 @@ ORDEM_URGENCIA = ["baixa", "media", "alta"]
 ORDEM_FASE = ["iniciacao", "planejamento", "execucao", "encerramento"]
 
 # Rótulos legíveis das features, na ordem de COLUNAS_FEATURES (usados no
-# gráfico de importância do dashboard admin).
+# gráfico de importância do painel "Modelo de IA").
 ROTULOS_FEATURES = {
     COLUNA_CATEGORIA: "Categoria",
     COLUNA_PROBABILIDADE: "Probabilidade",

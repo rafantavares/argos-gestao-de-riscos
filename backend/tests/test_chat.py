@@ -59,9 +59,9 @@ def test_chat_exige_gerente_vinculado(cliente, cabecalho_gerente, projeto, llm_s
     assert resposta.status_code == 403
 
 
-def test_chat_e_exclusivo_do_gerente(cliente, cabecalho_admin, projeto, llm_simulado):
-    resposta = cliente.post("/chat", headers=cabecalho_admin, json={"id_projeto": projeto.id, "mensagens": PERGUNTA})
-    assert resposta.status_code == 403
+def test_chat_exige_login(cliente, projeto, llm_simulado):
+    resposta = cliente.post("/chat", json={"id_projeto": projeto.id, "mensagens": PERGUNTA})
+    assert resposta.status_code == 401
 
 
 def test_sem_chave_de_api_o_chat_fica_indisponivel(cliente, cabecalho_gerente, projeto_com_gerente, monkeypatch):

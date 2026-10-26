@@ -29,18 +29,22 @@ Responda ao Rafael em português, de forma objetiva.
 ## Rodar e testar
 
 - Testes: `cd backend && python -m pytest` (SQLite em memória, não usa rede
-  nem o Supabase; ML e Gemini simulados). 211 testes.
+  nem o Supabase; ML e Gemini simulados). 197 testes.
 - Backend local: `cd backend && uvicorn app.main:app --reload --port 8000`
   (precisa de `DATABASE_URL` no `.env`). Frontend: `cd frontend && npm run dev`
   (porta 5173 — o CORS local espera exatamente essa porta).
 - Nos testes, usar e-mails `@example.com` (`@teste.local` é rejeitado) e não
   usar o `TestClient` como context manager (dispara o startup contra o banco real).
-- Contas de teste: `admin@teste.com` e `gerente@teste.com` (senhas com o Rafael).
+- Conta de teste: `gerente@teste.com` (senha com o Rafael); a antiga
+  `admin@teste.com` virou gerente. Qualquer pessoa cria conta em "Criar conta"
+  no login (`POST /auth/cadastro`).
+- Perfil único: todo usuário é **gerente de projetos** (o perfil admin foi
+  removido em 2026-10-26; ver "Fim do perfil admin" em `docs/funcionalidades.md`).
 
 ## Documentação por fase (ler antes de mexer na área)
 
 - `docs/funcionalidades.md`: ciclo de vida do risco, ML, dashboards,
-  governança do admin, suíte de testes.
+  governança (hoje do próprio gerente), suíte de testes.
 - `docs/registro-riscos-mpsbr.md`: registro no formato PMBOK / MR-MPS-SW:2023 (GPR 10/17, GPC 7; o antigo processo GRI não existe mais),
   escala 1–5, exposição, assistente de IA, previsão de notas e reavaliação.
 - `docs/assistente-chat.md`: chat com IA (Gemini) na barra lateral do gerente.

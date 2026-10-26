@@ -509,7 +509,7 @@ export default function Riscos() {
 
       {!carregando && meusProjetos.length === 0 && (
         <Alert severity="info" sx={{ mb: 2 }}>
-          Você ainda não está vinculado a nenhum projeto. Peça a um admin para te vincular antes de
+          Você ainda não tem projetos. Crie o primeiro em Projetos (menu ao lado) para começar a
           cadastrar riscos.
         </Alert>
       )}

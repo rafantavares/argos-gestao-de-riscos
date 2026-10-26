@@ -14,11 +14,10 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import InsightsIcon from "@mui/icons-material/Insights";
 import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
-import ManageAccountsOutlinedIcon from "@mui/icons-material/ManageAccountsOutlined";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import PsychologyOutlinedIcon from "@mui/icons-material/PsychologyOutlined";
 import SpaceDashboardOutlinedIcon from "@mui/icons-material/SpaceDashboardOutlined";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
@@ -39,25 +38,8 @@ const ALTURA_TOPO = 64;
 
 // Menu em grupos: acompanhar (ver a situação), decidir (IA) e gerenciar
 // (cadastros). `ia: true` pinta o item de violeta, a cor da IA no Argos.
-const MENU_ADMIN = [
-  {
-    titulo: "Acompanhar",
-    itens: [
-      { rotulo: "Visão geral", dica: "Indicadores, desempenho dos algoritmos e últimas recomendações", caminho: "/admin", icone: <InsightsIcon /> },
-      { rotulo: "Riscos", dica: "Visão consolidada dos riscos de todos os projetos", caminho: "/admin/riscos", icone: <ReportProblemOutlinedIcon /> },
-    ],
-  },
-  {
-    titulo: "Gerenciar",
-    itens: [
-      { rotulo: "Projetos", dica: "Cadastro de projetos e vínculo de gerentes", caminho: "/admin/projetos", icone: <AccountTreeOutlinedIcon /> },
-      { rotulo: "Gerentes", dica: "Usuários com perfil de gerente de projetos", caminho: "/admin/gerentes", icone: <ManageAccountsOutlinedIcon /> },
-      { rotulo: "Planos de contingência", dica: "Catálogo de planos que o modelo pode recomendar", caminho: "/admin/planos", icone: <ShieldOutlinedIcon /> },
-    ],
-  },
-];
-
-const MENU_GERENTE = [
+// Todo usuário é gerente de projetos (o perfil admin foi removido).
+const MENU = [
   {
     titulo: "Acompanhar",
     itens: [
@@ -75,11 +57,26 @@ const MENU_GERENTE = [
         icone: <AutoAwesomeOutlinedIcon />,
         ia: true,
       },
+      {
+        rotulo: "Modelo de IA",
+        dica: "Desempenho dos algoritmos, o que pesa na decisão e as últimas recomendações",
+        caminho: "/gerente/modelo",
+        icone: <PsychologyOutlinedIcon />,
+        ia: true,
+      },
     ],
   },
   {
     titulo: "Gerenciar",
-    itens: [{ rotulo: "Projetos", dica: "Seus projetos: crie novos ou edite os existentes", caminho: "/gerente/projetos", icone: <AccountTreeOutlinedIcon /> }],
+    itens: [
+      { rotulo: "Projetos", dica: "Seus projetos: crie novos ou edite os existentes", caminho: "/gerente/projetos", icone: <AccountTreeOutlinedIcon /> },
+      {
+        rotulo: "Planos de contingência",
+        dica: "Catálogo de planos que o modelo pode recomendar",
+        caminho: "/gerente/planos",
+        icone: <ShieldOutlinedIcon />,
+      },
+    ],
   },
 ];
 
@@ -88,10 +85,10 @@ const PAGINAS_EXTRAS = [
   { caminho: "/perfil", titulo: "Meu perfil", grupo: "Conta" },
 ];
 
-// Item ativo: a raiz (/gerente, /admin) só na própria página; os demais
+// Item ativo: a raiz (/gerente) só na própria página; os demais
 // também nas subpáginas (ex.: /gerente/riscos/12/recomendacao).
 function estaAtivo(caminho, pathname) {
-  if (caminho === "/gerente" || caminho === "/admin") return pathname === caminho;
+  if (caminho === "/gerente") return pathname === caminho;
   return pathname === caminho || pathname.startsWith(`${caminho}/`);
 }
 
@@ -123,7 +120,6 @@ export default function AppLayout({ children }) {
   // Badge de riscos que precisam de reavaliação: carrega ao entrar e a cada
   // 5 minutos (não a cada troca de página, para não pesar na API).
   useEffect(() => {
-    if (usuario.perfil !== "gerente") return undefined;
     const atualizar = () =>
       servicoRiscos
         .listarMeus()
@@ -132,11 +128,10 @@ export default function AppLayout({ children }) {
     atualizar();
     const intervalo = setInterval(atualizar, 5 * 60 * 1000);
     return () => clearInterval(intervalo);
-  }, [usuario.perfil]);
+  }, []);
 
-  const ehAdmin = usuario.perfil === "admin";
-  const menu = ehAdmin ? MENU_ADMIN : MENU_GERENTE;
-  const cargo = ehAdmin ? "Administrador" : "Gerente de projetos";
+  const menu = MENU;
+  const cargo = "Gerente de projetos";
 
   // Título da barra superior: o item do menu (ou página extra) que está aberto.
   const atual =
@@ -295,8 +290,8 @@ export default function AppLayout({ children }) {
                   width: 34,
                   height: 34,
                   fontSize: 13,
-                  bgcolor: misturar(ehAdmin ? v("ia") : v("marca"), 16),
-                  color: ehAdmin ? v("ia") : v("marca"),
+                  bgcolor: misturar(v("marca"), 16),
+                  color: v("marca"),
                 }}
               >
                 {iniciais(usuario.nome)}

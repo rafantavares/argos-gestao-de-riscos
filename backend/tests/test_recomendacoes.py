@@ -78,12 +78,6 @@ def test_gerar_recomendacao_para_risco_alheio_e_rejeitado(
     assert resposta.status_code == 404
 
 
-def test_admin_nao_gera_recomendacao(cliente, cabecalho_admin, risco, ml_simulado):
-    resposta = cliente.post(f"/recomendacoes/gerar/{risco.id}", headers=cabecalho_admin)
-
-    assert resposta.status_code == 403
-
-
 def test_plano_previsto_ausente_no_banco_retorna_erro(
     cliente, cabecalho_gerente, risco, monkeypatch
 ):
@@ -235,25 +229,13 @@ def test_listar_recomendacoes_do_risco(cliente, cabecalho_gerente, risco, ml_sim
     assert len(resposta.json()) == 2
 
 
-def test_admin_ve_recomendacoes_de_todos_os_projetos(
-    cliente, cabecalho_gerente, cabecalho_admin, risco, ml_simulado
-):
-    cliente.post(f"/recomendacoes/gerar/{risco.id}", headers=cabecalho_gerente)
-
-    resposta = cliente.get("/recomendacoes/admin/todas", headers=cabecalho_admin)
-
-    assert resposta.status_code == 200
-    assert len(resposta.json()) == 1
+def test_historico_de_metricas_exige_login(cliente):
+    assert cliente.get("/recomendacoes/metricas-historico").status_code == 401
 
 
-def test_gerente_nao_acessa_historico_de_metricas(cliente, cabecalho_gerente):
-    resposta = cliente.get("/recomendacoes/admin/metricas-historico", headers=cabecalho_gerente)
-
-    assert resposta.status_code == 403
-
-
-def test_historico_de_metricas_comeca_vazio(cliente, cabecalho_admin):
-    resposta = cliente.get("/recomendacoes/admin/metricas-historico", headers=cabecalho_admin)
+def test_historico_de_metricas_comeca_vazio(cliente, cabecalho_gerente):
+    """O painel "Modelo de IA" do gerente lê o histórico de retreinos."""
+    resposta = cliente.get("/recomendacoes/metricas-historico", headers=cabecalho_gerente)
 
     assert resposta.status_code == 200
     assert resposta.json() == []

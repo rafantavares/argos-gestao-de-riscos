@@ -83,7 +83,7 @@ def _montar_dataset_com_feedback(sessao: Session) -> pd.DataFrame:
     """Combina o dataset.csv original com os riscos cuja recomendação foi aceita
     pelo gerente, usados como novos exemplos validados para o retreinamento.
     O rótulo (nível de severidade) é derivado do plano aceito; planos fora do
-    catálogo base (cadastrados depois pelo admin) não têm nível e são ignorados."""
+    catálogo base (cadastrados depois pelos gerentes) não têm nível e são ignorados."""
     dataset_base = carregar_dataset()
 
     registros_feedback = (
@@ -270,27 +270,9 @@ def responder_recomendacao(
 
 
 @roteador.get(
-    "/admin/metricas-historico",
+    "/metricas-historico",
     response_model=List[MetricaTreinamentoResposta],
-    dependencies=[Depends(exigir_perfil(PerfilUsuario.ADMIN))],
+    dependencies=[Depends(exigir_perfil(PerfilUsuario.GERENTE))],
 )
 def listar_historico_metricas(sessao: Session = Depends(obter_sessao)):
     return sessao.query(MetricaTreinamento).order_by(MetricaTreinamento.criado_em).all()
-
-
-@roteador.get(
-    "/admin/todas",
-    response_model=List[RecomendacaoResposta],
-    dependencies=[Depends(exigir_perfil(PerfilUsuario.ADMIN))],
-)
-def listar_todas_recomendacoes(
-    sessao: Session = Depends(obter_sessao), admin: Usuario = Depends(obter_usuario_atual)
-):
-    return (
-        sessao.query(Recomendacao)
-        .options(joinedload(Recomendacao.plano))
-        .join(Risco, Risco.id == Recomendacao.id_risco)
-        .join(Projeto, Projeto.id == Risco.id_projeto)
-        .filter(Projeto.id_admin == admin.id)
-        .all()
-    )

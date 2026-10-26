@@ -5,15 +5,18 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.core.migrar_fase12 import converter_admins_em_gerentes
 from app.core.seed import semear_planos_contingencia
 from app.database import Base, SessaoLocal, engine
-from app.routers import auth, chat, ml, planos, projetos, recomendacoes, relatorio, riscos
+from app.routers import auth, chat, ml, planos, projetos, recomendacoes, riscos
 
 
 @asynccontextmanager
 async def ciclo_de_vida(_app: FastAPI):
-    """Na subida da API: cria as tabelas que faltarem e semeia o catálogo de planos."""
+    """Na subida da API: cria as tabelas que faltarem, converte contas do antigo
+    perfil admin em gerente e semeia o catálogo de planos."""
     Base.metadata.create_all(bind=engine)
+    converter_admins_em_gerentes()
     sessao = SessaoLocal()
     try:
         semear_planos_contingencia(sessao)
@@ -45,7 +48,6 @@ app.include_router(riscos.roteador)
 app.include_router(recomendacoes.roteador)
 app.include_router(planos.roteador)
 app.include_router(ml.roteador)
-app.include_router(relatorio.roteador)
 app.include_router(chat.roteador)
 
 

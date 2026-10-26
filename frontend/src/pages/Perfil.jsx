@@ -50,11 +50,10 @@ export default function Perfil() {
   const { usuario, sair } = useAuth();
   const navigate = useNavigate();
   const [projetos, setProjetos] = useState([]);
-  const ehAdmin = usuario.perfil === "admin";
 
   useEffect(() => {
-    (ehAdmin ? servicoProjetos.listar() : servicoProjetos.meus()).then(setProjetos).catch(() => setProjetos([]));
-  }, [ehAdmin]);
+    servicoProjetos.meus().then(setProjetos).catch(() => setProjetos([]));
+  }, []);
 
   return (
     <Box sx={{ maxWidth: 1000 }}>
@@ -66,8 +65,8 @@ export default function Perfil() {
             fontSize: 26,
             fontWeight: 700,
             fontFamily: '"Space Grotesk", sans-serif',
-            bgcolor: misturar(ehAdmin ? v("ia") : v("marca"), 16),
-            color: ehAdmin ? v("ia") : v("marca"),
+            bgcolor: misturar(v("marca"), 16),
+            color: v("marca"),
           }}
         >
           {iniciais(usuario.nome)}
@@ -81,8 +80,8 @@ export default function Perfil() {
           </Typography>
           <Chip
             size="small"
-            label={ehAdmin ? "Administrador" : "Gerente de projetos"}
-            color={ehAdmin ? "secondary" : "primary"}
+            label="Gerente de projetos"
+            color="primary"
             variant="outlined"
             sx={{ mt: 1, fontWeight: 600 }}
           />
@@ -98,7 +97,7 @@ export default function Perfil() {
             <Stack divider={<Divider />}>
               <Linha rotulo="Nome" valor={usuario.nome} />
               <Linha rotulo="E-mail" valor={usuario.email} />
-              <Linha rotulo="Perfil" valor={ehAdmin ? "Administrador" : "Gerente de projetos"} />
+              <Linha rotulo="Perfil" valor="Gerente de projetos" />
               {usuario.criado_em && (
                 <Linha rotulo="Conta criada em" valor={new Date(usuario.criado_em).toLocaleDateString("pt-BR")} />
               )}
@@ -109,7 +108,7 @@ export default function Perfil() {
         <Grid item xs={12} md={6}>
           <Cartao
             icone={<AccountTreeIcon />}
-            titulo={ehAdmin ? "Projetos que administro" : "Projetos vinculados"}
+            titulo="Projetos vinculados"
           >
             {projetos.length === 0 ? (
               <Typography variant="body2" color="text.secondary">
@@ -122,7 +121,7 @@ export default function Perfil() {
                 ))}
               </Box>
             )}
-            <Button size="small" sx={{ mt: 1.5 }} onClick={() => navigate(ehAdmin ? "/admin/projetos" : "/gerente/projetos")}>
+            <Button size="small" sx={{ mt: 1.5 }} onClick={() => navigate("/gerente/projetos")}>
               Ver projetos
             </Button>
           </Cartao>

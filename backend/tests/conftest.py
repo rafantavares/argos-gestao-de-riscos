@@ -34,7 +34,6 @@ from app.models.projeto_gerente import ProjetoGerente
 from app.models.risco import Risco
 from app.models.usuario import Usuario
 
-SENHA_ADMIN = "admin-de-teste"
 SENHA_GERENTE = "gerente-de-teste"
 
 
@@ -43,7 +42,6 @@ SENHA_GERENTE = "gerente-de-teste"
 @pytest.fixture(scope="session")
 def hashes_senhas() -> dict:
     return {
-        SENHA_ADMIN: criar_hash_senha(SENHA_ADMIN),
         SENHA_GERENTE: criar_hash_senha(SENHA_GERENTE),
     }
 
@@ -87,20 +85,6 @@ def cliente(sessao):
 
 
 @pytest.fixture
-def admin(sessao, hashes_senhas) -> Usuario:
-    usuario = Usuario(
-        nome="Admin de Teste",
-        email="admin@example.com",
-        senha_hash=hashes_senhas[SENHA_ADMIN],
-        perfil=PerfilUsuario.ADMIN,
-    )
-    sessao.add(usuario)
-    sessao.commit()
-    sessao.refresh(usuario)
-    return usuario
-
-
-@pytest.fixture
 def gerente(sessao, hashes_senhas) -> Usuario:
     usuario = Usuario(
         nome="Gerente de Teste",
@@ -130,8 +114,9 @@ def outro_gerente(sessao, hashes_senhas) -> Usuario:
 
 
 @pytest.fixture
-def projeto(sessao, admin) -> Projeto:
-    novo_projeto = Projeto(nome="Projeto de Teste", descricao="Descrição", id_admin=admin.id)
+def projeto(sessao, gerente) -> Projeto:
+    """Projeto criado pelo gerente de teste (ainda sem o vínculo; ver projeto_com_gerente)."""
+    novo_projeto = Projeto(nome="Projeto de Teste", descricao="Descrição", id_criador=gerente.id)
     sessao.add(novo_projeto)
     sessao.commit()
     sessao.refresh(novo_projeto)
@@ -186,11 +171,6 @@ def autenticar(cliente: TestClient, email: str, senha: str) -> dict:
     resposta = cliente.post("/auth/login", json={"email": email, "senha": senha})
     assert resposta.status_code == 200, resposta.text
     return {"Authorization": f"Bearer {resposta.json()['access_token']}"}
-
-
-@pytest.fixture
-def cabecalho_admin(cliente, admin) -> dict:
-    return autenticar(cliente, admin.email, SENHA_ADMIN)
 
 
 @pytest.fixture

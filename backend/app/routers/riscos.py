@@ -158,8 +158,8 @@ def consultar_assistente(
     ]
     similares = classificador.encontrar_similares(dados.titulo, dados.descricao_impacto, existentes)
 
-    # Base histórica da organização: riscos de todos os projetos do mesmo admin.
-    projeto = sessao.get(Projeto, dados.id_projeto)
+    # Base histórica da organização: riscos de todos os projetos (o Argos é de
+    # uma organização só).
     historico = [
         dict(
             indice=r.indice,
@@ -171,7 +171,7 @@ def consultar_assistente(
         )
         for r, nome_projeto in sessao.query(Risco, Projeto.nome)
         .join(Projeto, Projeto.id == Risco.id_projeto)
-        .filter(Projeto.id_admin == projeto.id_admin, Risco.arquivado.is_(False))
+        .filter(Risco.arquivado.is_(False))
         .all()
     ]
     notas_sugeridas = predicao.sugerir_notas(dados.titulo, dados.descricao_impacto, historico)
@@ -275,24 +275,6 @@ def listar_riscos_do_projeto(
         sessao.query(Risco)
         .options(COM_REAVALIACOES)
         .filter(Risco.id_projeto == id_projeto, Risco.arquivado.is_(False))
-        .all()
-    )
-
-
-@roteador.get(
-    "/admin/todos",
-    response_model=List[RiscoResposta],
-    dependencies=[Depends(exigir_perfil(PerfilUsuario.ADMIN))],
-)
-def listar_todos_riscos_do_admin(
-    sessao: Session = Depends(obter_sessao), admin: Usuario = Depends(obter_usuario_atual)
-):
-    """Riscos de todos os projetos administrados pelo admin autenticado (visão cross-projeto)."""
-    return (
-        sessao.query(Risco)
-        .options(COM_REAVALIACOES)
-        .join(Projeto, Projeto.id == Risco.id_projeto)
-        .filter(Projeto.id_admin == admin.id, Risco.arquivado.is_(False))
         .all()
     )
 

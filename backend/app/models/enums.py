@@ -3,7 +3,9 @@ import enum
 
 
 class PerfilUsuario(str, enum.Enum):
-    ADMIN = "admin"
+    # O perfil "admin" foi removido: todo usuário é gerente de projetos. O tipo
+    # perfil_usuario do Postgres ainda guarda o valor antigo, sem uso (a API
+    # converte contas "admin" em "gerente" ao iniciar; ver app/main.py).
     GERENTE = "gerente"
 
 

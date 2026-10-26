@@ -1,4 +1,4 @@
-"""Model ORM da entidade Usuario (admin ou gerente)."""
+"""Model ORM da entidade Usuario (gerente de projetos)."""
 from sqlalchemy import Column, DateTime, Enum, Integer, String, func
 from sqlalchemy.orm import relationship
 
@@ -18,9 +18,7 @@ class Usuario(Base):
     )
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
 
-    projetos_administrados = relationship(
-        "Projeto", back_populates="administrador", foreign_keys="Projeto.id_admin"
-    )
+    projetos_criados = relationship("Projeto", back_populates="criador", foreign_keys="Projeto.id_criador")
     riscos_gerenciados = relationship(
         "Risco", back_populates="gerente", foreign_keys="Risco.id_gerente"
     )

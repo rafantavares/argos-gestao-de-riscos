@@ -1,7 +1,7 @@
 """Análise preditiva das notas iniciais de impacto e probabilidade.
 
 Aprende com o histórico da própria organização: os riscos já registrados nos
-projetos do mesmo administrador formam a base. Para o texto digitado, busca os
+projetos da organização formam a base. Para o texto digitado, busca os
 riscos mais parecidos (TF-IDF de n-gramas de caracteres + similaridade do
 cosseno, como na detecção de duplicados) e sugere as notas pela média
 ponderada pela similaridade (k vizinhos mais próximos). Cada sugestão cita os

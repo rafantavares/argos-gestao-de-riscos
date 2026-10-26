@@ -64,7 +64,7 @@ def obter_usuario_atual(
 
 
 def exigir_perfil(*perfis_permitidos: PerfilUsuario):
-    """Dependência que restringe uma rota a um ou mais perfis (admin/gerente)."""
+    """Dependência que restringe uma rota a um ou mais perfis (hoje só existe o gerente)."""
 
     def verificador(usuario: Usuario = Depends(obter_usuario_atual)) -> Usuario:
         if usuario.perfil not in perfis_permitidos:

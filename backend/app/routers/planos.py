@@ -1,4 +1,4 @@
-"""Router de planos de contingência: catálogo administrado pelo admin.
+"""Router de planos de contingência: catálogo mantido pelos gerentes.
 
 Um plano não é apagado (Recomendacao histórica referencia por FK) -- só
 desativado (`ativo=False`), o que o remove das opções que o ML pode
@@ -22,7 +22,7 @@ from app.schemas.plano_contingencia import (
 roteador = APIRouter(
     prefix="/planos",
     tags=["Planos de Contingência"],
-    dependencies=[Depends(exigir_perfil(PerfilUsuario.ADMIN))],
+    dependencies=[Depends(exigir_perfil(PerfilUsuario.GERENTE))],
 )
 
 

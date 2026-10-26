@@ -43,22 +43,17 @@ export function removerToken() {
 export const auth = {
   login: (email, senha) => api.post("/auth/login", { email, senha }).then((r) => r.data),
   me: () => api.get("/auth/me").then((r) => r.data),
-  cadastrarGerente: (dados) => api.post("/auth/gerentes", dados).then((r) => r.data),
-  listarGerentes: () => api.get("/auth/gerentes").then((r) => r.data),
+  // Cadastro aberto: cria a conta (gerente) e devolve o token, como o login.
+  cadastrar: (nome, email, senha) => api.post("/auth/cadastro", { nome, email, senha }).then((r) => r.data),
   trocarSenha: (senhaAtual, senhaNova) =>
     api.patch("/auth/me/senha", { senha_atual: senhaAtual, senha_nova: senhaNova }),
 };
 
 // --- projetos ---
 export const projetos = {
-  listar: () => api.get("/projetos").then((r) => r.data),
   meus: () => api.get("/projetos/meus").then((r) => r.data),
   criar: (dados) => api.post("/projetos", dados).then((r) => r.data),
   editar: (id, dados) => api.put(`/projetos/${id}`, dados).then((r) => r.data),
-  vincularGerente: (idProjeto, idGerente) =>
-    api.post(`/projetos/${idProjeto}/gerentes`, { id_gerente: idGerente }).then((r) => r.data),
-  listarGerentesVinculados: (idProjeto) =>
-    api.get(`/projetos/${idProjeto}/gerentes`).then((r) => r.data),
 };
 
 // --- riscos ---
@@ -87,7 +82,6 @@ export const riscos = {
   evolucaoAgregada: (idProjeto, semanas = 12) =>
     api.get("/riscos/painel/evolucao", { params: { id_projeto: idProjeto, semanas } }).then((r) => r.data),
   assistente: (dados) => api.post("/riscos/assistente", dados).then((r) => r.data),
-  listarTodosAdmin: () => api.get("/riscos/admin/todos").then((r) => r.data),
 };
 
 // --- chat do assistente de IA ---
@@ -111,8 +105,7 @@ export const recomendacoes = {
   listarMinhas: () => api.get("/recomendacoes").then((r) => r.data),
   listarPorRisco: (idRisco) => api.get(`/recomendacoes/risco/${idRisco}`).then((r) => r.data),
   responder: (id, aceita) => api.patch(`/recomendacoes/${id}`, { aceita }).then((r) => r.data),
-  listarTodasAdmin: () => api.get("/recomendacoes/admin/todas").then((r) => r.data),
-  metricasHistorico: () => api.get("/recomendacoes/admin/metricas-historico").then((r) => r.data),
+  metricasHistorico: () => api.get("/recomendacoes/metricas-historico").then((r) => r.data),
 };
 
 // --- módulo de ML ---
@@ -121,20 +114,7 @@ export const ml = {
   importanciaFeatures: () => api.get("/ml/feature-importance").then((r) => r.data),
 };
 
-// --- relatórios (admin) ---
-export const relatorio = {
-  riscos: (idProjeto, idGerente) =>
-    api
-      .get("/relatorio/riscos", {
-        params: {
-          ...(idProjeto ? { id_projeto: idProjeto } : {}),
-          ...(idGerente ? { id_gerente: idGerente } : {}),
-        },
-      })
-      .then((r) => r.data),
-};
-
-// --- planos de contingência (admin) ---
+// --- planos de contingência (catálogo que o modelo recomenda) ---
 export const planos = {
   listar: () => api.get("/planos").then((r) => r.data),
   criar: (dados) => api.post("/planos", dados).then((r) => r.data),

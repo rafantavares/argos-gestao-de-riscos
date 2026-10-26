@@ -16,7 +16,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import EstadoVazio from "./EstadoVazio";
 
 /**
- * Tabela padrão das telas administrativas:
+ * Tabela padrão das telas de cadastro:
  * - busca inline no topo (filtra pelo texto devolvido por `textoBusca(linha)`)
  * - linhas com hover destacado
  * - coluna de ações visível apenas no hover da linha (`acoes(linha)`)

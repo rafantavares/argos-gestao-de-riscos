@@ -3,6 +3,26 @@
 Documenta as 4 frentes de expansão funcional do sistema (além do MVP
 inicial), pensadas para aprofundar a avaliação técnica do TCC II (DSR).
 
+> **Fim do perfil admin (2026-10-26).** O Argos passou a ter um perfil só, o
+> gerente de projetos. O que era do admin foi removido ou herdado:
+> - **Contas:** cadastro aberto no login (`POST /auth/cadastro`); saíram
+>   `POST/GET /auth/gerentes`. Ao iniciar, a API converte contas `admin` em
+>   `gerente` (`app/core/migrar_fase12.py`, idempotente).
+> - **Projetos:** o gerente cria os seus e já fica vinculado; a coluna
+>   `projetos.id_admin` continua no banco, mas significa "quem criou"
+>   (`Projeto.id_criador` no código). Saíram a listagem geral e o vínculo de
+>   gerentes pelo admin.
+> - **Herdados pelo gerente:** catálogo de planos (`/planos`, página Planos de
+>   contingência) e o painel do modelo (`/ml/feature-importance`,
+>   `/recomendacoes/metricas-historico`, página Modelo de IA).
+> - **Removidos:** visão cross-projeto (`/riscos/admin/todos`,
+>   `/recomendacoes/admin/todas`) e o relatório CSV do admin (`/relatorio/riscos`);
+>   o gerente exporta CSV e PDF pela página Riscos.
+> - **Base histórica** do assistente e da previsão de notas: todos os projetos
+>   (uma organização só).
+>
+> As seções abaixo que citam o admin descrevem o sistema como era em cada fase.
+
 ## Fase 1 — Ciclo de vida do risco (status + histórico)
 
 Um risco deixou de ser estático: agora tem `status` (identificado → em

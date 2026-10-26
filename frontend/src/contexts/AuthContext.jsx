@@ -33,13 +33,22 @@ export function AuthProvider({ children }) {
     return dados;
   }
 
+  // Cadastro aberto: a API cria a conta e já devolve o token.
+  async function cadastrar(nome, email, senha) {
+    const { access_token: token } = await auth.cadastrar(nome, email, senha);
+    salvarToken(token);
+    const dados = await auth.me();
+    setUsuario(dados);
+    return dados;
+  }
+
   function sair() {
     removerToken();
     setUsuario(null);
   }
 
   return (
-    <AuthContext.Provider value={{ usuario, carregando, entrar, sair }}>
+    <AuthContext.Provider value={{ usuario, carregando, entrar, cadastrar, sair }}>
       {children}
     </AuthContext.Provider>
   );

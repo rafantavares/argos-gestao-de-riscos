@@ -55,14 +55,6 @@ def test_gerente_nao_cadastra_risco_em_projeto_nao_vinculado(
     assert resposta.status_code == 403
 
 
-def test_admin_nao_pode_cadastrar_risco(cliente, cabecalho_admin, projeto):
-    resposta = cliente.post(
-        "/riscos", headers=cabecalho_admin, json={**RISCO_VALIDO, "id_projeto": projeto.id}
-    )
-
-    assert resposta.status_code == 403
-
-
 def test_cadastro_sem_os_novos_atributos_de_ml_e_rejeitado(
     cliente, cabecalho_gerente, projeto_com_gerente
 ):
@@ -174,12 +166,3 @@ def test_comentario_e_opcional_na_mudanca_de_status(cliente, cabecalho_gerente, 
     assert historico[-1]["comentario"] is None
 
 
-def test_admin_ve_riscos_de_todos_os_seus_projetos(cliente, cabecalho_admin, risco):
-    resposta = cliente.get("/riscos/admin/todos", headers=cabecalho_admin)
-
-    assert resposta.status_code == 200
-    assert [r["id"] for r in resposta.json()] == [risco.id]
-
-
-def test_gerente_nao_acessa_visao_cross_projeto_do_admin(cliente, cabecalho_gerente):
-    assert cliente.get("/riscos/admin/todos", headers=cabecalho_gerente).status_code == 403

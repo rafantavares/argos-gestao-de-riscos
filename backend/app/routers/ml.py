@@ -1,8 +1,6 @@
 """Router do módulo de ML: métricas atuais e importância das features.
 
-/ml/metricas é aberto a qualquer usuário autenticado (a barra lateral mostra
-o algoritmo ativo e sua acurácia para admin e gerente); /ml/feature-importance
-é restrito ao admin (dashboard analítico)."""
+Usados pelo painel "Modelo de IA" do gerente e pela aba Sobre das configurações."""
 from fastapi import APIRouter, Depends
 
 from app.core.security import exigir_perfil, obter_usuario_atual
@@ -16,7 +14,7 @@ roteador = APIRouter(prefix="/ml", tags=["Machine Learning"])
 @roteador.get(
     "/feature-importance",
     response_model=ImportanciaFeaturesResposta,
-    dependencies=[Depends(exigir_perfil(PerfilUsuario.ADMIN))],
+    dependencies=[Depends(exigir_perfil(PerfilUsuario.GERENTE))],
 )
 def importancia_features():
     """Importância relativa de cada feature no Random Forest (soma 1.0),

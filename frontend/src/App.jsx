@@ -10,11 +10,8 @@ import Login from "./pages/Login";
 // Páginas baixadas sob demanda: o primeiro acesso só carrega o login.
 const Perfil = lazy(() => import("./pages/Perfil"));
 const Configuracoes = lazy(() => import("./pages/Configuracoes"));
-const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
-const Gerentes = lazy(() => import("./pages/admin/Gerentes"));
-const PlanosContingencia = lazy(() => import("./pages/admin/PlanosContingencia"));
-const ProjetosAdmin = lazy(() => import("./pages/admin/Projetos"));
-const RiscosAdmin = lazy(() => import("./pages/admin/Riscos"));
+const PlanosContingencia = lazy(() => import("./pages/gerente/PlanosContingencia"));
+const ModeloIA = lazy(() => import("./pages/gerente/ModeloIA"));
 const GerenteDashboard = lazy(() => import("./pages/gerente/Dashboard"));
 const ProjetosGerente = lazy(() => import("./pages/gerente/Projetos"));
 const Assistente = lazy(() => import("./pages/gerente/Assistente"));
@@ -23,9 +20,9 @@ const FichaRiscoPdf = lazy(() => import("./pages/gerente/FichaRiscoPdf"));
 const Recomendacao = lazy(() => import("./pages/gerente/Recomendacao"));
 const Riscos = lazy(() => import("./pages/gerente/Riscos"));
 
-function PaginaProtegida({ perfil, children }) {
+function PaginaProtegida({ children }) {
   return (
-    <ProtectedRoute perfil={perfil}>
+    <ProtectedRoute>
       <AppLayout>
         {/* Troca de página sem esconder o menu enquanto a página baixa. */}
         <Suspense fallback={<LinearProgress sx={{ mt: 2 }} />}>{children}</Suspense>
@@ -38,7 +35,7 @@ function PaginaInicial() {
   const { usuario, carregando } = useAuth();
   if (carregando) return <TelaCarregando mensagem="Conectando ao servidor…" />;
   if (!usuario) return <Navigate to="/login" replace />;
-  return <Navigate to={usuario.perfil === "admin" ? "/admin" : "/gerente"} replace />;
+  return <Navigate to="/gerente" replace />;
 }
 
 export default function App() {
@@ -49,50 +46,9 @@ export default function App() {
         <Route path="/" element={<PaginaInicial />} />
 
         <Route
-          path="/admin"
-          element={
-            <PaginaProtegida perfil="admin">
-              <AdminDashboard />
-            </PaginaProtegida>
-          }
-        />
-        <Route
-          path="/admin/projetos"
-          element={
-            <PaginaProtegida perfil="admin">
-              <ProjetosAdmin />
-            </PaginaProtegida>
-          }
-        />
-        <Route
-          path="/admin/gerentes"
-          element={
-            <PaginaProtegida perfil="admin">
-              <Gerentes />
-            </PaginaProtegida>
-          }
-        />
-        <Route
-          path="/admin/riscos"
-          element={
-            <PaginaProtegida perfil="admin">
-              <RiscosAdmin />
-            </PaginaProtegida>
-          }
-        />
-        <Route
-          path="/admin/planos"
-          element={
-            <PaginaProtegida perfil="admin">
-              <PlanosContingencia />
-            </PaginaProtegida>
-          }
-        />
-
-        <Route
           path="/gerente"
           element={
-            <PaginaProtegida perfil="gerente">
+            <PaginaProtegida>
               <GerenteDashboard />
             </PaginaProtegida>
           }
@@ -100,7 +56,7 @@ export default function App() {
         <Route
           path="/gerente/projetos"
           element={
-            <PaginaProtegida perfil="gerente">
+            <PaginaProtegida>
               <ProjetosGerente />
             </PaginaProtegida>
           }
@@ -108,7 +64,7 @@ export default function App() {
         <Route
           path="/gerente/riscos"
           element={
-            <PaginaProtegida perfil="gerente">
+            <PaginaProtegida>
               <Riscos />
             </PaginaProtegida>
           }
@@ -116,7 +72,7 @@ export default function App() {
         <Route
           path="/gerente/riscos/:idRisco/recomendacao"
           element={
-            <PaginaProtegida perfil="gerente">
+            <PaginaProtegida>
               <Recomendacao />
             </PaginaProtegida>
           }
@@ -125,8 +81,26 @@ export default function App() {
         <Route
           path="/gerente/assistente"
           element={
-            <PaginaProtegida perfil="gerente">
+            <PaginaProtegida>
               <Assistente />
+            </PaginaProtegida>
+          }
+        />
+
+        <Route
+          path="/gerente/modelo"
+          element={
+            <PaginaProtegida>
+              <ModeloIA />
+            </PaginaProtegida>
+          }
+        />
+
+        <Route
+          path="/gerente/planos"
+          element={
+            <PaginaProtegida>
+              <PlanosContingencia />
             </PaginaProtegida>
           }
         />
@@ -134,7 +108,7 @@ export default function App() {
         <Route
           path="/gerente/riscos/:idRisco/ficha"
           element={
-            <ProtectedRoute perfil="gerente">
+            <ProtectedRoute>
               <FichaRiscoPdf />
             </ProtectedRoute>
           }
@@ -143,7 +117,7 @@ export default function App() {
         <Route
           path="/gerente/relatorio"
           element={
-            <ProtectedRoute perfil="gerente">
+            <ProtectedRoute>
               <Relatorio />
             </ProtectedRoute>
           }
@@ -169,6 +143,7 @@ export default function App() {
           }
         />
 
+        <Route path="/admin/*" element={<Navigate to="/gerente" replace />} />
         <Route path="/ajuda" element={<Navigate to="/configuracoes?aba=sobre" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -111,7 +111,7 @@ def test_plano_canonico_bate_com_o_catalogo_semeado():
 
 
 def test_nivel_do_plano_fora_do_catalogo_e_none():
-    """Planos cadastrados depois pelo admin (id > 12) não viram exemplo de treino."""
+    """Planos cadastrados depois pelos gerentes (id > 12) não viram exemplo de treino."""
     assert nivel_do_plano("tecnico", 99) is None
     assert nivel_do_plano("tecnico", 4) is None  # plano organizacional
 

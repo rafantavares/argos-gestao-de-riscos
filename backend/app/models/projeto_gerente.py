@@ -1,7 +1,7 @@
 """Model ORM da entidade de associação ProjetoGerente (vínculo N:N gerente <-> projeto).
 
-Um gerente só pode cadastrar riscos em projetos aos quais está vinculado pelo
-admin; um projeto pode ter mais de um gerente vinculado.
+Um gerente só pode cadastrar riscos em projetos aos quais está vinculado (quem
+cria o projeto já fica vinculado); um projeto pode ter mais de um gerente.
 """
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, func
 from sqlalchemy.orm import relationship

@@ -28,7 +28,10 @@ const DIFERENCIAIS = [
 ];
 
 export default function Login() {
-  const { usuario, carregando, entrar } = useAuth();
+  const { usuario, carregando, entrar, cadastrar } = useAuth();
+  // "entrar" ou "criar" (cadastro aberto: a conta nasce como gerente de projetos).
+  const [modo, setModo] = useState("entrar");
+  const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
@@ -46,6 +49,13 @@ export default function Login() {
     return <Navigate to="/" replace />;
   }
 
+  const criando = modo === "criar";
+
+  function trocarModo() {
+    setModo(criando ? "entrar" : "criar");
+    setErro("");
+  }
+
   async function aoEnviar(evento) {
     evento.preventDefault();
     setErro("");
@@ -53,16 +63,26 @@ export default function Login() {
     try {
       for (let tentativa = 1; tentativa <= TENTATIVAS_LOGIN; tentativa += 1) {
         try {
-          await entrar(email, senha);
+          if (criando) await cadastrar(nome, email, senha);
+          else await entrar(email, senha);
           return;
         } catch (e) {
           const codigo = e.response?.status;
+          const detalhe = e.response?.data?.detail;
           if (codigo === 401) {
-            setErro("Email ou senha incorretos.");
+            setErro("E-mail ou senha incorretos.");
+            return;
+          }
+          if (criando && codigo === 400 && typeof detalhe === "string") {
+            setErro(`${detalhe}. Entre com ela ou use outro e-mail.`);
             return;
           }
           if (codigo && codigo < 500) {
-            setErro("Não foi possível entrar. Confira o email e a senha.");
+            setErro(
+              criando
+                ? "Confira os campos: nome, um e-mail válido e senha com pelo menos 8 caracteres."
+                : "Não foi possível entrar. Confira o e-mail e a senha."
+            );
             return;
           }
           // Sem resposta ou erro 5xx: o servidor está acordando ou reiniciando.
@@ -169,11 +189,13 @@ export default function Login() {
         }}
       >
         <Box className="surgir surgir-atraso-1" sx={{ width: "100%", maxWidth: 380 }}>
-          <Typography variant="h5" fontWeight={700} sx={{ mb: 0.5 }}>
-            Bem-vindo de volta
+          <Typography variant="h5" component="h1" fontWeight={700} sx={{ mb: 0.5 }}>
+            {criando ? "Criar conta" : "Entrar no Argos"}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3.5 }}>
-            Entre com o email e a senha cadastrados pelo administrador.
+            {criando
+              ? "Cadastre-se como gerente de projetos para registrar e acompanhar os riscos dos seus projetos."
+              : "Use o e-mail e a senha da sua conta."}
           </Typography>
 
           <Box
@@ -183,14 +205,26 @@ export default function Login() {
           >
             {aguardando && <Alert severity="info">{aguardando}</Alert>}
             {erro && <Alert severity="error">{erro}</Alert>}
+            {criando && (
+              <TextField
+                label="Nome"
+                name="name"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                required
+                autoComplete="name"
+                inputProps={{ minLength: 2, maxLength: 120 }}
+              />
+            )}
             <TextField
-              label="Email"
+              label="E-mail"
+              name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              autoFocus
               autoComplete="email"
+              inputProps={{ spellCheck: false, autoCapitalize: "none" }}
             />
             <TextField
               label="Senha"
@@ -198,7 +232,10 @@ export default function Login() {
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
               required
-              autoComplete="current-password"
+              name="password"
+              autoComplete={criando ? "new-password" : "current-password"}
+              helperText={criando ? "Pelo menos 8 caracteres" : undefined}
+              inputProps={criando ? { minLength: 8, maxLength: 100 } : undefined}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -221,9 +258,16 @@ export default function Login() {
               disabled={enviando}
               sx={{ py: 1.4, fontWeight: 700, mt: 0.5 }}
             >
-              {enviando ? "Entrando…" : "Entrar"}
+              {enviando ? (criando ? "Criando conta…" : "Entrando…") : criando ? "Criar conta" : "Entrar"}
             </Button>
           </Box>
+
+          <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 2.5 }}>
+            {criando ? "Já tem conta?" : "Ainda não tem conta?"}{" "}
+            <Button variant="text" size="small" onClick={trocarModo} disabled={enviando} sx={{ verticalAlign: "baseline" }}>
+              {criando ? "Entrar" : "Criar conta"}
+            </Button>
+          </Typography>
 
           <Box sx={{ display: "flex", justifyContent: "center", mt: 3.5 }}>
             <Chip
