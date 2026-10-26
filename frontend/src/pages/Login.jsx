@@ -4,31 +4,38 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
+  Tooltip,
   IconButton,
   InputAdornment,
   TextField,
   Typography,
 } from "@mui/material";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import GridViewOutlinedIcon from "@mui/icons-material/GridViewOutlined";
+import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
+import UpdateIcon from "@mui/icons-material/Update";
+import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
+import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { useAuth } from "../contexts/AuthContext";
 import { Logo } from "../components/Logo";
-import IlustracaoRede from "../components/IlustracaoRede";
+import MatrizVitrine from "../components/MatrizVitrine";
+import { usePreferencias } from "../contexts/PreferenciasContext";
 import { VERSAO_SISTEMA } from "../constants";
 import { api } from "../services/api";
 
 const TENTATIVAS_LOGIN = 10; // ~1 min no total, o tempo de o servidor acordar
 
+// O que o Argos faz, cada item ligado a uma função real do sistema.
 const DIFERENCIAIS = [
-  "Recomendação de planos de contingência por aprendizado de máquina",
-  "Matriz de risco PMBOK com ciclo de vida completo",
-  "Modelo que aprende com o feedback dos gerentes",
+  { icone: GridViewOutlinedIcon, titulo: "Matriz de risco", texto: "Probabilidade × impacto no padrão PMBOK, com a exposição de cada projeto." },
+  { icone: AutoAwesomeOutlinedIcon, titulo: "Plano recomendado por IA", texto: "Um modelo treinado indica o plano de contingência e aprende com as suas decisões.", ia: true },
+  { icone: UpdateIcon, titulo: "Monitoramento contínuo", texto: "Reavaliações e histórico de cada risco, como pede o MR-MPS-SW:2023." },
 ];
 
 export default function Login() {
   const { usuario, carregando, entrar, cadastrar } = useAuth();
+  const { escuro, alternarModo } = usePreferencias();
   // "entrar" ou "criar" (cadastro aberto: a conta nasce como gerente de projetos).
   const [modo, setModo] = useState("entrar");
   const [nome, setNome] = useState("");
@@ -109,87 +116,116 @@ export default function Login() {
         bgcolor: "background.default",
       }}
     >
-      {/* Coluna esquerda: hero visual */}
+      {/* Coluna esquerda: o produto (matriz de risco) e o que ele faz */}
       <Box
+        component="section"
+        aria-label="Sobre o Argos"
         sx={{
-          flexBasis: { md: "60%" },
+          flexBasis: { md: "58%" },
           flexGrow: 1,
-          position: "relative",
-          overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          justifyContent: "space-between",
-          p: { xs: 3, md: 6 },
-          minHeight: { xs: 320, md: "100vh" },
-          background:
-            "radial-gradient(1200px 600px at 20% 10%, color-mix(in srgb, var(--argos-marca) 10%, transparent), transparent 60%), radial-gradient(900px 500px at 90% 90%, color-mix(in srgb, var(--argos-ia) 10%, transparent), transparent 60%), var(--argos-fundo)",
-          borderRight: { md: "1px solid var(--argos-borda)" },
+          gap: { xs: 3, md: 4 },
+          p: { xs: 3, sm: 4, md: 6 },
+          minHeight: { md: "100vh" },
+          bgcolor: "var(--argos-fundo)",
+          borderRight: { md: "1px solid var(--argos-borda-suave)" },
         }}
       >
-        <Box className="surgir">
-          <Logo size={44} fontSize={26} />
-        </Box>
+        <Logo size={40} fontSize={24} />
 
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", lg: "row" },
-            alignItems: "center",
-            gap: { xs: 3, lg: 5 },
-            my: { xs: 3, md: 0 },
-          }}
-        >
-          <Box className="surgir surgir-atraso-1" sx={{ flex: 1, maxWidth: 460 }}>
+        <Box sx={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: { xs: 3, md: 4.5 } }}>
+          <Box sx={{ maxWidth: 620 }}>
             <Typography
-              variant="h3"
-              fontWeight={700}
-              sx={{ lineHeight: 1.15, mb: 2, fontSize: { xs: 30, md: 40 } }}
+              component="p"
+              sx={{
+                fontFamily: '"Space Grotesk", sans-serif',
+                fontWeight: 600,
+                fontSize: { xs: 30, md: 38, xl: 44 },
+                lineHeight: 1.1,
+                letterSpacing: "-0.02em",
+                textWrap: "balance",
+                mb: 1.75,
+              }}
             >
-              Inteligência preditiva para gestão de riscos em projetos de TI
+              Saiba onde está o risco do seu projeto antes que ele vire problema.
             </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-              Cadastre riscos, visualize a exposição do projeto e receba o plano de
-              contingência mais adequado, recomendado por um modelo treinado nas práticas do
-              PMBOK.
+            <Typography color="text.secondary" sx={{ maxWidth: 520 }}>
+              Registre os riscos, acompanhe a exposição de cada projeto e receba o plano de contingência mais adequado.
             </Typography>
-            <Box component="ul" sx={{ m: 0, pl: 0, listStyle: "none", display: "grid", gap: 1.2 }}>
-              {DIFERENCIAIS.map((texto) => (
-                <Box component="li" key={texto} sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "primary.main", flexShrink: 0 }} />
-                  <Typography variant="body2" color="text.secondary">
-                    {texto}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
           </Box>
 
           <Box
-            className="surgir surgir-atraso-2"
-            sx={{ flex: 1, display: { xs: "none", sm: "block" }, width: "100%", maxWidth: 520 }}
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 1fr) minmax(0, 420px)" },
+              alignItems: "center",
+              gap: { xs: 4, lg: 5 },
+            }}
           >
-            <IlustracaoRede />
+            <Box component="ul" sx={{ m: 0, p: 0, listStyle: "none", display: "grid", gap: 2.25, maxWidth: 420 }}>
+              {DIFERENCIAIS.map(({ icone: Icone, titulo, texto, ia }) => (
+                <Box component="li" key={titulo} sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
+                  <Box
+                    sx={{
+                      width: 34,
+                      height: 34,
+                      flexShrink: 0,
+                      borderRadius: 2,
+                      display: "grid",
+                      placeItems: "center",
+                      color: ia ? "secondary.main" : "primary.main",
+                      bgcolor: ia ? "color-mix(in srgb, var(--argos-ia) 12%, transparent)" : "color-mix(in srgb, var(--argos-marca) 12%, transparent)",
+                    }}
+                  >
+                    <Icone sx={{ fontSize: 18 }} />
+                  </Box>
+                  <Box>
+                    <Typography variant="body2" fontWeight={600}>
+                      {titulo}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {texto}
+                    </Typography>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+
+            <Box sx={{ display: { xs: "none", sm: "flex" }, justifyContent: "center" }}>
+              <MatrizVitrine />
+            </Box>
           </Box>
         </Box>
 
-        <Typography variant="caption" color="text.secondary" className="surgir surgir-atraso-3">
-          Trabalho de Conclusão de Curso · versão {VERSAO_SISTEMA}
+        <Typography variant="caption" color="text.secondary">
+          Trabalho de Conclusão de Curso · Engenharia de Software · versão {VERSAO_SISTEMA}
         </Typography>
       </Box>
 
       {/* Coluna direita: formulário */}
       <Box
         sx={{
-          flexBasis: { md: "40%" },
+          flexBasis: { md: "42%" },
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          position: "relative",
           p: { xs: 3, md: 6 },
           bgcolor: "background.paper",
         }}
       >
-        <Box className="surgir surgir-atraso-1" sx={{ width: "100%", maxWidth: 380 }}>
-          <Typography variant="h5" component="h1" fontWeight={700} sx={{ mb: 0.5 }}>
+        <Tooltip title={escuro ? "Usar modo claro" : "Usar modo escuro"}>
+          <IconButton
+            onClick={alternarModo}
+            aria-label={escuro ? "Usar modo claro" : "Usar modo escuro"}
+            sx={{ position: "absolute", top: 16, right: 16, border: 1, borderColor: "divider" }}
+          >
+            {escuro ? <LightModeOutlinedIcon fontSize="small" /> : <DarkModeOutlinedIcon fontSize="small" />}
+          </IconButton>
+        </Tooltip>
+        <Box sx={{ width: "100%", maxWidth: 380 }}>
+          <Typography variant="h5" component="h1" fontWeight={600} sx={{ mb: 0.5 }}>
             {criando ? "Criar conta" : "Entrar no Argos"}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3.5 }}>
@@ -256,7 +292,7 @@ export default function Login() {
               variant="contained"
               size="large"
               disabled={enviando}
-              sx={{ py: 1.4, fontWeight: 700, mt: 0.5 }}
+              sx={{ py: 1.4, fontWeight: 600, mt: 0.5 }}
             >
               {enviando ? (criando ? "Criando conta…" : "Entrando…") : criando ? "Criar conta" : "Entrar"}
             </Button>
@@ -269,15 +305,6 @@ export default function Login() {
             </Button>
           </Typography>
 
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 3.5 }}>
-            <Chip
-              icon={<LockOutlinedIcon sx={{ fontSize: 14 }} />}
-              label="Acesso seguro via JWT"
-              size="small"
-              variant="outlined"
-              sx={{ color: "text.secondary", borderColor: "divider", "& .MuiChip-icon": { color: "primary.main" } }}
-            />
-          </Box>
         </Box>
       </Box>
     </Box>
