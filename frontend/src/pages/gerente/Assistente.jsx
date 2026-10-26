@@ -98,7 +98,8 @@ function Mensagem({ mensagem, acao }) {
       >
         <AutoAwesomeIcon sx={{ fontSize: 18 }} />
       </Box>
-      <Box sx={{ minWidth: 0, flex: 1, wordBreak: "break-word", pt: 0.5 }}>
+      {/* Linhas de até ~75 caracteres: respostas longas ficam mais fáceis de ler. */}
+      <Box sx={{ minWidth: 0, flex: 1, maxWidth: "75ch", wordBreak: "break-word", pt: 0.5 }}>
         <TextoFormatado texto={mensagem.texto} />
         {acao}
       </Box>
@@ -268,12 +269,9 @@ export default function Assistente() {
   }
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", height: { md: "calc(100vh - 112px)" }, minHeight: 480 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", height: { md: "calc(100vh - 120px)" }, minHeight: 480 }}>
       <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, mb: 2, flexWrap: "wrap" }}>
-        <Box sx={{ flexGrow: 1, minWidth: 240 }}>
-          <Typography variant="h5" fontWeight={600}>
-            Assistente IA
-          </Typography>
+        <Box sx={{ flexGrow: 1, minWidth: 240, alignSelf: "center" }}>
           <Typography variant="body2" color="text.secondary">
             Descreva um problema do projeto e receba sugestões de como registrar e tratar o risco.
           </Typography>
@@ -308,7 +306,7 @@ export default function Assistente() {
           }}
         >
           <Box sx={{ p: 1.5 }}>
-            <Button fullWidth variant="outlined" startIcon={<AddIcon />} onClick={novaConversa} disabled={enviando}>
+            <Button fullWidth variant="outlined" color="secondary" startIcon={<AddIcon />} onClick={novaConversa} disabled={enviando}>
               Nova conversa
             </Button>
           </Box>
@@ -325,6 +323,10 @@ export default function Assistente() {
                   <Box
                     key={c.id}
                     onClick={() => abrirConversa(c.id)}
+                    onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && abrirConversa(c.id)}
+                    role="button"
+                    tabIndex={0}
+                    aria-current={ativa ? "true" : undefined}
                     sx={{
                       display: "flex",
                       alignItems: "center",
@@ -334,9 +336,9 @@ export default function Assistente() {
                       mb: 0.5,
                       borderRadius: 1.5,
                       cursor: "pointer",
-                      bgcolor: ativa ? "color-mix(in srgb, var(--argos-marca) 12%, transparent)" : "transparent",
-                      "&:hover": { bgcolor: ativa ? "color-mix(in srgb, var(--argos-marca) 16%, transparent)" : "var(--argos-sobreposicao)" },
-                      "&:hover .acoes": { opacity: 1 },
+                      bgcolor: ativa ? "color-mix(in srgb, var(--argos-ia) 12%, transparent)" : "transparent",
+                      "&:hover": { bgcolor: ativa ? "color-mix(in srgb, var(--argos-ia) 16%, transparent)" : "var(--argos-sobreposicao)" },
+                      "&:hover .acoes, &:focus-within .acoes": { opacity: 1 },
                     }}
                   >
                     <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -475,7 +477,7 @@ export default function Assistente() {
                             disabled={gerandoRascunho || enviando}
                             sx={{ mt: 1.5 }}
                           >
-                            {gerandoRascunho ? "Montando o rascunho..." : "Preencher novo risco com esta sugestão"}
+                            {gerandoRascunho ? "Montando o rascunho…" : "Preencher novo risco com esta sugestão"}
                           </Button>
                         )
                       }
@@ -505,7 +507,7 @@ export default function Assistente() {
                   fullWidth
                   multiline
                   maxRows={6}
-                  placeholder={idProjeto ? "Descreva o problema ou faça uma pergunta..." : "Selecione um projeto"}
+                  placeholder={idProjeto ? "Descreva o problema ou faça uma pergunta…" : "Selecione um projeto"}
                   value={texto}
                   onChange={(e) => setTexto(e.target.value)}
                   onKeyDown={aoTeclar}

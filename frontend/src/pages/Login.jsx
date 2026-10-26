@@ -221,7 +221,7 @@ export default function Login() {
               disabled={enviando}
               sx={{ py: 1.4, fontWeight: 700, mt: 0.5 }}
             >
-              {enviando ? "Entrando..." : "Entrar"}
+              {enviando ? "Entrando…" : "Entrar"}
             </Button>
           </Box>
 

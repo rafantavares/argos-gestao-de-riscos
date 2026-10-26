@@ -54,7 +54,7 @@ export default function FormularioSenha() {
       />
       <Box>
         <Button type="submit" variant="contained" disabled={!valido || salvando}>
-          {salvando ? "Salvando..." : "Alterar senha"}
+          {salvando ? "Salvando…" : "Alterar senha"}
         </Button>
       </Box>
     </Stack>

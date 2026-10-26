@@ -255,7 +255,7 @@ export default function Dashboard() {
                 disabled={exportando || riscos.length === 0}
                 onClick={exportarRelatorio}
               >
-                {exportando ? "Gerando..." : "Exportar CSV"}
+                {exportando ? "Gerando…" : "Exportar CSV"}
               </Button>
             </span>
           </Tooltip>

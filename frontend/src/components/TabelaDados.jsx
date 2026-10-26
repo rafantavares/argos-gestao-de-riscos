@@ -29,7 +29,7 @@ export default function TabelaDados({
   linhas,
   chaveLinha = (linha) => linha.id,
   textoBusca,
-  placeholderBusca = "Buscar...",
+  placeholderBusca = "Buscar…",
   acoes,
   carregando = false,
   vazio = {},

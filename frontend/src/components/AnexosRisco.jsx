@@ -100,7 +100,7 @@ export default function AnexosRisco({ idRisco }) {
           disabled={enviando}
           onClick={() => entradaRef.current?.click()}
         >
-          {enviando ? "Enviando..." : "Anexar arquivo"}
+          {enviando ? "Enviando…" : "Anexar arquivo"}
         </Button>
       </Box>
       {anexos.length === 0 ? (
