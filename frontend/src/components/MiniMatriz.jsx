@@ -17,9 +17,11 @@ export default function MiniMatriz({ probabilidade, impacto, tamanho = 7, folga 
             height: tamanho,
             borderRadius: tamanho > 10 ? 0.75 : 0.25,
             bgcolor: cor,
-            opacity: atual ? 1 : 0.18,
-            outline: atual ? "2px solid var(--argos-texto)" : "none",
-            outlineOffset: 0,
+            opacity: atual ? 1 : 0.28,
+            // Anel em volta da posição do risco (vão na cor do cartão + contorno).
+            boxShadow: atual ? "0 0 0 1.5px var(--argos-cartao), 0 0 0 3px var(--argos-texto)" : "none",
+            position: atual ? "relative" : "static",
+            zIndex: atual ? 1 : "auto",
           }}
         />
       );
@@ -28,6 +30,8 @@ export default function MiniMatriz({ probabilidade, impacto, tamanho = 7, folga 
   return (
     <Tooltip title={`Probabilidade ${probabilidade} × impacto ${impacto} = exposição ${probabilidade * impacto}`}>
       <Box
+        role="img"
+        aria-label={`Posição na matriz: probabilidade ${probabilidade}, impacto ${impacto}`}
         sx={{
           display: "grid",
           gridTemplateColumns: `repeat(5, ${tamanho}px)`,

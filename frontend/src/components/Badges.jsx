@@ -1,8 +1,9 @@
-import { Box, Chip } from "@mui/material";
+import { Box, Chip, Tooltip } from "@mui/material";
 import CodeIcon from "@mui/icons-material/Code";
 import CorporateFareIcon from "@mui/icons-material/CorporateFare";
 import PublicIcon from "@mui/icons-material/Public";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import UpdateIcon from "@mui/icons-material/Update";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import CropFreeIcon from "@mui/icons-material/CropFree";
 import DnsOutlinedIcon from "@mui/icons-material/DnsOutlined";
@@ -155,4 +156,20 @@ const ACEITE = {
 export function ChipAceite({ aceita, size = "small" }) {
   const { label, cor } = ACEITE[aceita === true ? "true" : aceita === false ? "false" : "null"];
   return <Chip size={size} variant="outlined" icon={<Marcador cor={cor} forma="circulo" tamanho={8} />} label={label} sx={estiloMarcado} />;
+}
+
+// Aviso de reavaliação pendente (monitoramento contínuo, GPR 17): o mesmo
+// formato no quadro, nos cartões e na tabela.
+export function ChipReavaliar({ size = "small" }) {
+  return (
+    <Tooltip title="Sem reavaliação há 30 dias ou mais (monitoramento contínuo, GPR 17)">
+      <Chip
+        size={size}
+        variant="outlined"
+        icon={<UpdateIcon sx={{ fontSize: 15 }} />}
+        label="Reavaliar"
+        sx={{ ...estiloMarcado, "& .MuiChip-icon": { color: "var(--argos-atencao)", ml: "6px", mr: "-2px" } }}
+      />
+    </Tooltip>
+  );
 }

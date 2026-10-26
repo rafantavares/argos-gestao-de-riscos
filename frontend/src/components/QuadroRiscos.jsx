@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Box, Paper, Typography } from "@mui/material";
-import { CORES_STATUS, STATUS_RISCO, faixaExposicao, precisaReavaliar } from "../constants";
-import { ChipSeveridade } from "./Badges";
+import { CORES_STATUS, STATUS_RISCO, precisaReavaliar } from "../constants";
+import { ChipReavaliar, ChipSeveridade, Marcador } from "./Badges";
 import MiniMatriz from "./MiniMatriz";
 
 // Quadro Kanban do ciclo de vida do risco (MR-MPS-SW:2023, GPR 17): arrastar um
@@ -54,9 +54,9 @@ export default function QuadroRiscos({ riscos, projetoPorId, aoAbrir, aoMudarSta
               transition: "background-color 0.15s, border-color 0.15s",
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 0.5, pb: 1, mb: 1, borderBottom: `2px solid ${cor}` }}>
-              <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: cor }} />
-              <Typography variant="body2" fontWeight={700} sx={{ flexGrow: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 0.5, pb: 1, mb: 1, borderBottom: 1, borderColor: "divider" }}>
+              <Marcador cor={cor} forma="circulo" tamanho={8} />
+              <Typography component="h3" variant="body2" fontWeight={600} sx={{ flexGrow: 1 }}>
                 {coluna.label}
               </Typography>
               <Typography variant="caption" color="text.secondary" fontWeight={600}>
@@ -65,7 +65,6 @@ export default function QuadroRiscos({ riscos, projetoPorId, aoAbrir, aoMudarSta
             </Box>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
               {lista.map((risco) => {
-                const faixa = faixaExposicao(risco.exposicao);
                 const travado = risco.status === "encerrado";
                 return (
                   <Paper
@@ -80,17 +79,21 @@ export default function QuadroRiscos({ riscos, projetoPorId, aoAbrir, aoMudarSta
                       setColunaAlvo(null);
                     }}
                     onClick={() => aoAbrir(risco)}
+                    onKeyDown={(e) => e.key === "Enter" && aoAbrir(risco)}
+                    tabIndex={0}
+                    role="link"
+                    aria-label={`Abrir ${risco.indice} ${risco.titulo}`}
                     sx={{
                       p: 1.25,
                       cursor: travado ? "pointer" : "grab",
-                      borderLeft: `4px solid ${faixa.cor}`,
                       opacity: arrastando?.id === risco.id ? 0.4 : 1,
-                      "&:hover": { borderColor: "primary.main" },
+                      transition: "border-color 150ms ease",
+                      "&:hover": { borderColor: "var(--argos-borda-forte)" },
                     }}
                   >
                     <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
                       <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                        <Typography variant="caption" sx={{ color: "primary.main", fontWeight: 700 }}>
+                        <Typography variant="caption" sx={{ color: "primary.main", fontWeight: 600 }}>
                           {risco.indice}
                         </Typography>
                         <Typography variant="body2" fontWeight={600} sx={{ lineHeight: 1.3, wordBreak: "break-word" }}>
@@ -104,11 +107,7 @@ export default function QuadroRiscos({ riscos, projetoPorId, aoAbrir, aoMudarSta
                     </Box>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mt: 1, flexWrap: "wrap" }}>
                       <ChipSeveridade probabilidade={risco.probabilidade} impacto={risco.impacto} />
-                      {precisaReavaliar(risco) && (
-                        <Typography variant="caption" sx={{ color: "var(--argos-atencao)", fontWeight: 700 }}>
-                          Reavaliar
-                        </Typography>
-                      )}
+                      {precisaReavaliar(risco) && <ChipReavaliar />}
                     </Box>
                   </Paper>
                 );

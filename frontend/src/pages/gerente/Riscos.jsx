@@ -40,7 +40,6 @@ import { useAviso, useConfirmacao } from "../../contexts/FeedbackContext";
 import ViewKanbanOutlinedIcon from "@mui/icons-material/ViewKanbanOutlined";
 import MiniMatriz from "../../components/MiniMatriz";
 import QuadroRiscos from "../../components/QuadroRiscos";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import {
   projetos as servicoProjetos,
@@ -62,7 +61,7 @@ import {
   precisaReavaliar,
   rotulo,
 } from "../../constants";
-import { ChipAceite, ChipArea, ChipSeveridade, ChipStatus, ChipUrgencia } from "../../components/Badges";
+import { ChipAceite, ChipArea, ChipReavaliar, ChipSeveridade, ChipStatus, ChipUrgencia, Marcador } from "../../components/Badges";
 import EstadoVazio from "../../components/EstadoVazio";
 import { exportarCsv } from "../../utils/exportarCsv";
 
@@ -237,11 +236,10 @@ function BarraFiltros({ filtros, alterar, limpar, projetos, total, visiveis }) {
             <MenuItem value="">Todas</MenuItem>
             {FAIXAS_EXPOSICAO.map((f) => (
               <MenuItem key={f.label} value={f.label}>
-                <Box
-                  component="span"
-                  sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: f.cor, mr: 1, display: "inline-block" }}
-                />
-                {f.label}
+                <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 1 }}>
+                  <Marcador cor={f.cor} />
+                  {f.label}
+                </Box>
               </MenuItem>
             ))}
           </TextField>
@@ -433,10 +431,7 @@ export default function Riscos() {
       <Box
         sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2, mb: 3 }}
       >
-        <Box>
-          <Typography variant="h5" fontWeight={600}>
-            Riscos
-          </Typography>
+        <Box sx={{ mr: "auto" }}>
           <Typography variant="body2" color="text.secondary">
             Clique em um risco para ver a recomendação do modelo, o registro e a evolução da exposição.
           </Typography>
@@ -630,9 +625,9 @@ function TabelaRiscos({ riscos, projetoPorId, recomendacaoPorRisco, aoAbrir }) {
                     {risco.titulo}
                   </Typography>
                   {precisaReavaliar(risco) && (
-                    <Typography variant="caption" sx={{ color: "var(--argos-atencao)", fontWeight: 600 }}>
-                      Reavaliar
-                    </Typography>
+                    <Box sx={{ mt: 0.5 }}>
+                      <ChipReavaliar />
+                    </Box>
                   )}
                 </TableCell>
                 <TableCell sx={{ whiteSpace: "nowrap" }}>{projetoPorId.get(risco.id_projeto)?.nome ?? "—"}</TableCell>
@@ -660,22 +655,24 @@ function TabelaRiscos({ riscos, projetoPorId, recomendacaoPorRisco, aoAbrir }) {
 }
 
 function CartaoRisco({ risco, projeto, recomendacao, aoAbrir }) {
-  const faixa = faixaExposicao(risco.exposicao);
   const fase = FASES_PROJETO.find((f) => f.value === risco.fase_projeto);
 
   return (
     <Paper
       onClick={aoAbrir}
+      onKeyDown={(e) => e.key === "Enter" && aoAbrir()}
+      tabIndex={0}
+      role="link"
+      aria-label={`Abrir ${risco.indice} ${risco.titulo}`}
       sx={{
-        p: 2,
+        p: 2.25,
         height: "100%",
         cursor: "pointer",
-        borderLeft: `5px solid ${faixa.cor}`,
-        transition: "transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease",
-        "&:hover": { transform: "translateY(-2px)", boxShadow: 4, borderColor: "primary.main" },
+        transition: "border-color 150ms ease",
+        "&:hover": { borderColor: "var(--argos-borda-forte)" },
         display: "flex",
         flexDirection: "column",
-        gap: 1.2,
+        gap: 1.5,
       }}
     >
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 1 }}>
@@ -686,28 +683,19 @@ function CartaoRisco({ risco, projeto, recomendacao, aoAbrir }) {
             </Box>
             {risco.titulo}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
             {projeto?.nome ?? "—"} · {new Date(risco.criado_em).toLocaleDateString("pt-BR")}
           </Typography>
         </Box>
-        <Stack spacing={0.75} alignItems="flex-end">
-          <ChipStatus status={risco.status} />
-          <MiniMatriz probabilidade={risco.probabilidade} impacto={risco.impacto} />
-          {precisaReavaliar(risco) && (
-            <Tooltip title="Sem reavaliação há 30 dias ou mais (monitoramento contínuo, GPR 17)">
-              <Chip
-                size="small"
-                label="Reavaliar"
-                sx={{ bgcolor: "color-mix(in srgb, var(--argos-atencao) 15%, transparent)", color: "var(--argos-atencao)", fontWeight: 600 }}
-              />
-            </Tooltip>
-          )}
-        </Stack>
+        <MiniMatriz probabilidade={risco.probabilidade} impacto={risco.impacto} />
       </Box>
 
+      {/* Gravidade e situação primeiro; depois os atributos do registro. */}
       <Stack direction="row" spacing={0.8} useFlexGap flexWrap="wrap">
-        <ChipArea area={risco.area_afetada} />
         <ChipSeveridade probabilidade={risco.probabilidade} impacto={risco.impacto} />
+        <ChipStatus status={risco.status} />
+        {precisaReavaliar(risco) && <ChipReavaliar />}
+        <ChipArea area={risco.area_afetada} />
         <ChipUrgencia urgencia={risco.urgencia} />
         {fase && (
           <Tooltip title={`Risco identificado na fase de ${fase.label.toLowerCase()} do projeto`}>
@@ -726,10 +714,10 @@ function CartaoRisco({ risco, projeto, recomendacao, aoAbrir }) {
 
       {recomendacao ? (
         <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
-          <ShieldOutlinedIcon sx={{ fontSize: 18, color: "secondary.main", mt: 0.2 }} />
+          <AutoAwesomeIcon sx={{ fontSize: 18, color: "secondary.main", mt: 0.2 }} />
           <Box sx={{ minWidth: 0, flexGrow: 1 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.3 }}>
-              <Typography variant="caption" fontWeight={700} sx={{ color: "secondary.main" }}>
+              <Typography variant="caption" fontWeight={600} sx={{ color: "secondary.main" }}>
                 Plano recomendado
               </Typography>
               <ChipAceite aceita={recomendacao.aceita} />
@@ -745,7 +733,7 @@ function CartaoRisco({ risco, projeto, recomendacao, aoAbrir }) {
         </Box>
       ) : (
         <Typography variant="caption" color="text.secondary" sx={{ fontStyle: "italic" }}>
-          Nenhuma recomendação gerada ainda — abra o risco para gerar.
+          Nenhuma recomendação gerada ainda. Abra o risco para gerar.
         </Typography>
       )}
     </Paper>
@@ -755,7 +743,7 @@ function CartaoRisco({ risco, projeto, recomendacao, aoAbrir }) {
 function SecaoFormulario({ titulo, descricao, children }) {
   return (
     <Box>
-      <Typography variant="overline" sx={{ color: "primary.main", fontWeight: 700, letterSpacing: 1 }}>
+      <Typography component="h3" variant="subtitle1">
         {titulo}
       </Typography>
       {descricao && (
@@ -832,8 +820,8 @@ function PainelAssistente({ analise, carregando, notasAtuais, aoUsarArea, aoApli
     >
       <Box sx={{ display: "flex", alignItems: "center", gap: 0.8, mb: 1 }}>
         <AutoAwesomeIcon sx={{ fontSize: 18, color: "secondary.main" }} />
-        <Typography variant="caption" fontWeight={700} sx={{ color: "secondary.main", letterSpacing: 0.5 }}>
-          ASSISTENTE DE IA
+        <Typography variant="caption" fontWeight={600} sx={{ color: "secondary.main" }}>
+          Assistente de IA
         </Typography>
         {carregando && <CircularProgress size={12} />}
       </Box>
@@ -1053,7 +1041,7 @@ function DialogoNovoRisco({ aberto, projetos, projetoInicial, rascunho, aoFechar
                 onChange={(e) => setTitulo(e.target.value)}
                 required
                 autoFocus
-                placeholder="Ex.: Indisponibilidade do fornecedor de nuvem"
+                placeholder="Ex.: Indisponibilidade do fornecedor de nuvem…"
               />
             </Grid>
             <Grid item xs={12}>
@@ -1109,12 +1097,7 @@ function DialogoNovoRisco({ aberto, projetos, projetoInicial, rascunho, aoFechar
                   Exposição (impacto × probabilidade):
                 </Typography>
                 {exposicao ? (
-                  <>
-                    <Typography variant="h6" sx={{ lineHeight: 1 }}>
-                      {exposicao}
-                    </Typography>
-                    <ChipSeveridade probabilidade={probabilidade} impacto={impacto} />
-                  </>
+                  <ChipSeveridade probabilidade={probabilidade} impacto={impacto} />
                 ) : (
                   <Typography variant="caption" color="text.secondary">
                     preencha impacto e probabilidade
@@ -1142,7 +1125,7 @@ function DialogoNovoRisco({ aberto, projetos, projetoInicial, rascunho, aoFechar
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <TimelineIcon fontSize="small" sx={{ color: "primary.main" }} />
+                      <TimelineIcon fontSize="small" sx={{ color: "text.secondary" }} />
                     </InputAdornment>
                   ),
                 }}
@@ -1159,7 +1142,7 @@ function DialogoNovoRisco({ aberto, projetos, projetoInicial, rascunho, aoFechar
           <Box>
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 1 }}>
               <Box>
-                <Typography variant="overline" sx={{ color: "primary.main", fontWeight: 700, letterSpacing: 1 }}>
+                <Typography component="h3" variant="subtitle1">
                   Tratamento
                 </Typography>
                 <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.2 }}>
@@ -1170,6 +1153,8 @@ function DialogoNovoRisco({ aberto, projetos, projetoInicial, rascunho, aoFechar
                 <span>
                   <Button
                     size="small"
+                    color="secondary"
+                    variant="outlined"
                     startIcon={<AutoAwesomeIcon />}
                     disabled={!analise?.sugestao_plano}
                     onClick={aplicarSugestoes}
@@ -1210,7 +1195,7 @@ function DialogoNovoRisco({ aberto, projetos, projetoInicial, rascunho, aoFechar
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={aoFechar}>Cancelar</Button>
           <Button type="submit" variant="contained" disabled={enviando}>
-            {enviando ? "Cadastrando..." : "Cadastrar e ver recomendação"}
+            {enviando ? "Cadastrando…" : "Cadastrar e ver recomendação"}
           </Button>
         </DialogActions>
       </Box>
