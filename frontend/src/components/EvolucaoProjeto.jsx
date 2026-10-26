@@ -3,11 +3,13 @@ import { Box, Paper, Typography } from "@mui/material";
 import { LineChart } from "@mui/x-charts/LineChart";
 import { riscos as servicoRiscos } from "../services/api";
 import { FAIXAS_EXPOSICAO } from "../constants";
+import { usePreferencias } from "../contexts/PreferenciasContext";
 
 // Evolução da exposição dos riscos ativos semana a semana (últimas 12), com a
 // soma de cada faixa empilhada: a altura total é a exposição do projeto.
 export default function EvolucaoProjeto({ idProjeto }) {
   const [pontos, setPontos] = useState(null);
+  const { corReal } = usePreferencias();
 
   useEffect(() => {
     servicoRiscos
@@ -56,7 +58,7 @@ export default function EvolucaoProjeto({ idProjeto }) {
             id: faixa.label,
             label: faixa.label,
             data: pontos.map((p) => p.por_faixa[faixa.label] ?? 0),
-            color: faixa.cor,
+            color: corReal(faixa.cor),
             area: true,
             stack: "total",
             showMark: false,

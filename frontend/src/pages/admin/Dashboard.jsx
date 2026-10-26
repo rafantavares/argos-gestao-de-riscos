@@ -52,6 +52,7 @@ import EstadoVazio from "../../components/EstadoVazio";
 import { ChipAceite } from "../../components/Badges";
 import BarraConfianca from "../../components/BarraConfianca";
 import { exportarCsv } from "../../utils/exportarCsv";
+import { usePreferencias } from "../../contexts/PreferenciasContext";
 import { tendenciaSemanal, tendenciaTaxaSemanal } from "../../utils/tendencias";
 
 const METRICAS_COMPARADAS = [
@@ -98,6 +99,7 @@ const COLUNAS_RELATORIO = [
 ];
 
 export default function Dashboard() {
+  const { corReal } = usePreferencias();
   const [projetos, setProjetos] = useState([]);
   const [gerentes, setGerentes] = useState([]);
   const [riscos, setRiscos] = useState([]);
@@ -143,7 +145,7 @@ export default function Dashboard() {
   const projetosComRiscos = projetos.filter((p) => riscos.some((r) => r.id_projeto === p.id));
   const seriesCategoriaProjeto = CATEGORIAS.map((categoria) => ({
     label: categoria.label,
-    color: CORES_SERIE_CATEGORIA[categoria.value],
+    color: corReal(CORES_SERIE_CATEGORIA[categoria.value]),
     stack: "total",
     data: projetosComRiscos.map(
       (p) => riscos.filter((r) => r.id_projeto === p.id && r.categoria === categoria.value).length
@@ -154,7 +156,7 @@ export default function Dashboard() {
   const algoritmosDisponiveis = metricas ? ALGORITMOS.filter((a) => metricas[a]) : [];
   const seriesPerformance = algoritmosDisponiveis.map((algoritmo) => ({
     label: NOMES_ALGORITMOS[algoritmo],
-    color: CORES_ALGORITMOS[algoritmo],
+    color: corReal(CORES_ALGORITMOS[algoritmo]),
     data: METRICAS_COMPARADAS.map((m) =>
       metricas[algoritmo][m.chave] != null ? Math.round(metricas[algoritmo][m.chave] * 1000) / 10 : null
     ),
@@ -165,7 +167,7 @@ export default function Dashboard() {
   const carimbosTempo = [...new Set(historicoMetricas.map((m) => m.criado_em))].sort();
   const seriesAcuracia = ALGORITMOS.map((algoritmo) => ({
     label: NOMES_ALGORITMOS[algoritmo],
-    color: CORES_ALGORITMOS[algoritmo],
+    color: corReal(CORES_ALGORITMOS[algoritmo]),
     data: carimbosTempo.map((carimbo) => {
       const ponto = historicoMetricas.find((m) => m.criado_em === carimbo && m.algoritmo === algoritmo);
       return ponto ? Math.round(ponto.acuracia * 1000) / 10 : null;
@@ -341,7 +343,7 @@ export default function Dashboard() {
                 series={[
                   {
                     data: importancia.features.map((f) => Math.round(f.importancia * 1000) / 10),
-                    color: "var(--argos-marca)",
+                    color: corReal("var(--argos-marca)"),
                     valueFormatter: (v) => `${v.toFixed(1)}%`,
                   },
                 ]}

@@ -19,6 +19,7 @@ import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import { riscos as servicoRiscos } from "../services/api";
+import { usePreferencias } from "../contexts/PreferenciasContext";
 import { FASES_PROJETO, IMPACTOS, PROBABILIDADES, faixaExposicao, rotulo } from "../constants";
 
 const TENDENCIAS = {
@@ -31,6 +32,7 @@ const TENDENCIAS = {
 // gerente revisa as notas e a fase atual, e cada revisão vira um ponto da
 // série de evolução da exposição.
 export default function EvolucaoExposicao({ risco, aoReavaliar }) {
+  const { corReal } = usePreferencias();
   const [evolucao, setEvolucao] = useState(null);
   const [probabilidade, setProbabilidade] = useState(risco.probabilidade);
   const [impacto, setImpacto] = useState(risco.impacto);
@@ -132,7 +134,7 @@ export default function EvolucaoExposicao({ risco, aoReavaliar }) {
             {
               data: pontos.map((p) => p.exposicao),
               label: "Exposição",
-              color: "var(--argos-marca)",
+              color: corReal("var(--argos-marca)"),
               showMark: true,
               valueFormatter: (valor) => `${valor} · ${faixaExposicao(valor).label}`,
             },

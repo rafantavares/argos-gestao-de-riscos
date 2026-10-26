@@ -3,6 +3,7 @@ import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import TrendingFlatIcon from "@mui/icons-material/TrendingFlat";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import { SparkLineChart } from "@mui/x-charts/SparkLineChart";
+import { usePreferencias } from "../contexts/PreferenciasContext";
 
 /**
  * Card de indicador com micro-tendência: variação em relação à semana anterior
@@ -11,6 +12,7 @@ import { SparkLineChart } from "@mui/x-charts/SparkLineChart";
  * `tendencia`: { atual, anterior, serie: number[] } -- opcional.
  */
 export default function CartaoEstatistica({ titulo, valor, icone, tendencia, cor = "var(--argos-texto2)", destaque = false, rodape }) {
+  const { corReal } = usePreferencias();
   const delta = tendencia ? tendencia.atual - tendencia.anterior : null;
   const IconeTendencia = delta === null || delta === 0 ? TrendingFlatIcon : delta > 0 ? TrendingUpIcon : TrendingDownIcon;
 
@@ -68,7 +70,7 @@ export default function CartaoEstatistica({ titulo, valor, icone, tendencia, cor
               data={tendencia.serie}
               height={36}
               width={96}
-              colors={["var(--argos-texto2)"]}
+              colors={[corReal("var(--argos-texto2)")]}
               area
               curve="natural"
               sx={{ "& .MuiAreaElement-root": { fillOpacity: 0.14 } }}
