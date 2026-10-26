@@ -10,28 +10,19 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import GridViewOutlinedIcon from "@mui/icons-material/GridViewOutlined";
-import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
-import UpdateIcon from "@mui/icons-material/Update";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { useAuth } from "../contexts/AuthContext";
 import { Logo } from "../components/Logo";
-import MatrizVitrine from "../components/MatrizVitrine";
+import PainelLogin from "../components/PainelLogin";
 import { usePreferencias } from "../contexts/PreferenciasContext";
 import { VERSAO_SISTEMA } from "../constants";
 import { api } from "../services/api";
 
 const TENTATIVAS_LOGIN = 10; // ~1 min no total, o tempo de o servidor acordar
 
-// O que o Argos faz, cada item ligado a uma função real do sistema.
-const DIFERENCIAIS = [
-  { icone: GridViewOutlinedIcon, titulo: "Matriz de risco", texto: "Probabilidade × impacto no padrão PMBOK, com a exposição de cada projeto." },
-  { icone: AutoAwesomeOutlinedIcon, titulo: "Plano recomendado por IA", texto: "Um modelo treinado indica o plano de contingência e aprende com as suas decisões.", ia: true },
-  { icone: UpdateIcon, titulo: "Monitoramento contínuo", texto: "Reavaliações e histórico de cada risco, como pede o MR-MPS-SW:2023." },
-];
 
 export default function Login() {
   const { usuario, carregando, entrar, cadastrar } = useAuth();
@@ -110,135 +101,41 @@ export default function Login() {
   return (
     <Box
       sx={{
+        height: { md: "100vh" },
         minHeight: "100vh",
         display: "flex",
-        flexDirection: { xs: "column", md: "row" },
+        overflow: { md: "hidden" },
         bgcolor: "background.default",
       }}
     >
-      {/* Coluna esquerda: o produto (matriz de risco) e o que ele faz */}
+      {/* Coluna do formulário */}
       <Box
-        component="section"
-        aria-label="Sobre o Argos"
+        component="main"
         sx={{
-          flexBasis: { md: "58%" },
-          flexGrow: 1,
+          flex: { xs: 1, md: "0 0 520px" },
           display: "flex",
           flexDirection: "column",
-          gap: { xs: 3, md: 4 },
-          p: { xs: 3, sm: 4, md: 6 },
-          minHeight: { md: "100vh" },
-          bgcolor: "var(--argos-fundo)",
-          borderRight: { md: "1px solid var(--argos-borda-suave)" },
-        }}
-      >
-        <Logo size={40} fontSize={24} />
-
-        <Box sx={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: { xs: 3, md: 4.5 } }}>
-          <Box sx={{ maxWidth: 620 }}>
-            <Typography
-              component="p"
-              sx={{
-                fontFamily: '"Space Grotesk", sans-serif',
-                fontWeight: 600,
-                fontSize: { xs: 30, md: 38, xl: 44 },
-                lineHeight: 1.1,
-                letterSpacing: "-0.02em",
-                textWrap: "balance",
-                mb: 1.75,
-              }}
-            >
-              Saiba onde está o risco do seu projeto antes que ele vire problema.
-            </Typography>
-            <Typography color="text.secondary" sx={{ maxWidth: 520 }}>
-              Registre os riscos, acompanhe a exposição de cada projeto e receba o plano de contingência mais adequado.
-            </Typography>
-          </Box>
-
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 1fr) minmax(0, 420px)" },
-              alignItems: "center",
-              gap: { xs: 4, lg: 5 },
-            }}
-          >
-            <Box component="ul" sx={{ m: 0, p: 0, listStyle: "none", display: "grid", gap: 2.25, maxWidth: 420 }}>
-              {DIFERENCIAIS.map(({ icone: Icone, titulo, texto, ia }) => (
-                <Box component="li" key={titulo} sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
-                  <Box
-                    sx={{
-                      width: 34,
-                      height: 34,
-                      flexShrink: 0,
-                      borderRadius: 2,
-                      display: "grid",
-                      placeItems: "center",
-                      color: ia ? "secondary.main" : "primary.main",
-                      bgcolor: ia ? "color-mix(in srgb, var(--argos-ia) 12%, transparent)" : "color-mix(in srgb, var(--argos-marca) 12%, transparent)",
-                    }}
-                  >
-                    <Icone sx={{ fontSize: 18 }} />
-                  </Box>
-                  <Box>
-                    <Typography variant="body2" fontWeight={600}>
-                      {titulo}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {texto}
-                    </Typography>
-                  </Box>
-                </Box>
-              ))}
-            </Box>
-
-            <Box sx={{ display: { xs: "none", sm: "flex" }, justifyContent: "center" }}>
-              <MatrizVitrine />
-            </Box>
-          </Box>
-        </Box>
-
-        <Typography variant="caption" color="text.secondary">
-          Trabalho de Conclusão de Curso · Engenharia de Software · versão {VERSAO_SISTEMA}
-        </Typography>
-      </Box>
-
-      {/* Coluna direita: formulário */}
-      <Box
-        sx={{
-          flexBasis: { md: "42%" },
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          position: "relative",
-          p: { xs: 3, md: 6 },
+          px: { xs: 3, sm: 6, md: 8 },
+          py: { xs: 3, md: 5.5 },
           bgcolor: "background.paper",
+          position: "relative",
+          zIndex: 1,
+          boxShadow: { md: "12px 0 40px rgba(0,0,0,0.25)" },
         }}
       >
-        <Tooltip title={escuro ? "Usar modo claro" : "Usar modo escuro"}>
-          <IconButton
-            onClick={alternarModo}
-            aria-label={escuro ? "Usar modo claro" : "Usar modo escuro"}
-            sx={{ position: "absolute", top: 16, right: 16, border: 1, borderColor: "divider" }}
-          >
-            {escuro ? <LightModeOutlinedIcon fontSize="small" /> : <DarkModeOutlinedIcon fontSize="small" />}
-          </IconButton>
-        </Tooltip>
-        <Box sx={{ width: "100%", maxWidth: 380 }}>
-          <Typography variant="h5" component="h1" fontWeight={600} sx={{ mb: 0.5 }}>
-            {criando ? "Criar conta" : "Entrar no Argos"}
+        <Logo size={40} fontSize={23} />
+
+        <Box sx={{ my: "auto", py: 4, width: "100%", maxWidth: 400, mx: { xs: "auto", md: 0 } }}>
+          <Typography component="h1" sx={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: 30, fontWeight: 600, letterSpacing: "-0.01em", mb: 1 }}>
+            {criando ? "Criar conta" : "Bem-vindo de volta"}
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3.5 }}>
+          <Typography color="text.secondary" sx={{ mb: 3.5 }}>
             {criando
               ? "Cadastre-se como gerente de projetos para registrar e acompanhar os riscos dos seus projetos."
-              : "Use o e-mail e a senha da sua conta."}
+              : "Entre para acompanhar os riscos dos seus projetos."}
           </Typography>
 
-          <Box
-            component="form"
-            onSubmit={aoEnviar}
-            sx={{ display: "flex", flexDirection: "column", gap: 2.2 }}
-          >
+          <Box component="form" onSubmit={aoEnviar} sx={{ display: "flex", flexDirection: "column", gap: 2.2 }}>
             {aguardando && <Alert severity="info">{aguardando}</Alert>}
             {erro && <Alert severity="error">{erro}</Alert>}
             {criando && (
@@ -275,14 +172,15 @@ export default function Login() {
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton
-                      size="small"
-                      onClick={() => setMostrarSenha((v) => !v)}
-                      aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
-                      edge="end"
-                    >
-                      {mostrarSenha ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
-                    </IconButton>
+                    <Tooltip title={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}>
+                      <IconButton
+                        onClick={() => setMostrarSenha((v) => !v)}
+                        aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+                        edge="end"
+                      >
+                        {mostrarSenha ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                      </IconButton>
+                    </Tooltip>
                   </InputAdornment>
                 ),
               }}
@@ -292,20 +190,39 @@ export default function Login() {
               variant="contained"
               size="large"
               disabled={enviando}
-              sx={{ py: 1.4, fontWeight: 600, mt: 0.5 }}
+              sx={{ py: 1.5, fontWeight: 600, mt: 0.5, boxShadow: "0 8px 24px color-mix(in srgb, var(--argos-marca) 25%, transparent)" }}
             >
               {enviando ? (criando ? "Criando conta…" : "Entrando…") : criando ? "Criar conta" : "Entrar"}
             </Button>
           </Box>
 
-          <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 2.5 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2.5 }}>
             {criando ? "Já tem conta?" : "Ainda não tem conta?"}{" "}
-            <Button variant="text" size="small" onClick={trocarModo} disabled={enviando} sx={{ verticalAlign: "baseline" }}>
+            <Button variant="text" size="small" onClick={trocarModo} disabled={enviando} sx={{ verticalAlign: "baseline", fontWeight: 600 }}>
               {criando ? "Entrar" : "Criar conta"}
             </Button>
           </Typography>
-
         </Box>
+
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
+          <Typography variant="caption" color="text.secondary">
+            TCC · Engenharia de Software · v{VERSAO_SISTEMA}
+          </Typography>
+          <Tooltip title={escuro ? "Usar modo claro" : "Usar modo escuro"}>
+            <IconButton
+              onClick={alternarModo}
+              aria-label={escuro ? "Usar modo claro" : "Usar modo escuro"}
+              sx={{ border: 1, borderColor: "divider" }}
+            >
+              {escuro ? <LightModeOutlinedIcon fontSize="small" /> : <DarkModeOutlinedIcon fontSize="small" />}
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </Box>
+
+      {/* Painel da marca: radar de riscos e cartões do produto */}
+      <Box sx={{ flex: 1, minWidth: 0, display: { xs: "none", md: "block" } }}>
+        <PainelLogin />
       </Box>
     </Box>
   );
