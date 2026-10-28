@@ -42,7 +42,7 @@ const LARGURA_MENU = { xs: 68, md: 248 };
 const ALTURA_TOPO = 64;
 
 // Menu em grupos: acompanhar (ver a situação), decidir (IA) e gerenciar
-// (cadastros). `ia: true` pinta o item de violeta, a cor da IA no Argos.
+// (cadastros). Todos os itens usam a mesma cor da marca.
 // Todo usuário é gerente de projetos (o perfil admin foi removido).
 const MENU = [
   {
@@ -60,14 +60,6 @@ const MENU = [
         dica: "Descreva um problema e receba sugestões de registro e tratamento do risco",
         caminho: "/gerente/assistente",
         icone: <AutoAwesomeOutlinedIcon />,
-        ia: true,
-      },
-      {
-        rotulo: "Modelo de IA",
-        dica: "Desempenho dos algoritmos, o que pesa na decisão e as últimas recomendações",
-        caminho: "/gerente/modelo",
-        icone: <PsychologyOutlinedIcon />,
-        ia: true,
       },
     ],
   },
@@ -86,6 +78,7 @@ const PAGINAS_EXTRAS = [
 const PAGINAS_BUSCA = [
   ...MENU.flatMap((g) => g.itens.map((i) => ({ caminho: i.caminho, titulo: i.rotulo, grupo: g.titulo, icone: i.icone }))),
   ...PAGINAS_EXTRAS,
+  { caminho: "/configuracoes?aba=modelo", titulo: "Desempenho da IA", grupo: "Conta", icone: <PsychologyOutlinedIcon /> },
   { caminho: "/configuracoes?aba=sobre", titulo: "Sobre o Argos", grupo: "Conta", icone: <InfoOutlinedIcon /> },
 ].map((p) => ({ ...p, icone: <Box sx={{ display: "grid", "& svg": { fontSize: 18 } }}>{p.icone}</Box> }));
 
@@ -159,7 +152,7 @@ export default function AppLayout({ children }) {
   // Título da barra superior: o item do menu (ou página extra) que está aberto.
   const atual =
     menu
-      .flatMap((g) => g.itens.map((i) => ({ titulo: i.rotulo, grupo: g.titulo, caminho: i.caminho, icone: i.icone, ia: i.ia })))
+      .flatMap((g) => g.itens.map((i) => ({ titulo: i.rotulo, grupo: g.titulo, caminho: i.caminho, icone: i.icone })))
       .find((i) => estaAtivo(i.caminho, pathname)) ?? PAGINAS_EXTRAS.find((p) => pathname.startsWith(p.caminho));
   const subpagina = SUBPAGINAS.find((s) => s.padrao.test(pathname));
 
@@ -233,12 +226,6 @@ export default function AppLayout({ children }) {
                           mb: 0.25,
                           py: 0.85,
                           justifyContent: { xs: "center", md: "flex-start" },
-                          ...(item.ia && {
-                            "& .MuiListItemIcon-root": { color: v("ia") },
-                            "&.Mui-selected": { backgroundColor: misturar(v("ia"), 12) },
-                            "&.Mui-selected::before": { backgroundColor: v("ia") },
-                            "&.Mui-selected .MuiListItemIcon-root": { color: v("ia") },
-                          }),
                         }}
                       >
                         <ListItemIcon sx={{ minWidth: { xs: 0, md: 36 } }}>{item.icone}</ListItemIcon>
@@ -350,9 +337,9 @@ export default function AppLayout({ children }) {
                     borderRadius: 2,
                     display: { xs: "none", sm: "grid" },
                     placeItems: "center",
-                    color: atual.ia ? v("ia") : v("marca"),
-                    bgcolor: misturar(atual.ia ? v("ia") : v("marca"), 12),
-                    border: `1px solid ${misturar(atual.ia ? v("ia") : v("marca"), 25)}`,
+                    color: v("marca"),
+                    bgcolor: misturar(v("marca"), 12),
+                    border: `1px solid ${misturar(v("marca"), 25)}`,
                     "& svg": { fontSize: 20 },
                   }}
                 >

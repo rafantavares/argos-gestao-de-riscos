@@ -10,7 +10,6 @@ import Login from "./pages/Login";
 // Páginas baixadas sob demanda: o primeiro acesso só carrega o login.
 const Perfil = lazy(() => import("./pages/Perfil"));
 const Configuracoes = lazy(() => import("./pages/Configuracoes"));
-const ModeloIA = lazy(() => import("./pages/gerente/ModeloIA"));
 const GerenteDashboard = lazy(() => import("./pages/gerente/Dashboard"));
 const ProjetosGerente = lazy(() => import("./pages/gerente/Projetos"));
 const Assistente = lazy(() => import("./pages/gerente/Assistente"));
@@ -86,14 +85,8 @@ export default function App() {
           }
         />
 
-        <Route
-          path="/gerente/modelo"
-          element={
-            <PaginaProtegida>
-              <ModeloIA />
-            </PaginaProtegida>
-          }
-        />
+        {/* A página do modelo virou a aba "Desempenho da IA" de Configurações. */}
+        <Route path="/gerente/modelo" element={<Navigate to="/configuracoes?aba=modelo" replace />} />
 
         <Route
           path="/gerente/riscos/:idRisco/ficha"

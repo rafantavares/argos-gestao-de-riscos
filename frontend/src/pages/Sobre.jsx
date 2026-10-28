@@ -187,8 +187,8 @@ function PlanosDoModelo() {
 
 export default function Sobre() {
   return (
-    <Box sx={{ maxWidth: 1000 }}>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+    <Box>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3, maxWidth: 760 }}>
         Sistema web de gestão de riscos com análise preditiva para apoio à decisão em projetos de TI: como ele
         avalia, trata e monitora os riscos, e onde cada parte se apoia no PMBOK e no MR-MPS-SW:2023.
       </Typography>

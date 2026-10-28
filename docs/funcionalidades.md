@@ -13,7 +13,7 @@ inicial), pensadas para aprofundar a avaliação técnica do TCC II (DSR).
 >   (`Projeto.id_criador` no código). Saíram a listagem geral e o vínculo de
 >   gerentes pelo admin.
 > - **Herdado pelo gerente:** o painel do modelo (`/ml/feature-importance`,
->   `/recomendacoes/metricas-historico`, página Modelo de IA).
+>   `/recomendacoes/metricas-historico`, aba "Desempenho da IA" em Configurações).
 > - **Catálogo de planos só para consulta:** o modelo só recomenda os 12 planos
 >   fixos (grupo PMBOK × nível), então criar, editar e desativar planos saiu.
 >   `GET /planos` lista os 12, mostrados em Configurações > Sobre o Argos. Ao
