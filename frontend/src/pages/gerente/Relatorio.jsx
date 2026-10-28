@@ -232,7 +232,7 @@ export default function Relatorio() {
           })}
         </Tabela>
         <Typography sx={{ fontSize: "0.6875rem", color: COR.suave, mt: 1.25 }}>
-          Riscos ativos sem reavaliação há 30 dias ou mais devem ter as notas revisadas conforme o andamento do projeto.
+          Riscos ativos com a reavaliação vencida (prazo do projeto por faixa de exposição) devem ter as notas revisadas conforme o andamento do projeto.
         </Typography>
       </Secao>
     </DocumentoPdf>

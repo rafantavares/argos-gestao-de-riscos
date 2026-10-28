@@ -83,7 +83,8 @@ class Risco(Base):
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
     atualizado_em = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
-    projeto = relationship("Projeto", back_populates="riscos")
+    # Carregado junto: as listagens leem o apetite e os prazos do projeto.
+    projeto = relationship("Projeto", back_populates="riscos", lazy="joined")
     gerente = relationship(
         "Usuario", back_populates="riscos_gerenciados", foreign_keys=[id_gerente]
     )
@@ -99,3 +100,17 @@ class Risco(Base):
     def ultima_avaliacao_em(self):
         """Data da última reavaliação (ou do cadastro, se nunca foi reavaliado)."""
         return self.reavaliacoes[-1].criado_em if self.reavaliacoes else self.criado_em
+
+    @property
+    def prazo_reavaliacao_dias(self):
+        """Dias entre reavaliações exigidos pelo projeto para a faixa atual."""
+        if self.projeto is None:
+            return None
+        return self.projeto.prazo_reavaliacao(self.probabilidade * self.impacto)
+
+    @property
+    def fora_do_apetite(self):
+        """Exposição acima do apetite de risco definido no projeto."""
+        if self.projeto is None:
+            return False
+        return self.probabilidade * self.impacto > self.projeto.apetite_exposicao

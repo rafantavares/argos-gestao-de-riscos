@@ -3,6 +3,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import CodeIcon from "@mui/icons-material/Code";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
 import CorporateFareIcon from "@mui/icons-material/CorporateFare";
 import PublicIcon from "@mui/icons-material/Public";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
@@ -198,13 +199,28 @@ export function ChipAceite({ aceita, size = "small" }) {
 // formato no quadro, nos cartões e na tabela.
 export function ChipReavaliar({ size = "small" }) {
   return (
-    <Tooltip title="Sem reavaliação há 30 dias ou mais (monitoramento contínuo, GPR 17)">
+    <Tooltip title="Reavaliação vencida pelo prazo do projeto (monitoramento contínuo, GPR 17)">
       <Chip
         size={size}
         variant="outlined"
         icon={<UpdateIcon sx={{ fontSize: "0.9375rem" }} />}
         label="Reavaliar"
         sx={{ ...estiloMarcado, "& .MuiChip-icon": { color: "var(--argos-atencao)", ml: "6px", mr: "-2px" } }}
+      />
+    </Tooltip>
+  );
+}
+
+// Exposição acima do apetite definido no projeto (critério de risco, ISO 31000).
+export function ChipForaApetite({ size = "small" }) {
+  return (
+    <Tooltip title="Exposição acima do apetite de risco do projeto: pede tratamento">
+      <Chip
+        size={size}
+        variant="outlined"
+        icon={<WarningAmberOutlinedIcon sx={{ fontSize: "0.9375rem" }} />}
+        label="Fora do apetite"
+        sx={{ ...estiloMarcado, "& .MuiChip-icon": { color: "var(--argos-erro)", ml: "6px", mr: "-2px" } }}
       />
     </Tooltip>
   );

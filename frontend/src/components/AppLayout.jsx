@@ -235,7 +235,7 @@ export default function AppLayout({ children }) {
                           sx={{ display: { xs: "none", md: "block" } }}
                         />
                         {badge && (
-                          <Tooltip title={`${badge} risco(s) sem reavaliação há 30 dias ou mais`} placement="right">
+                          <Tooltip title={`${badge} risco(s) com a reavaliação vencida`} placement="right">
                             <Box
                               component="span"
                               sx={{

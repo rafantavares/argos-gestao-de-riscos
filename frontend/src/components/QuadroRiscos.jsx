@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Box, Paper, Typography } from "@mui/material";
 import { CORES_STATUS, STATUS_RISCO, precisaReavaliar } from "../constants";
-import { ChipReavaliar, ChipSeveridade, Marcador } from "./Badges";
+import { ChipForaApetite, ChipReavaliar, ChipSeveridade, Marcador } from "./Badges";
 import MiniMatriz from "./MiniMatriz";
 
 // Quadro Kanban do ciclo de vida do risco (MR-MPS-SW:2023, GPR 17): arrastar um
@@ -107,6 +107,7 @@ export default function QuadroRiscos({ riscos, projetoPorId, aoAbrir, aoMudarSta
                     </Box>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mt: 1, flexWrap: "wrap" }}>
                       <ChipSeveridade probabilidade={risco.probabilidade} impacto={risco.impacto} />
+                      {risco.fora_do_apetite && risco.status !== "encerrado" && <ChipForaApetite />}
                       {precisaReavaliar(risco) && <ChipReavaliar />}
                     </Box>
                   </Paper>

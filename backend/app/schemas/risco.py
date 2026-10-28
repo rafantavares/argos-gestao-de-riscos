@@ -61,6 +61,8 @@ class RiscoResposta(RiscoBase):
     criado_em: datetime
     atualizado_em: datetime
     ultima_avaliacao_em: Optional[datetime] = None
+    prazo_reavaliacao_dias: Optional[int] = None
+    fora_do_apetite: bool = False
 
     @computed_field
     @property

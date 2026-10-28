@@ -83,6 +83,10 @@ def editar_projeto(
         projeto.nome = dados.nome
     if dados.descricao is not None:
         projeto.descricao = dados.descricao
+    for campo in ("apetite_exposicao", "prazo_reavaliacao_muito_grave", "prazo_reavaliacao_grave", "prazo_reavaliacao_demais"):
+        valor = getattr(dados, campo)
+        if valor is not None:
+            setattr(projeto, campo, valor)
 
     sessao.commit()
     sessao.refresh(projeto)

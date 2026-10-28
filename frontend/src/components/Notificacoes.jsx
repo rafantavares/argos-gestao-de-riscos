@@ -5,12 +5,12 @@ import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNone
 import UpdateIcon from "@mui/icons-material/Update";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import { precisaReavaliar } from "../constants";
+import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
+import { diasDesdeAvaliacao, precisaReavaliar } from "../constants";
 
-const dias = (data) => Math.floor((Date.now() - new Date(data).getTime()) / 86400000);
-
-// O que pede ação do gerente agora: riscos sem reavaliação há 30+ dias (GPR 17)
-// e recomendações da IA aguardando decisão. Cada item abre o risco.
+// O que pede ação do gerente agora: riscos fora do apetite ainda sem tratamento
+// (ISO 31000), recomendações da IA aguardando decisão e reavaliações vencidas
+// pelo prazo do projeto (GPR 17). Cada item abre o risco.
 export function itensPendentes(riscos, recomendacoes) {
   const riscoPorId = new Map(riscos.map((r) => [r.id, r]));
   const reavaliar = riscos
@@ -19,7 +19,7 @@ export function itensPendentes(riscos, recomendacoes) {
       chave: `reav-${r.id}`,
       tipo: "reavaliar",
       titulo: `${r.indice} · ${r.titulo}`,
-      detalhe: `Sem reavaliação há ${dias(r.ultima_avaliacao_em ?? r.criado_em)} dias`,
+      detalhe: `Sem reavaliação há ${diasDesdeAvaliacao(r)} dias (prazo: ${r.prazo_reavaliacao_dias ?? 30})`,
       destino: `/gerente/riscos/${r.id}/recomendacao?aba=evolucao`,
       data: r.ultima_avaliacao_em ?? r.criado_em,
     }));
@@ -36,8 +36,24 @@ export function itensPendentes(riscos, recomendacoes) {
         data: rec.criado_em,
       };
     });
-  return [...decidir, ...reavaliar];
+  const foraDoApetite = riscos
+    .filter((r) => !r.arquivado && r.fora_do_apetite && r.status === "identificado")
+    .map((r) => ({
+      chave: `apet-${r.id}`,
+      tipo: "apetite",
+      titulo: `${r.indice} · ${r.titulo}`,
+      detalhe: `Exposição ${r.exposicao}, acima do apetite do projeto, sem tratamento`,
+      destino: `/gerente/riscos/${r.id}/recomendacao`,
+      data: r.criado_em,
+    }));
+  return [...foraDoApetite, ...decidir, ...reavaliar];
 }
+
+const ESTILO_TIPO = {
+  apetite: { cor: "var(--argos-erro)", icone: <WarningAmberOutlinedIcon sx={{ fontSize: "1.0625rem" }} /> },
+  decidir: { cor: "var(--argos-ia)", icone: <AutoAwesomeOutlinedIcon sx={{ fontSize: "1.0625rem" }} /> },
+  reavaliar: { cor: "var(--argos-atencao)", icone: <UpdateIcon sx={{ fontSize: "1.0625rem" }} /> },
+};
 
 export default function Notificacoes({ itens }) {
   const navigate = useNavigate();
@@ -81,7 +97,7 @@ export default function Notificacoes({ itens }) {
         {total === 0 ? (
           <Box sx={{ px: 2, py: 4, textAlign: "center", color: "text.secondary" }}>
             <CheckCircleOutlineIcon sx={{ color: "success.main", mb: 1 }} />
-            <Typography variant="body2">Tudo em dia. Nenhuma decisão ou reavaliação pendente.</Typography>
+            <Typography variant="body2">Tudo em dia. Nada fora do apetite, nenhuma decisão ou reavaliação pendente.</Typography>
           </Box>
         ) : (
           <Box sx={{ maxHeight: 420, overflowY: "auto", py: 0.5 }}>
@@ -99,14 +115,11 @@ export default function Notificacoes({ itens }) {
                     borderRadius: 1.5,
                     display: "grid",
                     placeItems: "center",
-                    color: item.tipo === "decidir" ? "secondary.main" : "warning.main",
-                    bgcolor:
-                      item.tipo === "decidir"
-                        ? "color-mix(in srgb, var(--argos-ia) 14%, transparent)"
-                        : "color-mix(in srgb, var(--argos-atencao) 14%, transparent)",
+                    color: ESTILO_TIPO[item.tipo].cor,
+                    bgcolor: `color-mix(in srgb, ${ESTILO_TIPO[item.tipo].cor} 14%, transparent)`,
                   }}
                 >
-                  {item.tipo === "decidir" ? <AutoAwesomeOutlinedIcon sx={{ fontSize: "1.0625rem" }} /> : <UpdateIcon sx={{ fontSize: "1.0625rem" }} />}
+                  {ESTILO_TIPO[item.tipo].icone}
                 </Box>
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                   <Typography variant="body2" fontWeight={500} noWrap>

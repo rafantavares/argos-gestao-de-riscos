@@ -248,6 +248,25 @@ def evolucao_exposicao_agregada(
 
 
 @roteador.get(
+    "/painel/calibracao",
+    dependencies=[Depends(exigir_perfil(PerfilUsuario.GERENTE))],
+)
+def calibracao_avaliacoes(
+    sessao: Session = Depends(obter_sessao),
+    gerente: Usuario = Depends(obter_usuario_atual),
+):
+    """Tendência das avaliações do gerente: quanto as notas iniciais mudaram
+    nas reavaliações, no geral e por área afetada (página Meu perfil)."""
+    riscos = (
+        sessao.query(Risco)
+        .options(COM_REAVALIACOES)
+        .filter(Risco.id_gerente == gerente.id, Risco.arquivado.is_(False))
+        .all()
+    )
+    return monitoramento.calibracao(riscos)
+
+
+@roteador.get(
     "/{id_risco}",
     response_model=RiscoResposta,
     dependencies=[Depends(exigir_perfil(PerfilUsuario.GERENTE))],

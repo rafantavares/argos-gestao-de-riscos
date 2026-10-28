@@ -40,11 +40,12 @@ import {
   rotulo,
 } from "../../constants";
 import BarraConfianca from "../../components/BarraConfianca";
+import { useDialogoRejeicao } from "../../components/DialogoRejeicao";
 import EvolucaoExposicao from "../../components/EvolucaoExposicao";
 import AnexosRisco from "../../components/AnexosRisco";
 import FichaRisco from "../../components/FichaRisco";
 import { useAviso, useConfirmacao } from "../../contexts/FeedbackContext";
-import { ChipArea, ChipSeveridade, ChipStatus, Marcador } from "../../components/Badges";
+import { ChipArea, ChipForaApetite, ChipSeveridade, ChipStatus, Marcador } from "../../components/Badges";
 
 const ABAS_RISCO = ["plano", "registro", "evolucao", "evidencias", "historico"];
 
@@ -107,6 +108,7 @@ export default function Recomendacao() {
   const setAba = (nova) => setParametros(nova === "plano" ? {} : { aba: nova }, { replace: true });
   const avisar = useAviso();
   const confirmar = useConfirmacao();
+  const [dialogoRejeicao, pedirMotivo] = useDialogoRejeicao();
   // Evita gerar duas recomendações quando o efeito roda duas vezes (StrictMode em dev).
   const carregandoRef = useRef(false);
 
@@ -145,21 +147,15 @@ export default function Recomendacao() {
   }, [idRisco]);
 
   async function responder(aceita) {
-    if (
-      !aceita &&
-      !(await confirmar({
-        titulo: "Rejeitar o plano recomendado?",
-        mensagem: "O status do risco é mantido e você poderá gerar uma nova recomendação depois.",
-        confirmar: "Rejeitar",
-        perigo: true,
-      }))
-    ) {
-      return;
+    let motivo = null;
+    if (!aceita) {
+      motivo = await pedirMotivo();
+      if (motivo === null) return;
     }
     setProcessando(true);
     setErro("");
     try {
-      const atualizada = await servicoRecomendacoes.responder(recomendacao.id, aceita);
+      const atualizada = await servicoRecomendacoes.responder(recomendacao.id, aceita, motivo);
       setRecomendacao(atualizada);
       setConfirmacao({ aceita });
       avisar(aceita ? "Plano aceito." : "Recomendação rejeitada.", aceita ? "success" : "info");
@@ -249,6 +245,7 @@ export default function Recomendacao() {
 
   return (
     <Box sx={{ maxWidth: 1100 }}>
+      {dialogoRejeicao}
       <Button startIcon={<ArrowBackIcon />} size="small" onClick={() => navigate("/gerente/riscos")} sx={{ mb: 1 }}>
         Voltar para riscos
       </Button>
@@ -399,7 +396,15 @@ export default function Recomendacao() {
               {recomendacao.aceita === false && (
                 <Box>
                   <Alert severity="warning" sx={{ mb: 2 }}>
-                    Recomendação rejeitada. Gere uma nova para consultar o modelo outra vez.
+                    Recomendação rejeitada
+                    {recomendacao.decidida_em && ` em ${new Date(recomendacao.decidida_em).toLocaleDateString("pt-BR")}`}.
+                    {recomendacao.motivo_rejeicao && (
+                      <>
+                        {" "}
+                        Motivo: <strong>{recomendacao.motivo_rejeicao}</strong>.
+                      </>
+                    )}{" "}
+                    Gere uma nova para consultar o modelo outra vez.
                   </Alert>
                   <Button variant="outlined" startIcon={<AutoAwesomeIcon />} disabled={processando} onClick={gerarNovaRecomendacao}>
                     Gerar nova recomendação
@@ -637,6 +642,7 @@ function RegistroRisco({ risco, aoSalvar }) {
         </Typography>
         <ChipArea area={risco.area_afetada} />
         <ChipSeveridade probabilidade={risco.probabilidade} impacto={risco.impacto} />
+        {risco.fora_do_apetite && risco.status !== "encerrado" && <ChipForaApetite />}
       </Box>
       <Stack spacing={2}>
         <TextField label="Risco (título)" {...campo("titulo")} inputProps={{ maxLength: 200 }} />

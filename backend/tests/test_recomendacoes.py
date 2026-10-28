@@ -239,3 +239,38 @@ def test_historico_de_metricas_comeca_vazio(cliente, cabecalho_gerente):
 
     assert resposta.status_code == 200
     assert resposta.json() == []
+
+
+def test_rejeitar_registra_data_e_motivo(cliente, cabecalho_gerente, risco, ml_simulado):
+    id_recomendacao = cliente.post(f"/recomendacoes/gerar/{risco.id}", headers=cabecalho_gerente).json()["id"]
+
+    corpo = cliente.patch(
+        f"/recomendacoes/{id_recomendacao}",
+        headers=cabecalho_gerente,
+        json={"aceita": False, "motivo_rejeicao": "  Plano caro demais para a fase atual  "},
+    ).json()
+
+    assert corpo["aceita"] is False
+    assert corpo["motivo_rejeicao"] == "Plano caro demais para a fase atual"
+    assert corpo["decidida_em"] is not None
+
+
+def test_aceitar_ignora_motivo_de_rejeicao(cliente, cabecalho_gerente, risco, ml_simulado):
+    id_recomendacao = cliente.post(f"/recomendacoes/gerar/{risco.id}", headers=cabecalho_gerente).json()["id"]
+
+    corpo = cliente.patch(
+        f"/recomendacoes/{id_recomendacao}",
+        headers=cabecalho_gerente,
+        json={"aceita": True, "motivo_rejeicao": "não deveria ficar"},
+    ).json()
+
+    assert corpo["aceita"] is True and corpo["motivo_rejeicao"] is None
+    assert corpo["decidida_em"] is not None
+
+
+def test_motivo_de_rejeicao_tem_limite_de_tamanho(cliente, cabecalho_gerente, risco, ml_simulado):
+    id_recomendacao = cliente.post(f"/recomendacoes/gerar/{risco.id}", headers=cabecalho_gerente).json()["id"]
+    resposta = cliente.patch(
+        f"/recomendacoes/{id_recomendacao}", headers=cabecalho_gerente, json={"aceita": False, "motivo_rejeicao": "x" * 501}
+    )
+    assert resposta.status_code == 422

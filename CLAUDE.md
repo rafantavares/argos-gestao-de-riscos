@@ -29,7 +29,7 @@ Responda ao Rafael em português, de forma objetiva.
 ## Rodar e testar
 
 - Testes: `cd backend && python -m pytest` (SQLite em memória, não usa rede
-  nem o Supabase; ML e Gemini simulados). 194 testes.
+  nem o Supabase; ML e Gemini simulados). 205 testes.
 - Backend local: `cd backend && uvicorn app.main:app --reload --port 8000`
   (precisa de `DATABASE_URL` no `.env`). Frontend: `cd frontend && npm run dev`
   (porta 5173 — o CORS local espera exatamente essa porta).
@@ -48,6 +48,8 @@ Responda ao Rafael em português, de forma objetiva.
 - `docs/registro-riscos-mpsbr.md`: registro no formato PMBOK / MR-MPS-SW:2023 (GPR 10/17, GPC 7; o antigo processo GRI não existe mais),
   escala 1–5, exposição, assistente de IA, previsão de notas e reavaliação.
 - `docs/assistente-chat.md`: chat com IA (Gemini) na barra lateral do gerente.
+- `docs/funcionalidades.md` › "Fase 13": apetite e prazos de reavaliação por
+  projeto, decisão datada com motivo e calibração das avaliações.
 
 ## Estado atual (2026-10-01)
 

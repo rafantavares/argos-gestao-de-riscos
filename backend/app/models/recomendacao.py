@@ -1,5 +1,5 @@
 """Model ORM da entidade Recomendacao (saída do módulo de ML para um Risco)."""
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, func
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -17,6 +17,9 @@ class Recomendacao(Base):
     # recomendações geradas antes desse campo existir.
     confianca = Column(Float, nullable=True)
     aceita = Column(Boolean, nullable=True, default=None)
+    # Quando o gerente aceitou/rejeitou e, se rejeitou, por quê (opcional).
+    decidida_em = Column(DateTime(timezone=True), nullable=True)
+    motivo_rejeicao = Column(Text, nullable=True)
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
 
     risco = relationship("Risco", back_populates="recomendacoes")

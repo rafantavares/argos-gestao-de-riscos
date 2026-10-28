@@ -79,6 +79,7 @@ export const riscos = {
   atualizarTratamento: (id, dados) => api.patch(`/riscos/${id}/tratamento`, dados).then((r) => r.data),
   reavaliar: (id, dados) => api.post(`/riscos/${id}/reavaliacao`, dados).then((r) => r.data),
   evolucao: (id) => api.get(`/riscos/${id}/evolucao`).then((r) => r.data),
+  calibracao: () => api.get("/riscos/painel/calibracao").then((r) => r.data),
   evolucaoAgregada: (idProjeto, semanas = 12) =>
     api.get("/riscos/painel/evolucao", { params: { id_projeto: idProjeto, semanas } }).then((r) => r.data),
   assistente: (dados) => api.post("/riscos/assistente", dados).then((r) => r.data),
@@ -104,7 +105,8 @@ export const recomendacoes = {
   gerar: (idRisco) => api.post(`/recomendacoes/gerar/${idRisco}`).then((r) => r.data),
   listarMinhas: () => api.get("/recomendacoes").then((r) => r.data),
   listarPorRisco: (idRisco) => api.get(`/recomendacoes/risco/${idRisco}`).then((r) => r.data),
-  responder: (id, aceita) => api.patch(`/recomendacoes/${id}`, { aceita }).then((r) => r.data),
+  responder: (id, aceita, motivoRejeicao) =>
+    api.patch(`/recomendacoes/${id}`, { aceita, motivo_rejeicao: motivoRejeicao || null }).then((r) => r.data),
   metricasHistorico: () => api.get("/recomendacoes/metricas-historico").then((r) => r.data),
 };
 

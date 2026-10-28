@@ -213,14 +213,27 @@ export function iniciais(nome) {
 }
 
 // Monitoramento contínuo (MR-MPS-SW:2023, GPR 17): risco ativo sem reavaliação
-// há 30 dias ou mais (mesma regra de backend/app/assistente/monitoramento.py).
+// dentro do prazo do projeto para a faixa dele (padrão: 7 dias Muito Grave,
+// 15 Grave, 30 os demais; a API manda em `prazo_reavaliacao_dias`). Mesma regra
+// de backend/app/assistente/monitoramento.py.
 export const DIAS_PARA_REAVALIAR = 30;
+
+export function diasDesdeAvaliacao(risco) {
+  return Math.floor((Date.now() - new Date(risco.ultima_avaliacao_em ?? risco.criado_em).getTime()) / 86400000);
+}
 
 export function precisaReavaliar(risco) {
   if (risco.status === "encerrado") return false;
-  const data = new Date(risco.ultima_avaliacao_em ?? risco.criado_em);
-  return (Date.now() - data.getTime()) / 86400000 >= DIAS_PARA_REAVALIAR;
+  return diasDesdeAvaliacao(risco) >= (risco.prazo_reavaliacao_dias ?? DIAS_PARA_REAVALIAR);
 }
+
+// Critérios de risco do projeto (ISO 31000): apetite e prazos padrão.
+export const CRITERIOS_PADRAO = {
+  apetite_exposicao: 15,
+  prazo_reavaliacao_muito_grave: 7,
+  prazo_reavaliacao_grave: 15,
+  prazo_reavaliacao_demais: 30,
+};
 
 // Risco residual (PMBOK / ISO 31000): exposição esperada após a mitigação.
 // Sem previsão de residual, o risco conta com a exposição atual.

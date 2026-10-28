@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.migrar_fase12 import converter_admins_em_gerentes
+from app.core.migrar_fase13 import adicionar_colunas_fase13
 from app.core.seed import semear_planos_contingencia, sincronizar_textos_planos
 from app.database import Base, SessaoLocal, engine
 from app.routers import auth, chat, ml, planos, projetos, recomendacoes, riscos
@@ -13,9 +14,11 @@ from app.routers import auth, chat, ml, planos, projetos, recomendacoes, riscos
 
 @asynccontextmanager
 async def ciclo_de_vida(_app: FastAPI):
-    """Na subida da API: cria as tabelas que faltarem, converte contas do antigo
-    perfil admin em gerente e semeia/atualiza o catálogo de planos."""
+    """Na subida da API: cria as tabelas que faltarem, adiciona as colunas novas
+    (fase 13), converte contas do antigo perfil admin em gerente e
+    semeia/atualiza o catálogo de planos."""
     Base.metadata.create_all(bind=engine)
+    adicionar_colunas_fase13()
     converter_admins_em_gerentes()
     sessao = SessaoLocal()
     try:

@@ -61,7 +61,7 @@ import {
   precisaReavaliar,
   rotulo,
 } from "../../constants";
-import { ChipAceite, ChipArea, ChipReavaliar, ChipSeveridade, ChipStatus, ChipUrgencia, Marcador } from "../../components/Badges";
+import { ChipAceite, ChipArea, ChipForaApetite, ChipReavaliar, ChipSeveridade, ChipStatus, ChipUrgencia, Marcador } from "../../components/Badges";
 import EstadoVazio from "../../components/EstadoVazio";
 import { exportarCsv } from "../../utils/exportarCsv";
 
@@ -699,6 +699,7 @@ function CartaoRisco({ risco, projeto, recomendacao, aoAbrir }) {
       <Stack direction="row" spacing={0.8} useFlexGap flexWrap="wrap">
         <ChipSeveridade probabilidade={risco.probabilidade} impacto={risco.impacto} />
         <ChipStatus status={risco.status} />
+        {risco.fora_do_apetite && risco.status !== "encerrado" && <ChipForaApetite />}
         {precisaReavaliar(risco) && <ChipReavaliar />}
         <ChipArea area={risco.area_afetada} />
         <ChipUrgencia urgencia={risco.urgencia} />

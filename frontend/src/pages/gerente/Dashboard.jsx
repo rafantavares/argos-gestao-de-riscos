@@ -31,7 +31,7 @@ import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import NotificationImportantOutlinedIcon from "@mui/icons-material/NotificationImportantOutlined";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { useAviso, useConfirmacao } from "../../contexts/FeedbackContext";
+import { useAviso } from "../../contexts/FeedbackContext";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
@@ -45,6 +45,7 @@ import PanoramaRisco from "../../components/PanoramaRisco";
 import EvolucaoProjeto from "../../components/EvolucaoProjeto";
 import EstadoVazio from "../../components/EstadoVazio";
 import BarraConfianca from "../../components/BarraConfianca";
+import { useDialogoRejeicao } from "../../components/DialogoRejeicao";
 import { ChipCategoria, ChipSeveridade, ChipStatus, ChipUrgencia } from "../../components/Badges";
 import {
   CATEGORIAS,
@@ -72,7 +73,7 @@ export default function Dashboard() {
   const [recomendacoes, setRecomendacoes] = useState([]);
   const [respondendo, setRespondendo] = useState(null);
   const avisar = useAviso();
-  const confirmar = useConfirmacao();
+  const [dialogoRejeicao, pedirMotivo] = useDialogoRejeicao();
   const [filtroProjeto, setFiltroProjeto] = useState("");
   const [acoesVisiveis, setAcoesVisiveis] = useState(lerAcoesVisiveis);
   const [todasAcoes, setTodasAcoes] = useState(false);
@@ -120,7 +121,8 @@ export default function Dashboard() {
     .map((risco) => {
       const rec = ultimaRecomendacao.get(risco.id);
       const motivos = [];
-      if (risco.exposicao >= 16 && rec?.aceita !== true) motivos.push({ texto: "Grave sem plano aceito", cor: "var(--argos-erro)" });
+      if (risco.fora_do_apetite && rec?.aceita !== true) motivos.push({ texto: "Fora do apetite sem plano aceito", cor: "var(--argos-erro)" });
+      else if (risco.exposicao >= 16 && rec?.aceita !== true) motivos.push({ texto: "Grave sem plano aceito", cor: "var(--argos-erro)" });
       if (precisaReavaliar(risco)) motivos.push({ texto: "Reavaliação pendente", cor: "var(--argos-atencao)" });
       if (rec && rec.aceita === null && Date.now() - new Date(rec.criado_em) > 7 * 86400000) {
         motivos.push({ texto: "Recomendação parada há 7+ dias", cor: "var(--argos-ia)" });
@@ -135,20 +137,14 @@ export default function Dashboard() {
   const tendenciaRiscos = useMemo(() => tendenciaSemanal(riscosDoFiltro), [riscosDoFiltro]);
 
   async function responder(recomendacao, aceita) {
-    if (
-      !aceita &&
-      !(await confirmar({
-        titulo: "Rejeitar o plano recomendado?",
-        mensagem: "O status do risco é mantido e você poderá gerar uma nova recomendação depois.",
-        confirmar: "Rejeitar",
-        perigo: true,
-      }))
-    ) {
-      return;
+    let motivo = null;
+    if (!aceita) {
+      motivo = await pedirMotivo();
+      if (motivo === null) return;
     }
     setRespondendo(recomendacao.id);
     try {
-      await servicoRecomendacoes.responder(recomendacao.id, aceita);
+      await servicoRecomendacoes.responder(recomendacao.id, aceita, motivo);
       avisar(aceita ? "Plano aceito." : "Recomendação rejeitada.", aceita ? "success" : "info");
       await carregar();
     } finally {
@@ -158,6 +154,7 @@ export default function Dashboard() {
 
   return (
     <Box>
+      {dialogoRejeicao}
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2, mb: 3 }}>
         <Box sx={{ mr: "auto" }}>
           <Typography variant="body2" color="text.secondary">
@@ -355,7 +352,7 @@ export default function Dashboard() {
               )}
             </Box>
             <Typography variant="caption" color="text.secondary">
-              Riscos graves sem plano aceito, sem reavaliação há 30 dias ou com recomendação parada
+              Riscos fora do apetite ou graves sem plano aceito, com a reavaliação vencida ou com recomendação parada
             </Typography>
           </Box>
           {precisamAtencao.length > 5 && (

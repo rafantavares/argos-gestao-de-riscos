@@ -13,6 +13,8 @@ from typing import List, Optional
 from app.core.exposicao import avaliacao_exposicao, pontuacao_exposicao
 from app.models.enums import StatusRisco
 
+# Prazo padrão entre reavaliações quando o risco não tem projeto carregado; o
+# prazo real vem do projeto, por faixa de exposição (Projeto.prazo_reavaliacao).
 DIAS_PARA_REAVALIAR = 30
 STATUS_SEM_MONITORAMENTO = {StatusRisco.ENCERRADO}
 
@@ -95,7 +97,7 @@ def montar_evolucao(risco, reavaliacoes: List, historico_status: List,
         "pontos": serie,
         "tendencia": tendencia(serie),
         "dias_desde_ultima_avaliacao": dias,
-        "reavaliacao_pendente": dias >= DIAS_PARA_REAVALIAR
+        "reavaliacao_pendente": dias >= (getattr(risco, "prazo_reavaliacao_dias", None) or DIAS_PARA_REAVALIAR)
         and risco.status not in STATUS_SEM_MONITORAMENTO,
         "sugestao": None if risco.status in STATUS_SEM_MONITORAMENTO
         else sugerir_recalculo(risco, serie, historico_status),
@@ -154,3 +156,46 @@ def serie_exposicao(riscos: List, reavaliacoes_por_risco: dict, historico_por_ri
             "por_faixa": por_faixa,
         })
     return pontos
+
+
+# ---------- calibração das avaliações do gerente ----------
+
+def calibracao(riscos: List) -> dict:
+    """Quanto as notas iniciais do gerente mudaram até a última reavaliação.
+
+    Para cada risco reavaliado ao menos uma vez, compara as notas do cadastro
+    (as "anteriores" da primeira reavaliação) com as atuais. Variação negativa =
+    as notas iniciais caíram (o gerente tendia a avaliar mais alto do que o
+    risco se mostrou); positiva = subiram. A variação também reflete mudanças
+    reais do risco, então é um indicador de tendência, não um erro medido."""
+    variacoes = []
+    for risco in riscos:
+        if not risco.reavaliacoes:
+            continue
+        primeira = risco.reavaliacoes[0]
+        variacoes.append({
+            "area": risco.area_afetada.value if hasattr(risco.area_afetada, "value") else risco.area_afetada,
+            "probabilidade": risco.probabilidade - primeira.probabilidade_anterior,
+            "impacto": risco.impacto - primeira.impacto_anterior,
+            "exposicao": pontuacao_exposicao(risco.probabilidade, risco.impacto)
+            - pontuacao_exposicao(primeira.probabilidade_anterior, primeira.impacto_anterior),
+        })
+
+    def media(itens, campo):
+        return round(sum(i[campo] for i in itens) / len(itens), 2) if itens else None
+
+    por_area = {}
+    for v in variacoes:
+        por_area.setdefault(v["area"], []).append(v)
+    return {
+        "riscos_total": len(riscos),
+        "riscos_reavaliados": len(variacoes),
+        "variacao_media_probabilidade": media(variacoes, "probabilidade"),
+        "variacao_media_impacto": media(variacoes, "impacto"),
+        "variacao_media_exposicao": media(variacoes, "exposicao"),
+        "por_area": sorted(
+            ({"area": area, "riscos": len(itens), "variacao_media_exposicao": media(itens, "exposicao")}
+             for area, itens in por_area.items()),
+            key=lambda a: -abs(a["variacao_media_exposicao"]),
+        ),
+    }

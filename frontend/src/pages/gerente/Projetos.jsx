@@ -11,6 +11,7 @@ import {
   Grid,
   IconButton,
   InputAdornment,
+  MenuItem,
   Paper,
   Skeleton,
   TextField,
@@ -22,7 +23,7 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import SearchIcon from "@mui/icons-material/Search";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { projetos as servicoProjetos, riscos as servicoRiscos } from "../../services/api";
-import { FAIXAS_EXPOSICAO, faixaExposicao, precisaReavaliar } from "../../constants";
+import { CRITERIOS_PADRAO, FAIXAS_EXPOSICAO, faixaExposicao, precisaReavaliar } from "../../constants";
 import { ChipReavaliar, Marcador } from "../../components/Badges";
 import { texturaFaixa } from "../../theme";
 import EstadoVazio from "../../components/EstadoVazio";
@@ -39,6 +40,7 @@ function resumir(riscosDoProjeto) {
     porFaixa,
     media,
     reavaliar: ativos.filter(precisaReavaliar).length,
+    foraDoApetite: ativos.filter((r) => r.fora_do_apetite).length,
   };
 }
 
@@ -123,6 +125,15 @@ function CartaoProjeto({ projeto, resumo, aoEditar, aoVerRiscos }) {
           {resumo.ativos ? "Por gravidade" : "Nenhum risco ativo"}
         </Typography>
         <DistribuicaoFaixas porFaixa={resumo.porFaixa} ativos={resumo.ativos} />
+        <Typography variant="caption" color="text.secondary" sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75, mt: 1 }}>
+          Apetite: até {projeto.apetite_exposicao ?? CRITERIOS_PADRAO.apetite_exposicao}
+          {resumo.foraDoApetite > 0 && (
+            <Box component="strong" sx={{ color: "text.primary", display: "inline-flex", alignItems: "center", gap: 0.5 }}>
+              · <Marcador cor="var(--argos-erro)" forma="circulo" tamanho={7} />
+              {resumo.foraDoApetite} fora do apetite
+            </Box>
+          )}
+        </Typography>
       </Box>
 
       <Box sx={{ mt: "auto", pt: 1.5, borderTop: 1, borderColor: "divider", display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
@@ -257,6 +268,7 @@ export default function Projetos() {
         rotuloSalvar="Salvar alterações"
         aberto={Boolean(projetoEmEdicao)}
         valoresIniciais={projetoEmEdicao}
+        comCriterios
         aoFechar={() => setProjetoEmEdicao(null)}
         aoSalvar={async (dados) => {
           await servicoProjetos.editar(projetoEmEdicao.id, dados);
@@ -269,24 +281,49 @@ export default function Projetos() {
   );
 }
 
-function DialogoProjeto({ titulo, rotuloSalvar, aberto, valoresIniciais, aoFechar, aoSalvar }) {
+// Exposições possíveis (probabilidade × impacto, notas de 1 a 5): o apetite é
+// escolhido entre elas.
+const EXPOSICOES_POSSIVEIS = [...new Set([1, 2, 3, 4, 5].flatMap((p) => [1, 2, 3, 4, 5].map((i) => p * i)))].sort((a, b) => a - b);
+
+const PRAZOS = [
+  { campo: "prazo_reavaliacao_muito_grave", rotulo: "Muito Grave (21–25)" },
+  { campo: "prazo_reavaliacao_grave", rotulo: "Grave (16–20)" },
+  { campo: "prazo_reavaliacao_demais", rotulo: "Demais faixas" },
+];
+
+const criteriosDe = (projeto) => Object.fromEntries(Object.entries(CRITERIOS_PADRAO).map(([campo, padrao]) => [campo, projeto?.[campo] ?? padrao]));
+
+function DialogoProjeto({ titulo, rotuloSalvar, aberto, valoresIniciais, comCriterios = false, aoFechar, aoSalvar }) {
   const [nome, setNome] = useState(valoresIniciais?.nome ?? "");
   const [descricao, setDescricao] = useState(valoresIniciais?.descricao ?? "");
+  const [criterios, setCriterios] = useState(criteriosDe(valoresIniciais));
   const [erro, setErro] = useState("");
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
     setNome(valoresIniciais?.nome ?? "");
     setDescricao(valoresIniciais?.descricao ?? "");
+    setCriterios(criteriosDe(valoresIniciais));
     setErro("");
   }, [valoresIniciais, aberto]);
+
+  const alterarCriterio = (campo, valor) => setCriterios((atual) => ({ ...atual, [campo]: valor }));
 
   async function aoEnviar(evento) {
     evento.preventDefault();
     setErro("");
     setSalvando(true);
     try {
-      await aoSalvar({ nome: nome.trim(), descricao });
+      const prazos = PRAZOS.map((p) => Number(criterios[p.campo]));
+      if (comCriterios && prazos.some((d) => !Number.isInteger(d) || d < 1 || d > 365)) {
+        setErro("Os prazos de reavaliação devem ser números inteiros de 1 a 365 dias.");
+        return;
+      }
+      await aoSalvar({
+        nome: nome.trim(),
+        descricao,
+        ...(comCriterios && Object.fromEntries(Object.entries(criterios).map(([campo, valor]) => [campo, Number(valor)]))),
+      });
     } catch (e) {
       const detalhe = e.response?.data?.detail;
       setErro(typeof detalhe === "string" ? detalhe : "Não foi possível salvar o projeto. Confira o nome (2 a 150 caracteres).");
@@ -319,6 +356,51 @@ function DialogoProjeto({ titulo, rotuloSalvar, aberto, valoresIniciais, aoFecha
             minRows={3}
             helperText="Opcional: objetivo, cliente ou escopo do projeto."
           />
+
+          {comCriterios ? (
+            <Box component="fieldset" sx={{ border: 1, borderColor: "divider", borderRadius: 2, p: 2, m: 0, display: "flex", flexDirection: "column", gap: 2 }}>
+              <Typography component="legend" variant="subtitle2" sx={{ px: 0.75 }}>
+                Critérios de risco
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: -1 }}>
+                Cada organização define quanto risco aceita (ISO 31000). Acima do apetite, o risco aparece como fora do apetite e pede
+                tratamento; o prazo diz de quantos em quantos dias cada faixa deve ser reavaliada (GPR 17).
+              </Typography>
+              <TextField
+                select
+                label="Apetite: maior exposição aceitável"
+                value={criterios.apetite_exposicao}
+                onChange={(e) => alterarCriterio("apetite_exposicao", e.target.value)}
+              >
+                {EXPOSICOES_POSSIVEIS.map((n) => {
+                  const faixa = faixaExposicao(n);
+                  return (
+                    <MenuItem key={n} value={n} sx={{ gap: 1 }}>
+                      <Marcador cor={faixa.cor} /> {n} · {faixa.label}
+                    </MenuItem>
+                  );
+                })}
+              </TextField>
+              <Box sx={{ display: "grid", gap: 1.5, gridTemplateColumns: { xs: "1fr", sm: "repeat(3, minmax(0, 1fr))" } }}>
+                {PRAZOS.map((p) => (
+                  <TextField
+                    key={p.campo}
+                    type="number"
+                    label={p.rotulo}
+                    value={criterios[p.campo]}
+                    onChange={(e) => alterarCriterio(p.campo, e.target.value)}
+                    inputProps={{ min: 1, max: 365 }}
+                    InputProps={{ endAdornment: <InputAdornment position="end">dias</InputAdornment> }}
+                  />
+                ))}
+              </Box>
+            </Box>
+          ) : (
+            <Typography variant="caption" color="text.secondary">
+              O projeto começa com os critérios de risco padrão (apetite 15; reavaliação a cada 7, 15 ou 30 dias por faixa). Ajuste em
+              Editar.
+            </Typography>
+          )}
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={aoFechar}>Cancelar</Button>

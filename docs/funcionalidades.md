@@ -124,9 +124,37 @@ virar 4D só porque o dataset ficou mais rico.
   (mesmo mecanismo incremental que já existia). Um plano recém-criado ainda
   não aparece nas previsões do modelo até isso acontecer.
 
+## Fase 13 — Critérios de risco, decisões datadas e calibração
+
+- **Critérios de risco por projeto (ISO 31000: os critérios são da
+  organização).** `projetos` ganhou `apetite_exposicao` (padrão 15) e os prazos
+  de reavaliação por faixa: `prazo_reavaliacao_muito_grave` (7 dias),
+  `prazo_reavaliacao_grave` (15) e `prazo_reavaliacao_demais` (30). Editáveis
+  em Projetos › Editar. O risco devolve `prazo_reavaliacao_dias` e
+  `fora_do_apetite` (exposição acima do apetite), calculados a partir do
+  projeto (`Risco.projeto` é carregado junto).
+- **Reavaliação pelo prazo do projeto (GPR 17).** O aviso "Reavaliar" e o
+  `reavaliacao_pendente` da evolução usam o prazo da faixa do risco, não mais
+  30 dias fixos.
+- **Fora do apetite.** Chip na lista, no quadro e na ficha; motivo no quadro
+  "Precisam de atenção" da Visão geral; item no sino quando o risco ainda está
+  "identificado" (sem tratamento); contagem no cartão do projeto.
+- **Decisão datada e com motivo.** `recomendacoes` ganhou `decidida_em` e
+  `motivo_rejeicao` (opcional, até 500 caracteres, só na rejeição). Rejeitar
+  abre um diálogo com motivos rápidos (`DialogoRejeicao.jsx`); a ficha mostra a
+  data e o motivo, e a atividade do Perfil registra "Plano aceito/rejeitado".
+- **Tendência de avaliação (calibração).** `GET /riscos/painel/calibracao`
+  compara as notas do cadastro com as atuais nos riscos reavaliados: variação
+  média de probabilidade, impacto e exposição, no geral e por área afetada. O
+  Perfil só interpreta a partir de 3 riscos reavaliados e avisa que a variação
+  também reflete mudanças reais do risco.
+- **Migração:** `app/core/migrar_fase13.py` (idempotente, roda na subida da API
+  em Postgres ou SQLite) e `backend/migracoes/fase13_criterios_risco.sql`.
+
 ## Testes automatizados (evidência da avaliação técnica)
 
-76 testes em `backend/tests/`, executados com `python -m pytest`:
+205 testes em `backend/tests/` (contagem atual; a tabela abaixo é da fase 4 e
+não foi atualizada arquivo a arquivo), executados com `python -m pytest`:
 
 | Arquivo | Testes | O que cobre |
 |---|---|---|

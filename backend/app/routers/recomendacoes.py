@@ -1,6 +1,7 @@
 """Router de recomendações: aciona o ML para recomendar um plano de contingência,
 registra o aceite/rejeição do gerente e retreina o modelo com o feedback aceito."""
 import json
+from datetime import datetime, timezone
 from typing import List
 
 import pandas as pd
@@ -228,6 +229,9 @@ def responder_recomendacao(
         )
 
     recomendacao.aceita = dados.aceita
+    recomendacao.decidida_em = datetime.now(timezone.utc)
+    motivo = (dados.motivo_rejeicao or "").strip()
+    recomendacao.motivo_rejeicao = motivo if not dados.aceita and motivo else None
 
     # Aceitar o plano coloca o risco "em tratamento" (só a partir de
     # "identificado", para não regredir um risco já mitigado/monitorado).
