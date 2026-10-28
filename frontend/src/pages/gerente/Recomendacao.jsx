@@ -289,9 +289,9 @@ export default function Recomendacao() {
             }}
           >
             {confirmacao.aceita ? (
-              <CheckCircleIcon sx={{ fontSize: 56, color: "success.main" }} />
+              <CheckCircleIcon sx={{ fontSize: "3.5rem", color: "success.main" }} />
             ) : (
-              <CancelIcon sx={{ fontSize: 56, color: "warning.main" }} />
+              <CancelIcon sx={{ fontSize: "3.5rem", color: "warning.main" }} />
             )}
             <Typography variant="h6" fontWeight={700} sx={{ mt: 1 }}>
               {confirmacao.aceita ? "Plano aceito" : "Recomendação rejeitada"}
@@ -372,7 +372,7 @@ export default function Recomendacao() {
                     startIcon={<CheckIcon />}
                     disabled={processando}
                     onClick={() => responder(true)}
-                    sx={{ px: 4, py: 1.4, fontWeight: 700, fontSize: 15 }}
+                    sx={{ px: 4, py: 1.4, fontWeight: 700, fontSize: "0.9375rem" }}
                   >
                     Aceitar plano
                   </Button>
@@ -383,7 +383,7 @@ export default function Recomendacao() {
                     startIcon={<CloseIcon />}
                     disabled={processando}
                     onClick={() => responder(false)}
-                    sx={{ px: 4, py: 1.4, fontWeight: 700, fontSize: 15 }}
+                    sx={{ px: 4, py: 1.4, fontWeight: 700, fontSize: "0.9375rem" }}
                   >
                     Rejeitar
                   </Button>
@@ -412,7 +412,7 @@ export default function Recomendacao() {
             {risco && (
               <Paper sx={{ p: 3, mb: 2 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-                  <AutoAwesomeIcon sx={{ color: "secondary.main", fontSize: 20 }} />
+                  <AutoAwesomeIcon sx={{ color: "secondary.main", fontSize: "1.25rem" }} />
                   <Typography variant="subtitle1" fontWeight={600}>
                     Por que esta recomendação?
                   </Typography>
@@ -631,7 +631,7 @@ function RegistroRisco({ risco, aoSalvar }) {
   return (
     <Paper sx={{ p: 3, mb: 2 }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5, flexWrap: "wrap" }}>
-        <EditNoteIcon sx={{ color: "text.secondary", fontSize: 22 }} />
+        <EditNoteIcon sx={{ color: "text.secondary", fontSize: "1.375rem" }} />
         <Typography variant="subtitle1" fontWeight={600}>
           Registro do risco {risco.indice}
         </Typography>

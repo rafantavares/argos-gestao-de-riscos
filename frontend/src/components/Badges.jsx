@@ -1,5 +1,8 @@
 import { Box, Chip, Tooltip } from "@mui/material";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import CodeIcon from "@mui/icons-material/Code";
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import CorporateFareIcon from "@mui/icons-material/CorporateFare";
 import PublicIcon from "@mui/icons-material/Public";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
@@ -32,12 +35,35 @@ import {
 // cor fica num marcador ao lado do texto; o texto usa sempre a cor de texto,
 // para a informação não depender só da cor (acessibilidade).
 
+// Modo daltônico: cada faixa de exposição ganha uma forma própria, para que a
+// gravidade não dependa só da cor (WCAG 1.4.1). Da mais leve à mais grave:
+// círculo, quadrado, losango, triângulo e estrela.
+const FORMAS_FAIXA = [
+  { clipPath: "circle(50%)" },
+  { borderRadius: "1px" },
+  { clipPath: "polygon(50% 0, 100% 50%, 50% 100%, 0 50%)", transform: "scale(1.2)" },
+  { clipPath: "polygon(50% 4%, 100% 96%, 0 96%)", transform: "scale(1.25)" },
+  {
+    clipPath: "polygon(50% 0, 63% 34%, 100% 36%, 71% 59%, 81% 96%, 50% 75%, 19% 96%, 29% 59%, 0 36%, 37% 34%)",
+    transform: "scale(1.4)",
+  },
+];
+
 export function Marcador({ cor, forma = "quadrado", tamanho = 10 }) {
+  const faixa = /--argos-exp-(\d)\)/.exec(cor ?? "")?.[1];
   return (
     <Box
       component="span"
       aria-hidden="true"
-      sx={{ width: tamanho, height: tamanho, flex: "none", borderRadius: forma === "circulo" ? "50%" : "3px", bgcolor: cor, display: "inline-block" }}
+      sx={{
+        width: tamanho,
+        height: tamanho,
+        flex: "none",
+        borderRadius: forma === "circulo" ? "50%" : "3px",
+        bgcolor: cor,
+        display: "inline-block",
+        ...(faixa !== undefined && { "[data-escala='daltonico'] &": { borderRadius: 0, ...FORMAS_FAIXA[faixa] } }),
+      }}
     />
   );
 }
@@ -105,7 +131,7 @@ export function ChipArea({ area, size = "small" }) {
     <Chip
       size={size}
       variant="outlined"
-      icon={<IconeArea area={area} sx={{ fontSize: 16 }} />}
+      icon={<IconeArea area={area} sx={{ fontSize: "1rem" }} />}
       label={rotulo(AREAS_AFETADAS, area)}
       sx={{ fontWeight: 600, borderColor: "var(--argos-borda-forte)", "& .MuiChip-icon": { color: "text.secondary" } }}
     />
@@ -125,7 +151,7 @@ export function ChipCategoria({ categoria, size = "small" }) {
   return (
     <Chip
       size={size}
-      icon={Icone ? <Icone sx={{ fontSize: 15 }} /> : undefined}
+      icon={Icone ? <Icone sx={{ fontSize: "0.9375rem" }} /> : undefined}
       label={rotulo(CATEGORIAS, categoria)}
       sx={{ bgcolor: "var(--argos-trilha)", color: "text.primary", fontWeight: 500, "& .MuiChip-icon": { color: "text.secondary" } }}
     />
@@ -147,15 +173,25 @@ export function ChipUrgencia({ urgencia, size = "small" }) {
   );
 }
 
+// Decisão sobre a recomendação: ícone (✓, ✕, ampulheta) + cor, para não
+// depender só do par verde/vermelho.
 const ACEITE = {
-  true: { label: "Aceita", cor: "var(--argos-sucesso)" },
-  false: { label: "Rejeitada", cor: "var(--argos-erro)" },
-  null: { label: "Pendente", cor: "var(--argos-atencao)" },
+  true: { label: "Aceita", cor: "var(--argos-sucesso)", Icone: CheckIcon },
+  false: { label: "Rejeitada", cor: "var(--argos-erro)", Icone: CloseIcon },
+  null: { label: "Pendente", cor: "var(--argos-atencao)", Icone: HourglassEmptyIcon },
 };
 
 export function ChipAceite({ aceita, size = "small" }) {
-  const { label, cor } = ACEITE[aceita === true ? "true" : aceita === false ? "false" : "null"];
-  return <Chip size={size} variant="outlined" icon={<Marcador cor={cor} forma="circulo" tamanho={8} />} label={label} sx={estiloMarcado} />;
+  const { label, cor, Icone } = ACEITE[aceita === true ? "true" : aceita === false ? "false" : "null"];
+  return (
+    <Chip
+      size={size}
+      variant="outlined"
+      icon={<Icone sx={{ fontSize: "0.9375rem" }} />}
+      label={label}
+      sx={{ ...estiloMarcado, "& .MuiChip-icon": { color: cor, ml: "6px", mr: "-2px" } }}
+    />
+  );
 }
 
 // Aviso de reavaliação pendente (monitoramento contínuo, GPR 17): o mesmo
@@ -166,7 +202,7 @@ export function ChipReavaliar({ size = "small" }) {
       <Chip
         size={size}
         variant="outlined"
-        icon={<UpdateIcon sx={{ fontSize: 15 }} />}
+        icon={<UpdateIcon sx={{ fontSize: "0.9375rem" }} />}
         label="Reavaliar"
         sx={{ ...estiloMarcado, "& .MuiChip-icon": { color: "var(--argos-atencao)", ml: "6px", mr: "-2px" } }}
       />

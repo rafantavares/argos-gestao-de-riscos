@@ -109,20 +109,20 @@ export default function FichaRiscoPdf() {
           }}
         >
           <Box>
-            <Typography sx={{ fontSize: 34, fontWeight: 700, lineHeight: 1, color: "inherit", fontFamily: '"Space Grotesk", sans-serif !important' }}>
+            <Typography sx={{ fontSize: "2.125rem", fontWeight: 700, lineHeight: 1, color: "inherit", fontFamily: '"Space Grotesk", sans-serif !important' }}>
               {risco.exposicao}
             </Typography>
-            <Typography sx={{ fontSize: 11, fontWeight: 600, color: "inherit" }}>{faixa.label}</Typography>
+            <Typography sx={{ fontSize: "0.6875rem", fontWeight: 600, color: "inherit" }}>{faixa.label}</Typography>
           </Box>
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography sx={{ fontSize: 11, color: COR.suave }}>Exposição = probabilidade × impacto (1 a 25)</Typography>
-          <Typography sx={{ fontSize: 14, fontWeight: 600, mt: 0.5 }}>
+          <Typography sx={{ fontSize: "0.6875rem", color: COR.suave }}>Exposição = probabilidade × impacto (1 a 25)</Typography>
+          <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, mt: 0.5 }}>
             Probabilidade {risco.probabilidade} ({rotulo(PROBABILIDADES, risco.probabilidade).toLowerCase()}) × impacto{" "}
             {risco.impacto} ({rotulo(IMPACTOS, risco.impacto).toLowerCase()})
           </Typography>
           {risco.exposicao_residual != null && (
-            <Typography sx={{ fontSize: 12, color: COR.suave, mt: 0.5, display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+            <Typography sx={{ fontSize: "0.75rem", color: COR.suave, mt: 0.5, display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
               Esperada após a mitigação:
               <Box component="span" sx={{ color: COR.texto, fontWeight: 600 }}>
                 <MarcadorFaixa pontuacao={risco.exposicao_residual} />
@@ -166,7 +166,7 @@ export default function FichaRiscoPdf() {
 
       <Secao numero={3} titulo="Planos recomendados pelo modelo" norma="apoio à decisão">
         {recomendacoes.length === 0 ? (
-          <Typography sx={{ fontSize: 12, color: COR.suave }}>Nenhuma recomendação gerada.</Typography>
+          <Typography sx={{ fontSize: "0.75rem", color: COR.suave }}>Nenhuma recomendação gerada.</Typography>
         ) : (
           <Tabela
             colunas={["Data", "Plano de contingência", "Algoritmo", { rotulo: "Confiança", estilo: { textAlign: "right" } }, "Decisão"]}
@@ -198,7 +198,7 @@ export default function FichaRiscoPdf() {
 
       <Secao numero={4} titulo="Evolução da exposição" norma="GPR 17 · monitoramento">
         {pontos.length <= 1 ? (
-          <Typography sx={{ fontSize: 12, color: COR.suave }}>
+          <Typography sx={{ fontSize: "0.75rem", color: COR.suave }}>
             Sem reavaliações: a exposição é a da avaliação inicial ({risco.exposicao} · {risco.avaliacao_exposicao}).
           </Typography>
         ) : (
@@ -219,7 +219,7 @@ export default function FichaRiscoPdf() {
               ))}
             </Tabela>
             {evolucao?.tendencia && (
-              <Typography sx={{ fontSize: 11, color: COR.suave, mt: 1.25 }}>
+              <Typography sx={{ fontSize: "0.6875rem", color: COR.suave, mt: 1.25 }}>
                 Tendência: exposição {evolucao.tendencia === "caindo" ? "caindo" : evolucao.tendencia === "subindo" ? "subindo" : "estável"}.
               </Typography>
             )}
@@ -244,7 +244,7 @@ export default function FichaRiscoPdf() {
 
       <Secao numero={6} titulo="Evidências anexadas">
         {anexos.length === 0 ? (
-          <Typography sx={{ fontSize: 12, color: COR.suave }}>Nenhuma evidência anexada.</Typography>
+          <Typography sx={{ fontSize: "0.75rem", color: COR.suave }}>Nenhuma evidência anexada.</Typography>
         ) : (
           <Tabela colunas={["Arquivo", { rotulo: "Tamanho", estilo: { textAlign: "right" } }, "Anexado em"]}>
             {anexos.map((a) => (
@@ -257,7 +257,7 @@ export default function FichaRiscoPdf() {
           </Tabela>
         )}
         {risco.id_conversa_origem && (
-          <Typography sx={{ fontSize: 11, color: COR.suave, mt: 1.25 }}>
+          <Typography sx={{ fontSize: "0.6875rem", color: COR.suave, mt: 1.25 }}>
             Risco criado a partir de uma conversa com o Assistente IA (sugestão revisada pelo gerente).
           </Typography>
         )}

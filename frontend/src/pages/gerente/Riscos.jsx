@@ -704,7 +704,7 @@ function CartaoRisco({ risco, projeto, recomendacao, aoAbrir }) {
         <ChipUrgencia urgencia={risco.urgencia} />
         {fase && (
           <Tooltip title={`Risco identificado na fase de ${fase.label.toLowerCase()} do projeto`}>
-            <Chip size="small" variant="outlined" icon={<TimelineIcon sx={{ fontSize: 14 }} />} label={fase.label} />
+            <Chip size="small" variant="outlined" icon={<TimelineIcon sx={{ fontSize: "0.875rem" }} />} label={fase.label} />
           </Tooltip>
         )}
       </Stack>
@@ -719,7 +719,7 @@ function CartaoRisco({ risco, projeto, recomendacao, aoAbrir }) {
 
       {recomendacao ? (
         <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
-          <AutoAwesomeIcon sx={{ fontSize: 18, color: "secondary.main", mt: 0.2 }} />
+          <AutoAwesomeIcon sx={{ fontSize: "1.125rem", color: "secondary.main", mt: 0.2 }} />
           <Box sx={{ minWidth: 0, flexGrow: 1 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.3 }}>
               <Typography variant="caption" fontWeight={600} sx={{ color: "secondary.main" }}>
@@ -824,7 +824,7 @@ function PainelAssistente({ analise, carregando, notasAtuais, aoUsarArea, aoApli
       sx={{ p: 1.5, borderColor: "color-mix(in srgb, var(--argos-ia) 45%, transparent)", bgcolor: "color-mix(in srgb, var(--argos-ia) 6%, transparent)" }}
     >
       <Box sx={{ display: "flex", alignItems: "center", gap: 0.8, mb: 1 }}>
-        <AutoAwesomeIcon sx={{ fontSize: 18, color: "secondary.main" }} />
+        <AutoAwesomeIcon sx={{ fontSize: "1.125rem", color: "secondary.main" }} />
         <Typography variant="caption" fontWeight={600} sx={{ color: "secondary.main" }}>
           Assistente de IA
         </Typography>

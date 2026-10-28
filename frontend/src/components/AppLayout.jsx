@@ -80,7 +80,7 @@ const PAGINAS_BUSCA = [
   ...PAGINAS_EXTRAS,
   { caminho: "/configuracoes?aba=modelo", titulo: "Desempenho da IA", grupo: "Conta", icone: <PsychologyOutlinedIcon /> },
   { caminho: "/configuracoes?aba=sobre", titulo: "Sobre o Argos", grupo: "Conta", icone: <InfoOutlinedIcon /> },
-].map((p) => ({ ...p, icone: <Box sx={{ display: "grid", "& svg": { fontSize: 18 } }}>{p.icone}</Box> }));
+].map((p) => ({ ...p, icone: <Box sx={{ display: "grid", "& svg": { fontSize: "1.125rem" } }}>{p.icone}</Box> }));
 
 // Subpáginas que ganham um terceiro nível no caminho da barra superior.
 const SUBPAGINAS = [{ padrao: /^\/gerente\/riscos\/\d+/, titulo: "Ficha do risco" }];
@@ -102,7 +102,7 @@ function ItemRodape({ icone, rotulo, ativo, onClick, extra }) {
         sx={{ py: 0.75, justifyContent: { xs: "center", md: "flex-start" } }}
       >
         <ListItemIcon sx={{ minWidth: { xs: 0, md: 36 } }}>{icone}</ListItemIcon>
-        <ListItemText primary={rotulo} primaryTypographyProps={{ fontSize: 14, fontWeight: 500 }} sx={{ display: { xs: "none", md: "block" } }} />
+        <ListItemText primary={rotulo} primaryTypographyProps={{ fontSize: "0.875rem", fontWeight: 500 }} sx={{ display: { xs: "none", md: "block" } }} />
         {extra}
       </ListItemButton>
     </Tooltip>
@@ -207,7 +207,7 @@ export default function AppLayout({ children }) {
             <Box key={grupo.titulo} sx={{ mb: 2 }}>
               <Typography
                 component="div"
-                sx={{ display: { xs: "none", md: "block" }, px: 1.5, pb: 0.75, fontSize: 12, fontWeight: 600, color: "text.disabled" }}
+                sx={{ display: { xs: "none", md: "block" }, px: 1.5, pb: 0.75, fontSize: "0.75rem", fontWeight: 600, color: "text.disabled" }}
               >
                 {grupo.titulo}
               </Typography>
@@ -231,7 +231,7 @@ export default function AppLayout({ children }) {
                         <ListItemIcon sx={{ minWidth: { xs: 0, md: 36 } }}>{item.icone}</ListItemIcon>
                         <ListItemText
                           primary={item.rotulo}
-                          primaryTypographyProps={{ fontSize: 14, fontWeight: ativo ? 600 : 500 }}
+                          primaryTypographyProps={{ fontSize: "0.875rem", fontWeight: ativo ? 600 : 500 }}
                           sx={{ display: { xs: "none", md: "block" } }}
                         />
                         {badge && (
@@ -245,7 +245,7 @@ export default function AppLayout({ children }) {
                                 borderRadius: 10,
                                 bgcolor: misturar(v("atencao"), 16),
                                 color: v("atencao"),
-                                fontSize: 12,
+                                fontSize: "0.75rem",
                                 fontWeight: 600,
                                 display: "grid",
                                 placeItems: "center",
@@ -301,7 +301,7 @@ export default function AppLayout({ children }) {
                 sx={{
                   width: 34,
                   height: 34,
-                  fontSize: 13,
+                  fontSize: "0.8125rem",
                   bgcolor: misturar(v("marca"), 16),
                   color: v("marca"),
                 }}
@@ -340,7 +340,7 @@ export default function AppLayout({ children }) {
                     color: v("marca"),
                     bgcolor: misturar(v("marca"), 12),
                     border: `1px solid ${misturar(v("marca"), 25)}`,
-                    "& svg": { fontSize: 20 },
+                    "& svg": { fontSize: "1.25rem" },
                   }}
                 >
                   {atual.icone}
@@ -350,12 +350,12 @@ export default function AppLayout({ children }) {
                 <Box
                   component="nav"
                   aria-label="Caminho"
-                  sx={{ display: "flex", alignItems: "center", gap: 0.25, color: "text.secondary", fontSize: 12, lineHeight: 1.3 }}
+                  sx={{ display: "flex", alignItems: "center", gap: 0.25, color: "text.secondary", fontSize: "0.75rem", lineHeight: 1.3 }}
                 >
                   <span>{atual?.grupo ?? "Argos"}</span>
                   {subpagina && atual && (
                     <>
-                      <NavigateNextIcon sx={{ fontSize: 14 }} />
+                      <NavigateNextIcon sx={{ fontSize: "0.875rem" }} />
                       <Box
                         component={LinkRouter}
                         to={atual.caminho}
@@ -388,7 +388,7 @@ export default function AppLayout({ children }) {
                 borderColor: "divider",
                 bgcolor: "background.paper",
                 color: "text.secondary",
-                fontSize: 14,
+                fontSize: "0.875rem",
                 transition: "border-color 150ms ease",
                 "&:hover": { borderColor: v("texto3") },
               }}
@@ -397,7 +397,7 @@ export default function AppLayout({ children }) {
               <Box component="span" sx={{ flex: 1, textAlign: "left" }}>
                 Buscar…
               </Box>
-              <Box component="kbd" sx={{ fontFamily: "inherit", fontSize: 11, border: 1, borderColor: "divider", borderRadius: 1, px: 0.75, py: 0.1 }}>
+              <Box component="kbd" sx={{ fontFamily: "inherit", fontSize: "0.6875rem", border: 1, borderColor: "divider", borderRadius: 1, px: 0.75, py: 0.1 }}>
                 {ATALHO}
               </Box>
             </ButtonBase>

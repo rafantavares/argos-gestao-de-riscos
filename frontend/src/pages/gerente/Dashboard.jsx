@@ -237,7 +237,7 @@ export default function Dashboard() {
                     borderRadius: 999,
                     bgcolor: "var(--argos-trilha)",
                     color: "text.primary",
-                    fontSize: 12,
+                    fontSize: "0.75rem",
                     fontWeight: 500,
                   }}
                 >
@@ -287,7 +287,7 @@ export default function Dashboard() {
                     {["#", "Risco", "Severidade", "Urgência", "Status", ""].map((cabecalho, i) => (
                       <TableCell
                         key={i}
-                        sx={{ color: "text.secondary", fontWeight: 600, fontSize: 12 }}
+                        sx={{ color: "text.secondary", fontWeight: 600, fontSize: "0.75rem" }}
                       >
                         {cabecalho}
                       </TableCell>
@@ -329,7 +329,7 @@ export default function Dashboard() {
                           <ChipStatus status={risco.status} />
                         </TableCell>
                         <TableCell align="right" sx={{ width: 40 }}>
-                          <OpenInNewIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+                          <OpenInNewIcon sx={{ fontSize: "1rem", color: "text.secondary" }} />
                         </TableCell>
                       </TableRow>
                     );

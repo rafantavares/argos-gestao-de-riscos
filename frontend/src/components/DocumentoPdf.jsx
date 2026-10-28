@@ -5,6 +5,8 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { FAIXAS_EXPOSICAO, IMPACTOS, PROBABILIDADES, faixaExposicao } from "../constants";
 import LogoMark from "./Logo";
+import { Marcador } from "./Badges";
+import { texturaFaixa } from "../theme";
 
 // Peças comuns dos documentos em PDF (relatório de riscos e ficha do risco):
 // folha A4 clara, barra "Baixar PDF" (salvar em PDF do navegador), cabeçalho,
@@ -27,7 +29,7 @@ export const COR = {
 export const celula = {
   borderBottom: `1px solid ${COR.linha}`,
   padding: "7px 8px",
-  fontSize: 11.5,
+  fontSize: "0.7188rem",
   lineHeight: 1.45,
   color: COR.texto,
   verticalAlign: "top",
@@ -36,7 +38,7 @@ export const celula = {
 export const cabecalho = {
   ...celula,
   borderBottom: `1.5px solid ${COR.linhaForte}`,
-  fontSize: 10.5,
+  fontSize: "0.6562rem",
   fontWeight: 600,
   color: COR.suave,
   whiteSpace: "nowrap",
@@ -66,14 +68,14 @@ export function Secao({ numero, titulo, norma, children }) {
     <Box component="section" sx={{ mt: 4.5, "&:first-of-type": { mt: 3.5 } }}>
       <Box sx={{ display: "flex", alignItems: "baseline", gap: 1.25, mb: 1.75, breakAfter: "avoid" }}>
         {numero != null && (
-          <Typography component="span" sx={{ fontFamily: TITULO, fontSize: 13, fontWeight: 600, color: COR.marca }}>
+          <Typography component="span" sx={{ fontFamily: TITULO, fontSize: "0.8125rem", fontWeight: 600, color: COR.marca }}>
             {String(numero).padStart(2, "0")}
           </Typography>
         )}
-        <Typography component="h2" sx={{ fontFamily: TITULO, fontSize: 16, fontWeight: 600, color: COR.texto }}>
+        <Typography component="h2" sx={{ fontFamily: TITULO, fontSize: "1rem", fontWeight: 600, color: COR.texto }}>
           {titulo}
         </Typography>
-        {norma && <Typography sx={{ fontSize: 10.5, color: COR.suave, ml: "auto", whiteSpace: "nowrap" }}>{norma}</Typography>}
+        {norma && <Typography sx={{ fontSize: "0.6562rem", color: COR.suave, ml: "auto", whiteSpace: "nowrap" }}>{norma}</Typography>}
       </Box>
       {children}
     </Box>
@@ -84,10 +86,10 @@ export function Secao({ numero, titulo, norma, children }) {
 export function Indicador({ valor, rotulo: nome, detalhe }) {
   return (
     <Box sx={{ py: 1.25, px: 1.5, bgcolor: COR.fundo, borderRadius: 1.5, breakInside: "avoid" }}>
-      <Typography sx={{ fontFamily: TITULO, fontSize: 24, fontWeight: 600, lineHeight: 1.1, color: COR.texto, fontVariantNumeric: "tabular-nums" }}>
+      <Typography sx={{ fontFamily: TITULO, fontSize: "1.5rem", fontWeight: 600, lineHeight: 1.1, color: COR.texto, fontVariantNumeric: "tabular-nums" }}>
         {valor}
       </Typography>
-      <Typography sx={{ fontSize: 11, color: COR.suave, mt: 0.25 }}>{nome}</Typography>
+      <Typography sx={{ fontSize: "0.6875rem", color: COR.suave, mt: 0.25 }}>{nome}</Typography>
       {detalhe && <Box sx={{ mt: 0.5 }}>{detalhe}</Box>}
     </Box>
   );
@@ -102,7 +104,7 @@ export function MarcadorFaixa({ pontuacao, rotulo: texto }) {
   const faixa = faixaExposicao(pontuacao);
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
-      <span style={{ width: 9, height: 9, borderRadius: 2, background: faixa.cor, flex: "none" }} />
+      <Marcador cor={faixa.cor} tamanho={9} />
       {texto ?? `${pontuacao} · ${faixa.label}`}
     </span>
   );
@@ -112,7 +114,7 @@ export function MarcadorFaixa({ pontuacao, rotulo: texto }) {
 export function Etiqueta({ cor, children }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
-      <span style={{ width: 9, height: 9, borderRadius: 2, background: cor, flex: "none" }} />
+      <Marcador cor={cor} tamanho={9} />
       {children}
     </span>
   );
@@ -128,13 +130,13 @@ export function DistribuicaoFaixas({ riscos }) {
         {contagem
           .filter((f) => f.n)
           .map((f) => (
-            <Box key={f.label} sx={{ flex: f.n, bgcolor: f.cor }} />
+            <Box key={f.label} sx={{ flex: f.n, bgcolor: f.cor, ...texturaFaixa(f.indice) }} />
           ))}
       </Box>
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: "4px 18px", mt: 1 }}>
         {contagem.map((f) => (
-          <Typography key={f.label} sx={{ fontSize: 11, color: COR.suave, display: "inline-flex", alignItems: "center", gap: 0.75 }}>
-            <Box component="span" sx={{ width: 9, height: 9, borderRadius: "2px", bgcolor: f.cor }} />
+          <Typography key={f.label} sx={{ fontSize: "0.6875rem", color: COR.suave, display: "inline-flex", alignItems: "center", gap: 0.75 }}>
+            <Marcador cor={f.cor} tamanho={9} />
             {f.label}
             <Box component="strong" sx={{ color: COR.texto, fontWeight: 600 }}>
               {f.n}
@@ -150,7 +152,7 @@ export function DistribuicaoFaixas({ riscos }) {
 // Matriz 5×5 (probabilidade × impacto) com a contagem de riscos: células na cor
 // da faixa (cheia quando há riscos, bem suave quando vazia), como no sistema.
 export function MatrizPdf({ riscos }) {
-  const rotuloEixo = { fontSize: 10, color: COR.suave, padding: "0 8px", whiteSpace: "nowrap" };
+  const rotuloEixo = { fontSize: "0.625rem", color: COR.suave, padding: "0 8px", whiteSpace: "nowrap" };
   return (
     <Box sx={{ display: "flex", justifyContent: "center", breakInside: "avoid" }}>
       <table style={{ borderCollapse: "separate", borderSpacing: 4 }}>
@@ -178,7 +180,7 @@ export function MatrizPdf({ riscos }) {
                       textAlign: "center",
                       fontFamily: TITULO,
                       fontWeight: 700,
-                      fontSize: 14,
+                      fontSize: "0.875rem",
                       color: faixa.corTexto,
                       background: n ? faixa.cor : `color-mix(in srgb, ${faixa.cor} 18%, transparent)`,
                     }}
@@ -218,10 +220,10 @@ export function Campos({ itens }) {
     <Box component="dl" sx={{ display: "grid", gridTemplateColumns: "150px minmax(0, 1fr)", columnGap: 2, rowGap: 0.9, m: 0 }}>
       {visiveis.map(([nome, valor]) => (
         <Box key={nome} sx={{ display: "contents" }}>
-          <Typography component="dt" sx={{ fontSize: 11, color: COR.suave, pt: "1px" }}>
+          <Typography component="dt" sx={{ fontSize: "0.6875rem", color: COR.suave, pt: "1px" }}>
             {nome}
           </Typography>
-          <Typography component="dd" sx={{ fontSize: 12, color: valor ? COR.texto : COR.fraco, m: 0, lineHeight: 1.5 }}>
+          <Typography component="dd" sx={{ fontSize: "0.75rem", color: valor ? COR.texto : COR.fraco, m: 0, lineHeight: 1.5 }}>
             {valor || "Não informado"}
           </Typography>
         </Box>
@@ -345,15 +347,15 @@ export function DocumentoPdf({ titulo, subtitulo, rotulo: rotuloBarra, resumo, m
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, mb: 3 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <LogoMark size={30} />
-            <Typography sx={{ fontFamily: `${TITULO} !important`, fontWeight: 600, fontSize: 15, letterSpacing: "0.12em" }}>ARGOS</Typography>
+            <Typography sx={{ fontFamily: `${TITULO} !important`, fontWeight: 600, fontSize: "0.9375rem", letterSpacing: "0.12em" }}>ARGOS</Typography>
           </Box>
-          <Typography sx={{ fontSize: 11, color: COR.suave, textAlign: "right" }}>Gestão de riscos com análise preditiva</Typography>
+          <Typography sx={{ fontSize: "0.6875rem", color: COR.suave, textAlign: "right" }}>Gestão de riscos com análise preditiva</Typography>
         </Box>
 
-        <Typography component="h1" sx={{ fontSize: 28, fontWeight: 600, lineHeight: 1.15, letterSpacing: "-0.01em" }}>
+        <Typography component="h1" sx={{ fontSize: "1.75rem", fontWeight: 600, lineHeight: 1.15, letterSpacing: "-0.01em" }}>
           {titulo}
         </Typography>
-        {subtitulo && <Typography sx={{ fontSize: 14, color: COR.suave, mt: 0.75 }}>{subtitulo}</Typography>}
+        {subtitulo && <Typography sx={{ fontSize: "0.875rem", color: COR.suave, mt: 0.75 }}>{subtitulo}</Typography>}
 
         {metadados.length > 0 && (
           <Box
@@ -368,8 +370,8 @@ export function DocumentoPdf({ titulo, subtitulo, rotulo: rotuloBarra, resumo, m
           >
             {metadados.map(([nome, valor]) => (
               <Box key={nome}>
-                <Typography sx={{ fontSize: 10.5, color: COR.suave }}>{nome}</Typography>
-                <Typography sx={{ fontSize: 12, fontWeight: 600, mt: 0.25 }}>{valor}</Typography>
+                <Typography sx={{ fontSize: "0.6562rem", color: COR.suave }}>{nome}</Typography>
+                <Typography sx={{ fontSize: "0.75rem", fontWeight: 600, mt: 0.25 }}>{valor}</Typography>
               </Box>
             ))}
           </Box>
@@ -378,7 +380,7 @@ export function DocumentoPdf({ titulo, subtitulo, rotulo: rotuloBarra, resumo, m
         {children}
 
         <Typography
-          sx={{ fontSize: 10, color: COR.suave, mt: 5, pt: 1.5, borderTop: `1px solid ${COR.linha}`, lineHeight: 1.5 }}
+          sx={{ fontSize: "0.625rem", color: COR.suave, mt: 5, pt: 1.5, borderTop: `1px solid ${COR.linha}`, lineHeight: 1.5 }}
         >
           Gerado pelo Argos. Base normativa: PMBOK e MR-MPS-SW:2023 (GPR 10, GPR 10+, GPR 17, GPC 7). As recomendações do
           modelo apoiam a decisão; a decisão é do gerente do projeto.

@@ -24,6 +24,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { projetos as servicoProjetos, riscos as servicoRiscos } from "../../services/api";
 import { FAIXAS_EXPOSICAO, faixaExposicao, precisaReavaliar } from "../../constants";
 import { ChipReavaliar, Marcador } from "../../components/Badges";
+import { texturaFaixa } from "../../theme";
 import EstadoVazio from "../../components/EstadoVazio";
 import { useAviso } from "../../contexts/FeedbackContext";
 
@@ -56,7 +57,7 @@ function DistribuicaoFaixas({ porFaixa, ativos }) {
         .filter((f) => f.quantidade)
         .map((f) => (
           <Tooltip key={f.label} title={`${f.label}: ${f.quantidade}`}>
-            <Box sx={{ flex: f.quantidade, bgcolor: f.cor, borderRadius: "3px", minWidth: 6 }} />
+            <Box sx={{ flex: f.quantidade, bgcolor: f.cor, borderRadius: "3px", minWidth: 6, ...texturaFaixa(f.indice) }} />
           </Tooltip>
         ))}
     </Box>
@@ -92,7 +93,7 @@ function CartaoProjeto({ projeto, resumo, aoEditar, aoVerRiscos }) {
           <Typography variant="caption" color="text.secondary">
             Riscos ativos
           </Typography>
-          <Typography sx={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: 26, fontWeight: 600, lineHeight: 1.1 }}>
+          <Typography sx={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: "1.625rem", fontWeight: 600, lineHeight: 1.1 }}>
             {resumo.ativos}
           </Typography>
           {resumo.total > resumo.ativos && (
@@ -105,7 +106,7 @@ function CartaoProjeto({ projeto, resumo, aoEditar, aoVerRiscos }) {
           <Typography variant="caption" color="text.secondary">
             Exposição média
           </Typography>
-          <Typography sx={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: 26, fontWeight: 600, lineHeight: 1.1 }}>
+          <Typography sx={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: "1.625rem", fontWeight: 600, lineHeight: 1.1 }}>
             {resumo.media != null ? resumo.media.toLocaleString("pt-BR", { maximumFractionDigits: 1 }) : "—"}
           </Typography>
           {faixaMedia && (

@@ -155,9 +155,9 @@ export const NOMES_ALGORITMOS = {
 };
 
 export const CORES_ALGORITMOS = {
-  knn: v("marca"),
-  arvore_decisao: v("info"),
-  random_forest: v("ia"),
+  knn: v("serie0"),
+  arvore_decisao: v("serie1"),
+  random_forest: v("serie2"),
 };
 
 export const ALGORITMOS = ["knn", "arvore_decisao", "random_forest"];

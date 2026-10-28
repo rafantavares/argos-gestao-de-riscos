@@ -34,6 +34,32 @@ Texto sobre as cores de acento e de severidade (todas claras/vibrantes) usa
 A cor de marca (acento) é separada das cores de severidade de propósito —
 evita confundir "isso é uma ação do sistema" com "esse risco é grave".
 
+## Acessibilidade (Configurações › Preferências)
+
+Preferências salvas no navegador (`PreferenciasContext`), aplicadas como
+atributos no `<html>` antes do primeiro desenho (script em `index.html`):
+
+- **Modo daltônico** (`data-escala="daltonico"`): a cor nunca é o único jeito
+  de ler a gravidade (WCAG 1.4.1).
+  - Escala de exposição de uma cor só, em degraus de claridade (`ESCALAS.daltonico`).
+  - Cada faixa ganha uma forma no `Marcador`: ● Muito Leve, ■ Leve, ◆ Moderado,
+    ▲ Grave, ★ Muito Grave.
+  - A matriz mostra a exposição no canto de cada célula, e as células e barras
+    ocupadas ganham textura (`texturaFaixa`), mais densa quanto mais grave.
+  - Sucesso/erro passam de verde/vermelho para azul/magenta (`ESTADOS_DALTONICO`,
+    Okabe-Ito), inclusive nas variáveis do MUI.
+  - Os links ficam sublinhados.
+- **Tamanho do texto** (`data-texto="grande"|"maior"`): 115% ou 130% no `<html>`.
+  Todas as fontes são em `rem`; não use `fontSize` numérico (px), que não
+  acompanha a preferência. A impressão (PDF) volta sempre a 100%.
+- **Reduzir animações** (`data-movimento="reduzido"`): zera transições e
+  animações em CSS, desliga o parallax do login e passa `skipAnimation` aos
+  gráficos.
+
+As cores de séries (`serie0`–`serie3`, usadas também pelos algoritmos em
+`CORES_ALGORITMOS`) e os pares sucesso/atenção/erro foram conferidos com
+simulação de protanopia e deuteranopia (diferença mínima ΔE ≥ 8).
+
 ## Tipografia
 
 - **Space Grotesk** (500/600/700) — títulos, marca, destaques (`h1`-`h6` no tema).

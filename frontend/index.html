@@ -14,12 +14,16 @@
     />
     <title>Argos</title>
     <script>
-      // Aplica o modo (claro/escuro) e a escala salvos antes de desenhar a página.
+      // Aplica o modo (claro/escuro), a escala, o tamanho do texto e o movimento
+      // salvos antes de desenhar a página.
       try {
         var modo = localStorage.getItem("mui-mode");
         if (modo === "system") modo = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
         document.documentElement.setAttribute("data-tema", modo === "light" ? "light" : "dark");
         if (localStorage.getItem("argos.escala") === "daltonico") document.documentElement.setAttribute("data-escala", "daltonico");
+        var texto = localStorage.getItem("argos.texto");
+        if (texto === "grande" || texto === "maior") document.documentElement.setAttribute("data-texto", texto);
+        if (localStorage.getItem("argos.movimento") === "reduzido") document.documentElement.setAttribute("data-movimento", "reduzido");
       } catch (e) {
         document.documentElement.setAttribute("data-tema", "dark");
       }

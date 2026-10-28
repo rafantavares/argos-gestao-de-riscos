@@ -209,7 +209,7 @@ export default function Sobre() {
             </Typography>
             {FAIXAS_EXPOSICAO.map((faixa, i) => (
               <Box key={faixa.label} sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
-                <Box sx={{ width: 12, height: 12, borderRadius: "50%", bgcolor: faixa.cor }} />
+                <Marcador cor={faixa.cor} tamanho={12} />
                 <Typography variant="body2" color="text.secondary">
                   <strong>{faixa.label}</strong>: {i === 0 ? 1 : FAIXAS_EXPOSICAO[i - 1].ate + 1} a {faixa.ate}
                 </Typography>

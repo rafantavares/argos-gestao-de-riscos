@@ -55,7 +55,7 @@ export default function FichaRisco({ risco, aoArquivar }) {
           }}
         >
           <Box>
-            <Typography sx={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: 38, fontWeight: 700, lineHeight: 1, color: "inherit" }}>
+            <Typography sx={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: "2.375rem", fontWeight: 700, lineHeight: 1, color: "inherit" }}>
               {risco.exposicao}
             </Typography>
             <Typography variant="caption" sx={{ color: "inherit", fontWeight: 600 }}>
@@ -71,7 +71,7 @@ export default function FichaRisco({ risco, aoArquivar }) {
             </Typography>
             <ChipStatus status={risco.status} />
             {risco.arquivado && (
-              <Chip size="small" icon={<ArchiveOutlinedIcon sx={{ fontSize: 15 }} />} label="Arquivado" sx={{ bgcolor: "var(--argos-trilha)" }} />
+              <Chip size="small" icon={<ArchiveOutlinedIcon sx={{ fontSize: "0.9375rem" }} />} label="Arquivado" sx={{ bgcolor: "var(--argos-trilha)" }} />
             )}
             {precisaReavaliar(risco) && <ChipReavaliar />}
           </Box>

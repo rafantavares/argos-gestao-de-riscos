@@ -45,7 +45,7 @@ export default function PanoramaRisco({ riscos }) {
               height={170}
               text={({ value }) => (riscos.length ? value.toLocaleString("pt-BR") : "—")}
               sx={{
-                [`& .${gaugeClasses.valueText}`]: { fontSize: 34, fontWeight: 700, fontFamily: '"Space Grotesk", sans-serif' },
+                [`& .${gaugeClasses.valueText}`]: { fontSize: "2.125rem", fontWeight: 700, fontFamily: '"Space Grotesk", sans-serif' },
                 [`& .${gaugeClasses.valueText} text`]: { fill: "var(--argos-texto)" },
                 [`& .${gaugeClasses.valueArc}`]: { fill: faixaMedia.cor },
                 [`& .${gaugeClasses.referenceArc}`]: { fill: "var(--argos-trilha)" },
@@ -90,7 +90,7 @@ export default function PanoramaRisco({ riscos }) {
                 const pior = faixaExposicao(area.maior);
                 return (
                   <Box key={area.value} sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                    <IconeArea area={area.value} sx={{ fontSize: 18, color: "text.secondary" }} />
+                    <IconeArea area={area.value} sx={{ fontSize: "1.125rem", color: "text.secondary" }} />
                     <Typography variant="body2" sx={{ width: { xs: 110, sm: 170 }, flexShrink: 0 }} noWrap>
                       {area.label}
                     </Typography>

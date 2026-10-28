@@ -12,7 +12,7 @@ import { usePreferencias } from "../contexts/PreferenciasContext";
  * `tendencia`: { atual, anterior, serie: number[] } -- opcional.
  */
 export default function CartaoEstatistica({ titulo, valor, icone, tendencia, cor = "var(--argos-texto2)", destaque = false, rodape }) {
-  const { corReal } = usePreferencias();
+  const { corReal, reduzirAnimacoes } = usePreferencias();
   const delta = tendencia ? tendencia.atual - tendencia.anterior : null;
   const IconeTendencia = delta === null || delta === 0 ? TrendingFlatIcon : delta > 0 ? TrendingUpIcon : TrendingDownIcon;
 
@@ -31,9 +31,9 @@ export default function CartaoEstatistica({ titulo, valor, icone, tendencia, cor
         "&:hover": { borderColor: destaque ? cor : "var(--argos-borda-forte)" },
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: cor, "& svg": { fontSize: 18 } }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: cor, "& svg": { fontSize: "1.125rem" } }}>
         {icone}
-        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, fontSize: 13 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, fontSize: "0.8125rem" }}>
           {titulo}
         </Typography>
       </Box>
@@ -43,13 +43,13 @@ export default function CartaoEstatistica({ titulo, valor, icone, tendencia, cor
           <Typography
             variant="h4"
             fontWeight={600}
-            sx={{ lineHeight: 1.05, fontSize: { xs: 28, md: 32 }, fontVariantNumeric: "tabular-nums" }}
+            sx={{ lineHeight: 1.05, fontSize: { xs: "1.75rem", md: "2rem" }, fontVariantNumeric: "tabular-nums" }}
           >
             {valor}
           </Typography>
           {tendencia && (
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.75, color: "text.secondary" }}>
-              <IconeTendencia sx={{ fontSize: 16 }} />
+              <IconeTendencia sx={{ fontSize: "1rem" }} />
               <Typography variant="caption" sx={{ color: "text.primary", fontWeight: 600 }}>
                 {delta > 0 ? `+${delta}` : delta}
               </Typography>
@@ -67,6 +67,7 @@ export default function CartaoEstatistica({ titulo, valor, icone, tendencia, cor
         {tendencia?.serie?.length > 1 && (
           <Box sx={{ width: 96, height: 36 }}>
             <SparkLineChart
+              skipAnimation={reduzirAnimacoes}
               data={tendencia.serie}
               height={36}
               width={96}

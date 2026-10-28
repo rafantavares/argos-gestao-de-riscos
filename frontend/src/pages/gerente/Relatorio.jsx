@@ -123,7 +123,7 @@ export default function Relatorio() {
           <Indicador valor={comResidual ? `−${reducao}%` : "—"} rotulo="exposição esperada após a mitigação" />
           <Indicador valor={comResidual} rotulo="com exposição residual prevista" />
         </Indicadores>
-        <Typography sx={{ fontSize: 11, color: COR.suave, mt: 2.5, mb: 1 }}>
+        <Typography sx={{ fontSize: "0.6875rem", color: COR.suave, mt: 2.5, mb: 1 }}>
           Distribuição por faixa de exposição (impacto × probabilidade)
         </Typography>
         <DistribuicaoFaixas riscos={riscos} />
@@ -135,7 +135,7 @@ export default function Relatorio() {
 
       <Secao numero={3} titulo="Riscos identificados" norma="GPR 10">
         {riscos.length === 0 ? (
-          <Typography sx={{ fontSize: 12, color: COR.suave }}>Nenhum risco neste recorte.</Typography>
+          <Typography sx={{ fontSize: "0.75rem", color: COR.suave }}>Nenhum risco neste recorte.</Typography>
         ) : (
           <Tabela
             colunas={[
@@ -178,13 +178,13 @@ export default function Relatorio() {
               sx={{ py: 2, borderTop: indice === 0 ? "none" : `1px solid ${COR.linha}`, breakInside: "avoid" }}
             >
               <Box sx={{ display: "flex", alignItems: "baseline", gap: 1.5, flexWrap: "wrap", mb: 1.25 }}>
-                <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
+                <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600 }}>
                   <Box component="span" sx={{ color: COR.marca, mr: 1 }}>
                     {r.indice}
                   </Box>
                   {r.titulo}
                 </Typography>
-                <Typography sx={{ fontSize: 11, color: COR.suave, ml: "auto", display: "inline-flex", gap: 1.5 }}>
+                <Typography sx={{ fontSize: "0.6875rem", color: COR.suave, ml: "auto", display: "inline-flex", gap: 1.5 }}>
                   <MarcadorFaixa pontuacao={r.exposicao} />
                   <span>urgência {rotulo(URGENCIAS, r.urgencia).toLowerCase()}</span>
                 </Typography>
@@ -231,7 +231,7 @@ export default function Relatorio() {
             );
           })}
         </Tabela>
-        <Typography sx={{ fontSize: 11, color: COR.suave, mt: 1.25 }}>
+        <Typography sx={{ fontSize: "0.6875rem", color: COR.suave, mt: 1.25 }}>
           Riscos ativos sem reavaliação há 30 dias ou mais devem ter as notas revisadas conforme o andamento do projeto.
         </Typography>
       </Secao>

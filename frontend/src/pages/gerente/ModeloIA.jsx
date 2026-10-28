@@ -28,13 +28,13 @@ const ESTILO_GRAFICO = {
   "& .MuiChartsAxis-line, & .MuiChartsAxis-tick": { stroke: "var(--argos-borda)" },
   "& .MuiChartsAxis-tickLabel, & .MuiChartsAxis-label": { fill: "var(--argos-texto2)" },
 };
-const LEGENDA = { legend: { labelStyle: { fontSize: 12, fill: "var(--argos-texto2)" }, itemMarkWidth: 10, itemMarkHeight: 10 } };
+const LEGENDA = { legend: { labelStyle: { fontSize: "0.75rem", fill: "var(--argos-texto2)" }, itemMarkWidth: 10, itemMarkHeight: 10 } };
 
 // Painel do modelo de recomendação (herdado do antigo perfil admin): como os
 // três algoritmos se saem, o que pesa na decisão, a evolução a cada retreino e
 // as últimas recomendações dos seus riscos.
 export default function ModeloIA() {
-  const { corReal } = usePreferencias();
+  const { corReal, reduzirAnimacoes } = usePreferencias();
   const [metricas, setMetricas] = useState(null);
   const [importancia, setImportancia] = useState(null);
   const [historico, setHistorico] = useState([]);
@@ -129,6 +129,7 @@ export default function ModeloIA() {
               <EstadoVazio compacto titulo="Métricas indisponíveis" />
             ) : (
               <BarChart
+                skipAnimation={reduzirAnimacoes}
                 height={300}
                 layout="horizontal"
                 margin={{ left: 90 }}
@@ -148,6 +149,7 @@ export default function ModeloIA() {
               <EstadoVazio compacto titulo="Modelo ainda não treinado" />
             ) : (
               <BarChart
+                skipAnimation={reduzirAnimacoes}
                 height={300}
                 layout="horizontal"
                 margin={{ left: 150 }}
@@ -178,6 +180,7 @@ export default function ModeloIA() {
             />
           ) : (
             <LineChart
+              skipAnimation={reduzirAnimacoes}
               height={280}
               xAxis={[{ data: carimbos.map((c) => new Date(c).toLocaleDateString("pt-BR")), scaleType: "point" }]}
               yAxis={[{ min: 0, max: 100, label: "Acurácia (%)" }]}
@@ -275,11 +278,11 @@ function MatrizConfusao({ nome, cor, dados }) {
       <Box component="table" sx={{ borderCollapse: "separate", borderSpacing: 4, width: "100%" }}>
         <thead>
           <tr>
-            <Box component="th" sx={{ fontSize: 11, color: "text.secondary", textAlign: "left", fontWeight: 500 }}>
+            <Box component="th" sx={{ fontSize: "0.6875rem", color: "text.secondary", textAlign: "left", fontWeight: 500 }}>
               Real \ Previsto
             </Box>
             {classes.map((c) => (
-              <Box component="th" key={c} sx={{ fontSize: 12, color: "text.secondary", fontWeight: 600 }}>
+              <Box component="th" key={c} sx={{ fontSize: "0.75rem", color: "text.secondary", fontWeight: 600 }}>
                 {c}
               </Box>
             ))}
@@ -288,7 +291,7 @@ function MatrizConfusao({ nome, cor, dados }) {
         <tbody>
           {valores.map((linha, i) => (
             <tr key={classes[i]}>
-              <Box component="th" sx={{ fontSize: 12, color: "text.secondary", fontWeight: 600, textAlign: "left" }}>
+              <Box component="th" sx={{ fontSize: "0.75rem", color: "text.secondary", fontWeight: 600, textAlign: "left" }}>
                 {classes[i]}
               </Box>
               {linha.map((valor, j) => {

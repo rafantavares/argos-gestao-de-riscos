@@ -104,6 +104,14 @@ export const ESCALAS = {
   },
 };
 
+// Modo daltônico: o par verde/vermelho de sucesso/erro é o que daltônicos mais
+// confundem, então vira azul/magenta (Okabe-Ito). Validado com simulação de
+// protanopia e deuteranopia junto com a cor de atenção (âmbar).
+export const ESTADOS_DALTONICO = {
+  dark: { sucesso: "#56B4E9", erro: "#E87DB5" },
+  light: { sucesso: "#0072B2", erro: "#A8336F" },
+};
+
 const kebab = (nome) => nome.replace(/[A-Z]/g, (l) => `-${l.toLowerCase()}`);
 
 /** Referência a um token do tema: v("cartao") → "var(--argos-cartao)". */
@@ -131,6 +139,52 @@ function variaveis(modo) {
     vars[`--argos-${kebab(nome)}`] = valor;
   });
   return { ...vars, ...variaveisEscala(ESCALAS.padrao[modo]) };
+}
+
+// Variáveis do MUI (success/error e as derivadas de Alert, LinearProgress…)
+// recalculadas com as cores do modo daltônico: gera um tema só com essas duas
+// cores e copia dele as variáveis --mui-palette-*success* / *error*.
+function estadosDaltonico(modo) {
+  const { sucesso, erro } = ESTADOS_DALTONICO[modo];
+  const variante = createTheme({
+    cssVariables: { colorSchemeSelector: "data-tema" },
+    colorSchemes: {
+      [modo]: {
+        palette: {
+          success: { main: sucesso, contrastText: PALETAS[modo].sobreTom },
+          error: { main: erro, contrastText: PALETAS[modo].sobreTom },
+        },
+      },
+    },
+    defaultColorScheme: modo,
+  });
+  const vars = { "--argos-sucesso": sucesso, "--argos-erro": erro };
+  variante.generateStyleSheets().forEach((folha) =>
+    Object.values(folha).forEach((regras) =>
+      Object.entries(regras ?? {}).forEach(([nome, valor]) => {
+        if (/^--mui-palette-.*(success|error)/i.test(nome)) vars[nome] = valor;
+      })
+    )
+  );
+  return vars;
+}
+
+// Textura por faixa de exposição (modo daltônico): listras cada vez mais densas
+// conforme a gravidade, na cor do texto da faixa. Muito Leve fica lisa.
+const TEXTURAS = [
+  null,
+  "repeating-linear-gradient(45deg, C 0 1.5px, transparent 1.5px 9px)",
+  "repeating-linear-gradient(45deg, C 0 1.5px, transparent 1.5px 6px)",
+  "repeating-linear-gradient(45deg, C 0 1.5px, transparent 1.5px 6px), repeating-linear-gradient(-45deg, C 0 1.5px, transparent 1.5px 6px)",
+  "repeating-linear-gradient(45deg, C 0 2px, transparent 2px 4.5px), repeating-linear-gradient(-45deg, C 0 2px, transparent 2px 4.5px)",
+];
+
+/** sx que aplica a textura da faixa só quando o modo daltônico está ligado. */
+export function texturaFaixa(indice) {
+  const textura = TEXTURAS[indice];
+  if (!textura) return {};
+  const cor = `color-mix(in srgb, var(--argos-exp-texto-${indice}) 38%, transparent)`;
+  return { "[data-escala='daltonico'] &": { backgroundImage: textura.replaceAll("C", cor) } };
 }
 
 function paletaMui(p, modo) {
@@ -185,12 +239,26 @@ const theme = createTheme({
       styleOverrides: {
         ":root, [data-tema='dark']": { ...variaveis("dark"), colorScheme: "dark" },
         "[data-tema='light']": { ...variaveis("light"), colorScheme: "light" },
-        "[data-tema='dark'][data-escala='daltonico']": variaveisEscala(ESCALAS.daltonico.dark),
-        "[data-tema='light'][data-escala='daltonico']": variaveisEscala(ESCALAS.daltonico.light),
+        "[data-tema='dark'][data-escala='daltonico']": { ...variaveisEscala(ESCALAS.daltonico.dark), ...estadosDaltonico("dark") },
+        "[data-tema='light'][data-escala='daltonico']": { ...variaveisEscala(ESCALAS.daltonico.light), ...estadosDaltonico("light") },
+        // Modo daltônico: links sublinhados (não dependem só da cor).
+        "[data-escala='daltonico'] a:not(.MuiButtonBase-root)": { textDecoration: "underline" },
+        // Tamanho do texto (Configurações › Preferências). Tudo é medido em rem,
+        // então cresce junto; a impressão (PDF) volta sempre ao tamanho padrão.
+        "html[data-texto='grande']": { fontSize: "115%" },
+        "html[data-texto='maior']": { fontSize: "130%" },
+        "@media print": { html: { fontSize: "100% !important" } },
+        // Reduzir animações (preferência explícita, além da do sistema).
+        "[data-movimento='reduzido'] *, [data-movimento='reduzido'] *::before, [data-movimento='reduzido'] *::after": {
+          transitionDuration: "0.01ms !important",
+          animationDuration: "0.01ms !important",
+          animationIterationCount: "1 !important",
+          scrollBehavior: "auto !important",
+        },
         // Documentos para impressão (PDF) usam sempre a paleta clara inteira (papel
         // branco), com a escala padrão ou a do modo daltônico.
         ".documento-claro": { ...variaveis("light"), colorScheme: "light" },
-        "[data-escala='daltonico'] .documento-claro": variaveisEscala(ESCALAS.daltonico.light),
+        "[data-escala='daltonico'] .documento-claro": { ...variaveisEscala(ESCALAS.daltonico.light), ...estadosDaltonico("light") },
         body: {
           backgroundColor: v("fundo"),
           WebkitFontSmoothing: "antialiased",

@@ -20,6 +20,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { usePreferencias } from "../contexts/PreferenciasContext";
 import { FAIXAS_EXPOSICAO } from "../constants";
 import FormularioSenha from "../components/FormularioSenha";
+import { texturaFaixa } from "../theme";
 
 const Sobre = lazy(() => import("./Sobre"));
 const ModeloIA = lazy(() => import("./gerente/ModeloIA"));
@@ -49,7 +50,8 @@ function Secao({ titulo, descricao, children }) {
 }
 
 function Preferencias() {
-  const { modo, definirModo, daltonico, definirDaltonico } = usePreferencias();
+  const { modo, definirModo, daltonico, definirDaltonico, tamanhoTexto, definirTamanhoTexto, reduzirAnimacoes, definirReduzirAnimacoes } =
+    usePreferencias();
 
   return (
     <Box sx={{ ...GRADE, alignItems: "stretch" }}>
@@ -65,8 +67,8 @@ function Preferencias() {
       </Secao>
 
       <Secao
-        titulo="Acessibilidade"
-        descricao="O modo daltônico troca a escala de gravidade (verde → vermelho) por uma escala de uma cor só, em degraus de claridade, que pessoas com daltonismo distinguem com segurança. A matriz, os gráficos e as etiquetas mudam juntos."
+        titulo="Modo daltônico"
+        descricao="A gravidade deixa de depender só da cor: a escala vira uma cor só em degraus de claridade, cada faixa ganha uma forma (● ■ ◆ ▲ ★), a matriz mostra a exposição de cada célula, as barras ganham textura, sucesso/erro passam de verde/vermelho para azul/magenta e os links ficam sublinhados."
       >
         <FormControlLabel
           control={<Switch checked={daltonico} onChange={(e) => definirDaltonico(e.target.checked)} />}
@@ -76,16 +78,47 @@ function Preferencias() {
           {FAIXAS_EXPOSICAO.map((faixa) => (
             <Box
               key={faixa.label}
-              sx={{ flex: 1, height: 40, bgcolor: faixa.cor, color: faixa.corTexto, display: "grid", placeItems: "center", fontSize: 12, fontWeight: 600 }}
+              sx={{ ...texturaFaixa(faixa.indice), flex: 1, height: 40, bgcolor: faixa.cor, color: faixa.corTexto, display: "grid", placeItems: "center", fontSize: "0.75rem", fontWeight: 600 }}
             >
-              {faixa.label}
+              <Box component="span" sx={{ bgcolor: faixa.cor, px: 0.75, borderRadius: 0.5 }}>
+                {faixa.label}
+              </Box>
             </Box>
           ))}
         </Box>
       </Secao>
+
+      <Secao titulo="Tamanho do texto" descricao="Aumenta todos os textos do sistema, inclusive tabelas e gráficos. Os documentos em PDF continuam no tamanho padrão.">
+        <ToggleButtonGroup exclusive value={tamanhoTexto} onChange={(_, novo) => novo && definirTamanhoTexto(novo)} aria-label="Tamanho do texto">
+          {TAMANHOS.map((t) => (
+            <ToggleButton key={t.valor} value={t.valor} sx={{ px: 2.5, gap: 1, alignItems: "baseline" }}>
+              <Box component="span" aria-hidden="true" sx={{ fontWeight: 700, fontSize: t.amostra }}>
+                A
+              </Box>
+              {t.rotulo}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+      </Secao>
+
+      <Secao
+        titulo="Animações"
+        descricao="Desliga o movimento da tela de entrada, as transições e a animação dos gráficos. Ajuda quem sente desconforto com movimento na tela."
+      >
+        <FormControlLabel
+          control={<Switch checked={reduzirAnimacoes} onChange={(e) => definirReduzirAnimacoes(e.target.checked)} />}
+          label="Reduzir animações"
+        />
+      </Secao>
     </Box>
   );
 }
+
+const TAMANHOS = [
+  { valor: "padrao", rotulo: "Padrão", amostra: "0.875rem" },
+  { valor: "grande", rotulo: "Grande", amostra: "1rem" },
+  { valor: "maior", rotulo: "Maior", amostra: "1.125rem" },
+];
 
 function Seguranca() {
   const { usuario, sair } = useAuth();

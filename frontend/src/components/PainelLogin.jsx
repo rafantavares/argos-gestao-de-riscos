@@ -42,6 +42,7 @@ const ANIMACOES = {
   "@media (prefers-reduced-motion: reduce)": {
     ".painel-login *": { animation: "none !important", transition: "none !important" },
   },
+  "[data-movimento='reduzido'] .painel-login *": { animation: "none !important", transition: "none !important" },
 };
 
 // Contagem de riscos por célula ("probabilidade-impacto") do cartão da matriz.
@@ -143,10 +144,10 @@ function CartaoMatriz() {
   return (
     <Box sx={{ ...vidro, width: 290, p: 2, animation: "surgirCartao .8s ease-out .2s both" }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", mb: 1.5 }}>
-        <Box component="span" sx={{ fontFamily: FONTE_TITULO, fontWeight: 600, fontSize: 14, color: COR.texto }}>
+        <Box component="span" sx={{ fontFamily: FONTE_TITULO, fontWeight: 600, fontSize: "0.875rem", color: COR.texto }}>
           Matriz do projeto
         </Box>
-        <Box component="span" sx={{ fontSize: 11, color: COR.texto2 }}>
+        <Box component="span" sx={{ fontSize: "0.6875rem", color: COR.texto2 }}>
           13 riscos ativos
         </Box>
       </Box>
@@ -165,7 +166,7 @@ function CartaoMatriz() {
                   placeItems: "center",
                   fontFamily: FONTE_TITULO,
                   fontWeight: 700,
-                  fontSize: 13,
+                  fontSize: "0.8125rem",
                   color: texto[f],
                   bgcolor: n ? cores[f] : `color-mix(in srgb, ${cores[f]} 20%, transparent)`,
                   boxShadow: p === 4 && i === 5 ? "0 0 0 2px #11161F, 0 0 0 3.5px #E8ECF3" : "none",
@@ -177,7 +178,7 @@ function CartaoMatriz() {
           })
         )}
       </Box>
-      <Box sx={{ mt: 1, fontSize: 11, color: COR.texto2 }}>probabilidade × impacto</Box>
+      <Box sx={{ mt: 1, fontSize: "0.6875rem", color: COR.texto2 }}>probabilidade × impacto</Box>
     </Box>
   );
 }
@@ -195,13 +196,13 @@ function AvisoReavaliacao() {
         background: "rgba(17,22,31,0.85)",
         border: "1px solid rgba(240,206,101,0.35)",
         boxShadow: "0 12px 30px rgba(0,0,0,0.4)",
-        fontSize: 13,
+        fontSize: "0.8125rem",
         color: COR.texto,
         whiteSpace: "nowrap",
         animation: "surgirCartao .8s ease-out .5s both",
       }}
     >
-      <UpdateIcon sx={{ fontSize: 17, color: "#F0CE65" }} />
+      <UpdateIcon sx={{ fontSize: "1.0625rem", color: "#F0CE65" }} />
       <span>
         <strong style={{ fontWeight: 600 }}>R07</strong> · reavaliação pendente há 34 dias
       </span>
@@ -217,18 +218,18 @@ function CartaoEvolucao() {
     <Box sx={{ ...vidro, width: 340, px: 2.25, py: 2, animation: "surgirCartao .8s ease-out .35s both" }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <Box>
-          <Box sx={{ fontSize: 12, color: COR.texto2 }}>Exposição média do projeto</Box>
+          <Box sx={{ fontSize: "0.75rem", color: COR.texto2 }}>Exposição média do projeto</Box>
           <Box sx={{ display: "flex", alignItems: "baseline", gap: 1.25, mt: 0.5 }}>
-            <Box component="span" sx={{ fontFamily: FONTE_TITULO, fontWeight: 600, fontSize: 28, color: COR.texto }}>
+            <Box component="span" sx={{ fontFamily: FONTE_TITULO, fontWeight: 600, fontSize: "1.75rem", color: COR.texto }}>
               9,2
             </Box>
-            <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, fontSize: 12, color: COR.texto }}>
+            <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, fontSize: "0.75rem", color: COR.texto }}>
               <Box component="span" sx={{ width: 9, height: 9, borderRadius: "2px", bgcolor: corLeve }} />
               Leve
             </Box>
           </Box>
         </Box>
-        <Box component="span" sx={{ fontSize: 12, fontWeight: 600, color: "#6CCB8B", px: 1, py: 0.4, borderRadius: "6px", bgcolor: "rgba(108,203,139,0.12)" }}>
+        <Box component="span" sx={{ fontSize: "0.75rem", fontWeight: 600, color: "#6CCB8B", px: 1, py: 0.4, borderRadius: "6px", bgcolor: "rgba(108,203,139,0.12)" }}>
           −38% após mitigação
         </Box>
       </Box>
@@ -250,7 +251,7 @@ function CartaoEvolucao() {
         />
         <circle cx="304" cy="54" r="4" fill={COR.marca} />
       </svg>
-      <Box sx={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: COR.texto3, mt: 0.5 }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", fontSize: "0.6875rem", color: COR.texto3, mt: 0.5 }}>
         <span>set.</span>
         <span>out.</span>
         <span>hoje</span>
@@ -272,19 +273,19 @@ function CartaoIA() {
       }}
     >
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-        <AutoAwesomeIcon sx={{ fontSize: 16, color: COR.ia }} />
-        <Box component="span" sx={{ fontSize: 12, fontWeight: 600, color: "#C4B5FD" }}>
+        <AutoAwesomeIcon sx={{ fontSize: "1rem", color: COR.ia }} />
+        <Box component="span" sx={{ fontSize: "0.75rem", fontWeight: 600, color: "#C4B5FD" }}>
           Plano recomendado pela IA
         </Box>
       </Box>
-      <Box sx={{ fontSize: 14, fontWeight: 600, color: COR.texto, lineHeight: 1.4 }}>
+      <Box sx={{ fontSize: "0.875rem", fontWeight: 600, color: COR.texto, lineHeight: 1.4 }}>
         Ativar fornecedor alternativo e acionar as cláusulas de contingência.
       </Box>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, mt: 1.5 }}>
         <Box sx={{ flex: 1, height: 5, borderRadius: 3, bgcolor: "rgba(255,255,255,0.08)" }}>
           <Box sx={{ width: "82%", height: "100%", borderRadius: 3, bgcolor: COR.ia }} />
         </Box>
-        <Box component="span" sx={{ fontSize: 11, color: COR.texto2 }}>
+        <Box component="span" sx={{ fontSize: "0.6875rem", color: COR.texto2 }}>
           82% de confiança
         </Box>
       </Box>
@@ -293,6 +294,7 @@ function CartaoIA() {
 }
 
 export default function PainelLogin() {
+  const { reduzirAnimacoes } = usePreferencias();
   const [mouse, setMouse] = useState({ x: 0, y: 0 });
   const quadro = useRef(0);
 
@@ -312,7 +314,7 @@ export default function PainelLogin() {
     <Box
       className="painel-login"
       aria-hidden="true"
-      onMouseMove={aoMover}
+      onMouseMove={reduzirAnimacoes ? undefined : aoMover}
       onMouseLeave={() => setMouse({ x: 0, y: 0 })}
       sx={{
         position: "relative",
@@ -355,8 +357,8 @@ export default function PainelLogin() {
           <LogoMark size={64} />
         </Box>
         <Box>
-          <Box sx={{ fontFamily: FONTE_TITULO, fontWeight: 600, fontSize: 42, lineHeight: 1, letterSpacing: "0.16em", color: COR.texto }}>ARGOS</Box>
-          <Box sx={{ fontSize: 15, color: COR.texto2, mt: 0.75 }}>Monitoramento contínuo de riscos, com análise preditiva</Box>
+          <Box sx={{ fontFamily: FONTE_TITULO, fontWeight: 600, fontSize: "2.625rem", lineHeight: 1, letterSpacing: "0.16em", color: COR.texto }}>ARGOS</Box>
+          <Box sx={{ fontSize: "0.9375rem", color: COR.texto2, mt: 0.75 }}>Monitoramento contínuo de riscos, com análise preditiva</Box>
         </Box>
       </Box>
     </Box>

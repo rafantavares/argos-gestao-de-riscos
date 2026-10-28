@@ -96,7 +96,7 @@ function Mensagem({ mensagem, acao }) {
           color: "secondary.main",
         }}
       >
-        <AutoAwesomeIcon sx={{ fontSize: 18 }} />
+        <AutoAwesomeIcon sx={{ fontSize: "1.125rem" }} />
       </Box>
       {/* Linhas de até ~75 caracteres: respostas longas ficam mais fáceis de ler. */}
       <Box sx={{ minWidth: 0, flex: 1, maxWidth: "75ch", wordBreak: "break-word", pt: 0.5 }}>
@@ -381,7 +381,7 @@ export default function Assistente() {
                           setRenomeando({ id: c.id, titulo: c.titulo });
                         }}
                       >
-                        <EditOutlinedIcon sx={{ fontSize: 16 }} />
+                        <EditOutlinedIcon sx={{ fontSize: "1rem" }} />
                       </IconButton>
                       <IconButton
                         size="small"
@@ -391,7 +391,7 @@ export default function Assistente() {
                           excluirConversa(c);
                         }}
                       >
-                        <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                        <DeleteOutlineIcon sx={{ fontSize: "1rem" }} />
                       </IconButton>
                     </Box>
                   </Box>

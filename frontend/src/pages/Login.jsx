@@ -126,7 +126,7 @@ export default function Login() {
         <Logo size={40} fontSize={23} />
 
         <Box sx={{ my: "auto", py: 4, width: "100%", maxWidth: 400, mx: { xs: "auto", md: 0 } }}>
-          <Typography component="h1" sx={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: 30, fontWeight: 600, letterSpacing: "-0.01em", mb: 1 }}>
+          <Typography component="h1" sx={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: "1.875rem", fontWeight: 600, letterSpacing: "-0.01em", mb: 1 }}>
             {criando ? "Criar conta" : "Bem-vindo de volta"}
           </Typography>
           <Typography color="text.secondary" sx={{ mb: 3.5 }}>

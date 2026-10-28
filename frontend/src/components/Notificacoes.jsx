@@ -57,7 +57,7 @@ export default function Notificacoes({ itens }) {
           aria-label={`Notificações: ${total} pendência${total === 1 ? "" : "s"}`}
           sx={{ border: 1, borderColor: "divider", bgcolor: "background.paper", width: 40, height: 40 }}
         >
-          <Badge badgeContent={total} max={99} color="warning" sx={{ "& .MuiBadge-badge": { fontWeight: 700, fontSize: 10, minWidth: 18, height: 18 } }}>
+          <Badge badgeContent={total} max={99} color="warning" sx={{ "& .MuiBadge-badge": { fontWeight: 700, fontSize: "0.625rem", minWidth: 18, height: 18 } }}>
             <NotificationsNoneOutlinedIcon fontSize="small" />
           </Badge>
         </IconButton>
@@ -106,7 +106,7 @@ export default function Notificacoes({ itens }) {
                         : "color-mix(in srgb, var(--argos-atencao) 14%, transparent)",
                   }}
                 >
-                  {item.tipo === "decidir" ? <AutoAwesomeOutlinedIcon sx={{ fontSize: 17 }} /> : <UpdateIcon sx={{ fontSize: 17 }} />}
+                  {item.tipo === "decidir" ? <AutoAwesomeOutlinedIcon sx={{ fontSize: "1.0625rem" }} /> : <UpdateIcon sx={{ fontSize: "1.0625rem" }} />}
                 </Box>
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                   <Typography variant="body2" fontWeight={500} noWrap>

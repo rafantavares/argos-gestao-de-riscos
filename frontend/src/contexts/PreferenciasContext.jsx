@@ -1,37 +1,63 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useColorScheme } from "@mui/material/styles";
-import { ESCALAS, PALETAS } from "../theme";
+import { ESCALAS, ESTADOS_DALTONICO, PALETAS } from "../theme";
 
 // Preferências visuais de quem está usando (ficam no navegador):
 // - modo: "dark" (padrão) ou "light"; o MUI guarda em localStorage["mui-mode"]
 //   e troca o atributo data-tema do <html>.
 // - daltonico: troca a escala de exposição pela versão segura para daltonismo
 //   (atributo data-escala do <html>; ver ESCALAS em theme.js).
+// - tamanhoTexto: "padrao", "grande" (115%) ou "maior" (130%) (data-texto).
+// - reduzirAnimacoes: desliga transições, animações e gráficos animados
+//   (data-movimento="reduzido"), mesmo sem a opção do sistema operacional.
 const CHAVE_ESCALA = "argos.escala";
+const CHAVE_TEXTO = "argos.texto";
+const CHAVE_MOVIMENTO = "argos.movimento";
+const TAMANHOS_TEXTO = ["padrao", "grande", "maior"];
 const PreferenciasContext = createContext(null);
 
-function lerDaltonico() {
+function ler(chave) {
   try {
-    return localStorage.getItem(CHAVE_ESCALA) === "daltonico";
+    return localStorage.getItem(chave);
   } catch {
-    return false;
+    return null;
   }
+}
+
+function gravar(chave, valor) {
+  try {
+    localStorage.setItem(chave, valor);
+  } catch {
+    // navegação privada: a preferência vale só nesta visita
+  }
+}
+
+// Atributo no <html>: presente com o valor, ou removido quando é o padrão.
+function marcarRaiz(atributo, valor) {
+  if (valor) document.documentElement.setAttribute(atributo, valor);
+  else document.documentElement.removeAttribute(atributo);
 }
 
 export function PreferenciasProvider({ children }) {
   const { mode, systemMode, setMode } = useColorScheme();
-  const [daltonico, setDaltonico] = useState(lerDaltonico);
+  const [daltonico, setDaltonico] = useState(() => ler(CHAVE_ESCALA) === "daltonico");
+  const [tamanhoTexto, setTamanhoTexto] = useState(() => (TAMANHOS_TEXTO.includes(ler(CHAVE_TEXTO)) ? ler(CHAVE_TEXTO) : "padrao"));
+  const [reduzirAnimacoes, setReduzirAnimacoes] = useState(() => ler(CHAVE_MOVIMENTO) === "reduzido");
 
   useEffect(() => {
-    const raiz = document.documentElement;
-    if (daltonico) raiz.setAttribute("data-escala", "daltonico");
-    else raiz.removeAttribute("data-escala");
-    try {
-      localStorage.setItem(CHAVE_ESCALA, daltonico ? "daltonico" : "padrao");
-    } catch {
-      // navegação privada: a preferência vale só nesta visita
-    }
+    marcarRaiz("data-escala", daltonico && "daltonico");
+    gravar(CHAVE_ESCALA, daltonico ? "daltonico" : "padrao");
   }, [daltonico]);
+
+  useEffect(() => {
+    marcarRaiz("data-texto", tamanhoTexto !== "padrao" && tamanhoTexto);
+    gravar(CHAVE_TEXTO, tamanhoTexto);
+  }, [tamanhoTexto]);
+
+  useEffect(() => {
+    marcarRaiz("data-movimento", reduzirAnimacoes && "reduzido");
+    gravar(CHAVE_MOVIMENTO, reduzirAnimacoes ? "reduzido" : "normal");
+  }, [reduzirAnimacoes]);
 
   // "system" só aparece se alguém mexer no armazenamento; resolve para o real.
   const modo = (mode === "system" ? systemMode : mode) ?? "dark";
@@ -43,7 +69,7 @@ export function PreferenciasProvider({ children }) {
     const kebab = (nome) => nome.replace(/[A-Z]/g, (l) => `-${l.toLowerCase()}`);
     const tema = modo === "light" ? "light" : "dark";
     const mapa = {};
-    Object.entries(PALETAS[tema]).forEach(([nome, cor]) => {
+    Object.entries({ ...PALETAS[tema], ...(daltonico ? ESTADOS_DALTONICO[tema] : {}) }).forEach(([nome, cor]) => {
       mapa[kebab(nome)] = cor;
     });
     ESCALAS[daltonico ? "daltonico" : "padrao"][tema].cores.forEach((cor, i) => {
@@ -66,6 +92,10 @@ export function PreferenciasProvider({ children }) {
     alternarModo: () => setMode(modo === "light" ? "dark" : "light"),
     daltonico,
     definirDaltonico: setDaltonico,
+    tamanhoTexto,
+    definirTamanhoTexto: setTamanhoTexto,
+    reduzirAnimacoes,
+    definirReduzirAnimacoes: setReduzirAnimacoes,
     corReal,
   };
 

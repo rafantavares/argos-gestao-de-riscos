@@ -33,7 +33,7 @@ const TENDENCIAS = {
 // gerente revisa as notas e a fase atual, e cada revisão vira um ponto da
 // série de evolução da exposição.
 export default function EvolucaoExposicao({ risco, aoReavaliar }) {
-  const { corReal } = usePreferencias();
+  const { corReal, reduzirAnimacoes } = usePreferencias();
   const [evolucao, setEvolucao] = useState(null);
   const [probabilidade, setProbabilidade] = useState(risco.probabilidade);
   const [impacto, setImpacto] = useState(risco.impacto);
@@ -91,7 +91,7 @@ export default function EvolucaoExposicao({ risco, aoReavaliar }) {
   return (
     <Paper sx={{ p: 3, mb: 2 }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5, flexWrap: "wrap" }}>
-        <TimelineIcon sx={{ color: "text.secondary", fontSize: 22 }} />
+        <TimelineIcon sx={{ color: "text.secondary", fontSize: "1.375rem" }} />
         <Typography variant="subtitle1" fontWeight={600}>
           Evolução da exposição
         </Typography>
@@ -120,6 +120,7 @@ export default function EvolucaoExposicao({ risco, aoReavaliar }) {
 
       {pontos.length > 1 ? (
         <LineChart
+          skipAnimation={reduzirAnimacoes}
           height={220}
           margin={{ left: 60, right: 50, top: 20, bottom: 30 }}
           xAxis={[

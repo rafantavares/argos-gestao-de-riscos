@@ -58,7 +58,7 @@ export default function BuscaGlobal({ aberta, aoFechar, riscos, paginas }) {
         chave: `p${p.id}`,
         titulo: p.nome,
         detalhe: "Ver riscos do projeto",
-        icone: <AccountTreeOutlinedIcon sx={{ fontSize: 18 }} />,
+        icone: <AccountTreeOutlinedIcon sx={{ fontSize: "1.125rem" }} />,
         destino: "/gerente/riscos",
         estado: { projeto: p.id },
       }));
@@ -119,9 +119,9 @@ export default function BuscaGlobal({ aberta, aoFechar, riscos, paginas }) {
           onKeyDown={aoTeclar}
           placeholder="Buscar riscos, projetos e páginas…"
           inputProps={{ "aria-label": "Buscar riscos, projetos e páginas", role: "combobox", "aria-expanded": true, "aria-controls": "resultados-busca" }}
-          sx={{ py: 2, fontSize: 16 }}
+          sx={{ py: 2, fontSize: "1rem" }}
         />
-        <Box component="kbd" sx={{ fontSize: 11, color: "text.secondary", border: 1, borderColor: "divider", borderRadius: 1, px: 0.75, py: 0.25, fontFamily: "inherit" }}>
+        <Box component="kbd" sx={{ fontSize: "0.6875rem", color: "text.secondary", border: 1, borderColor: "divider", borderRadius: 1, px: 0.75, py: 0.25, fontFamily: "inherit" }}>
           Esc
         </Box>
       </Box>
@@ -171,7 +171,7 @@ export default function BuscaGlobal({ aberta, aoFechar, riscos, paginas }) {
                         </Typography>
                       )}
                     </Box>
-                    {atual && <SubdirectoryArrowLeftIcon sx={{ fontSize: 16, color: "text.secondary" }} />}
+                    {atual && <SubdirectoryArrowLeftIcon sx={{ fontSize: "1rem", color: "text.secondary" }} />}
                   </ButtonBase>
                 );
               })}
@@ -180,11 +180,11 @@ export default function BuscaGlobal({ aberta, aoFechar, riscos, paginas }) {
         )}
       </Box>
 
-      <Box sx={{ display: "flex", gap: 2, px: 2.5, py: 1.25, borderTop: 1, borderColor: "divider", color: "text.secondary", fontSize: 12 }}>
+      <Box sx={{ display: "flex", gap: 2, px: 2.5, py: 1.25, borderTop: 1, borderColor: "divider", color: "text.secondary", fontSize: "0.75rem" }}>
         <span>↑ ↓ para navegar</span>
         <span>Enter para abrir</span>
         <Box component="span" sx={{ ml: "auto", display: "inline-flex", alignItems: "center", gap: 0.5 }}>
-          <ReportProblemOutlinedIcon sx={{ fontSize: 14 }} /> {riscos.filter((r) => !r.arquivado).length} riscos
+          <ReportProblemOutlinedIcon sx={{ fontSize: "0.875rem" }} /> {riscos.filter((r) => !r.arquivado).length} riscos
         </Box>
       </Box>
     </Dialog>

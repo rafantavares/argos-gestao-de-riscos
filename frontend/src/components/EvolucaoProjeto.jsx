@@ -9,7 +9,7 @@ import { usePreferencias } from "../contexts/PreferenciasContext";
 // soma de cada faixa empilhada: a altura total é a exposição do projeto.
 export default function EvolucaoProjeto({ idProjeto }) {
   const [pontos, setPontos] = useState(null);
-  const { corReal } = usePreferencias();
+  const { corReal, reduzirAnimacoes } = usePreferencias();
 
   useEffect(() => {
     servicoRiscos
@@ -50,6 +50,7 @@ export default function EvolucaoProjeto({ idProjeto }) {
         </Typography>
       ) : (
         <LineChart
+          skipAnimation={reduzirAnimacoes}
           height={250}
           margin={{ left: 50, right: 20, top: 40, bottom: 30 }}
           xAxis={[{ data: rotulos, scaleType: "point" }]}
@@ -66,7 +67,7 @@ export default function EvolucaoProjeto({ idProjeto }) {
           grid={{ horizontal: true }}
           tooltip={{ trigger: "axis" }}
           axisHighlight={{ x: "line" }}
-          slotProps={{ legend: { direction: "row", position: { vertical: "top", horizontal: "right" }, itemMarkWidth: 10, itemMarkHeight: 10, labelStyle: { fontSize: 12, fill: "var(--argos-texto2)" } } }}
+          slotProps={{ legend: { direction: "row", position: { vertical: "top", horizontal: "right" }, itemMarkWidth: 10, itemMarkHeight: 10, labelStyle: { fontSize: "0.75rem", fill: "var(--argos-texto2)" } } }}
           sx={{
             "& .MuiAreaElement-root": { fillOpacity: 0.9 },
             // Linha na cor do cartão: separa as faixas com um vão de 2px.
