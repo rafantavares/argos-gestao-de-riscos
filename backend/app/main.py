@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.migrar_fase12 import converter_admins_em_gerentes
 from app.core.migrar_fase13 import adicionar_colunas_fase13
 from app.core.migrar_fase14 import adicionar_colunas_fase14
+from app.core.migrar_fase15 import adicionar_colunas_fase15
 from app.core.seed import semear_planos_contingencia, sincronizar_textos_planos
 from app.database import Base, SessaoLocal, engine
 from app.routers import auth, chat, ml, planos, projetos, recomendacoes, riscos, tarefas
@@ -21,6 +22,7 @@ async def ciclo_de_vida(_app: FastAPI):
     Base.metadata.create_all(bind=engine)
     adicionar_colunas_fase13()
     adicionar_colunas_fase14()
+    adicionar_colunas_fase15()
     converter_admins_em_gerentes()
     sessao = SessaoLocal()
     try:

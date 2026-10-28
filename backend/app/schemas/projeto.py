@@ -33,3 +33,8 @@ class ProjetoResposta(ProjetoBase):
     prazo_reavaliacao_muito_grave: int = 7
     prazo_reavaliacao_grave: int = 15
     prazo_reavaliacao_demais: int = 30
+    arquivado: bool = False
+
+
+class ProjetoArquivar(BaseModel):
+    arquivado: bool

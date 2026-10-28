@@ -1,5 +1,5 @@
 """Model ORM da entidade Projeto."""
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, SmallInteger, String, Text, func
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, SmallInteger, String, Text, func
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -24,6 +24,8 @@ class Projeto(Base):
     prazo_reavaliacao_muito_grave = Column(SmallInteger, nullable=False, default=7, server_default="7")
     prazo_reavaliacao_grave = Column(SmallInteger, nullable=False, default=15, server_default="15")
     prazo_reavaliacao_demais = Column(SmallInteger, nullable=False, default=30, server_default="30")
+    # Projeto arquivado: some das listas junto com os riscos, mas nada é apagado.
+    arquivado = Column(Boolean, nullable=False, default=False, server_default="false")
 
     criador = relationship("Usuario", back_populates="projetos_criados", foreign_keys=[id_criador])
     riscos = relationship("Risco", back_populates="projeto")

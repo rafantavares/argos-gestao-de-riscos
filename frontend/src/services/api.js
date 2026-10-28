@@ -59,9 +59,12 @@ export const auth = {
 
 // --- projetos ---
 export const projetos = {
-  meus: () => api.get("/projetos/meus").then((r) => r.data),
+  meus: (incluirArquivados = false) =>
+    api.get("/projetos/meus", { params: incluirArquivados ? { incluir_arquivados: true } : {} }).then((r) => r.data),
   criar: (dados) => api.post("/projetos", dados).then((r) => r.data),
   editar: (id, dados) => api.put(`/projetos/${id}`, dados).then((r) => r.data),
+  arquivar: (id, arquivado) => api.patch(`/projetos/${id}/arquivo`, { arquivado }).then((r) => r.data),
+  excluir: (id) => api.delete(`/projetos/${id}`),
 };
 
 // --- riscos ---

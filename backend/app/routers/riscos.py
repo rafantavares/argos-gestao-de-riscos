@@ -76,6 +76,11 @@ def _verificar_gerente_vinculado(id_projeto: int, gerente: Usuario, sessao: Sess
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Gerente não está vinculado a este projeto",
         )
+    if vinculo.projeto.arquivado:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="O projeto está arquivado. Restaure-o para cadastrar riscos.",
+        )
 
 
 def _proximo_indice(id_projeto: int, sessao: Session) -> str:
@@ -495,6 +500,11 @@ def arquivar_risco(
     """Arquiva (ou restaura) o risco: ele some das listas, painéis, do ML e do
     assistente, mas o registro e o histórico continuam no banco."""
     risco = _obter_risco_do_gerente(id_risco, gerente, sessao)
+    if not dados.arquivado and risco.projeto.arquivado:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="O projeto deste risco está arquivado. Restaure o projeto.",
+        )
     if risco.arquivado != dados.arquivado:
         _registrar_evento(
             sessao, risco, gerente, "arquivo", "Risco arquivado" if dados.arquivado else "Risco restaurado do arquivo"

@@ -19,6 +19,9 @@ import {
   Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import UnarchiveOutlinedIcon from "@mui/icons-material/UnarchiveOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import SearchIcon from "@mui/icons-material/Search";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
@@ -149,6 +152,79 @@ function CartaoProjeto({ projeto, resumo, aoEditar, aoVerRiscos }) {
   );
 }
 
+// Projeto arquivado: só o essencial e as ações de restaurar ou excluir.
+function CartaoArquivado({ projeto, totalRiscos, aoRestaurar, aoExcluir }) {
+  return (
+    <Paper variant="outlined" sx={{ p: 2, display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
+      <ArchiveOutlinedIcon sx={{ color: "text.secondary" }} />
+      <Box sx={{ flex: 1, minWidth: 160 }}>
+        <Typography variant="subtitle2" sx={{ wordBreak: "break-word" }}>
+          {projeto.nome}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {totalRiscos ? `${totalRiscos} risco${totalRiscos === 1 ? "" : "s"} guardado${totalRiscos === 1 ? "" : "s"}` : "Sem riscos"}
+        </Typography>
+      </Box>
+      <Button size="small" startIcon={<UnarchiveOutlinedIcon />} onClick={aoRestaurar}>
+        Restaurar
+      </Button>
+      {totalRiscos === 0 && (
+        <Button size="small" color="error" startIcon={<DeleteOutlineIcon />} onClick={aoExcluir}>
+          Excluir
+        </Button>
+      )}
+    </Paper>
+  );
+}
+
+// Confirmação de arquivar ou excluir projeto.
+function DialogoConfirmar({ acao, aoFechar, aoConfirmar }) {
+  const [erro, setErro] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  useEffect(() => setErro(""), [acao]);
+  if (!acao) return null;
+  const excluir = acao.tipo === "excluir";
+
+  async function confirmar() {
+    setEnviando(true);
+    try {
+      await aoConfirmar();
+    } catch (e) {
+      const detalhe = e.response?.data?.detail;
+      setErro(typeof detalhe === "string" ? detalhe : "Não foi possível concluir. Tente de novo.");
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  return (
+    <Dialog open onClose={aoFechar} maxWidth="xs" fullWidth>
+      <DialogTitle>{excluir ? "Excluir projeto?" : "Arquivar projeto?"}</DialogTitle>
+      <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+        {erro && <Alert severity="error">{erro}</Alert>}
+        <Typography variant="body2">
+          {excluir ? (
+            <>
+              <strong>{acao.projeto.nome}</strong> será apagado de vez, junto com as conversas do assistente desse projeto. Não dá para desfazer.
+            </>
+          ) : (
+            <>
+              <strong>{acao.projeto.nome}</strong> e os riscos dele saem das listas, do painel e do sino. Nada é apagado: o histórico continua guardado
+              e você pode restaurar quando quiser.
+            </>
+          )}
+        </Typography>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button onClick={aoFechar}>Cancelar</Button>
+        <Button variant="contained" color={excluir ? "error" : "primary"} onClick={confirmar} disabled={enviando}>
+          {excluir ? "Excluir de vez" : "Arquivar"}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
 export default function Projetos() {
   const navigate = useNavigate();
   const avisar = useAviso();
@@ -158,11 +234,13 @@ export default function Projetos() {
   const [busca, setBusca] = useState("");
   const [dialogoNovo, setDialogoNovo] = useState(false);
   const [projetoEmEdicao, setProjetoEmEdicao] = useState(null);
+  const [confirmacao, setConfirmacao] = useState(null); // { tipo: "arquivar" | "excluir", projeto }
+  const [verArquivados, setVerArquivados] = useState(false);
 
   async function carregar() {
     setCarregando(true);
     try {
-      const [listaProjetos, listaRiscos] = await Promise.all([servicoProjetos.meus(), servicoRiscos.listarMeus()]);
+      const [listaProjetos, listaRiscos] = await Promise.all([servicoProjetos.meus(true), servicoRiscos.listarMeus(true)]);
       setProjetos(listaProjetos);
       setRiscos(listaRiscos);
     } finally {
@@ -170,16 +248,26 @@ export default function Projetos() {
     }
   }
 
+  async function restaurar(projeto) {
+    await servicoProjetos.arquivar(projeto.id, false);
+    avisar(`Projeto "${projeto.nome}" restaurado.`);
+    carregar();
+  }
+
   useEffect(() => {
     carregar();
   }, []);
 
   const resumos = useMemo(
-    () => new Map(projetos.map((p) => [p.id, resumir(riscos.filter((r) => r.id_projeto === p.id))])),
+    () => new Map(projetos.map((p) => [p.id, resumir(riscos.filter((r) => r.id_projeto === p.id && !r.arquivado))])),
     [projetos, riscos]
   );
+  // Todos os riscos do projeto, inclusive arquivados: só projeto sem nenhum pode ser excluído.
+  const totalRiscos = (id) => riscos.filter((r) => r.id_projeto === id).length;
+  const arquivados = projetos.filter((p) => p.arquivado).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  const ativos = projetos.filter((p) => !p.arquivado);
   const termo = busca.trim().toLowerCase();
-  const visiveis = projetos
+  const visiveis = ativos
     .filter((p) => !termo || `${p.nome} ${p.descricao ?? ""}`.toLowerCase().includes(termo))
     .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
@@ -189,7 +277,7 @@ export default function Projetos() {
         <Typography variant="body2" color="text.secondary" sx={{ mr: "auto" }}>
           Seus projetos e a situação de risco de cada um. Quem cria o projeto já fica vinculado a ele.
         </Typography>
-        {projetos.length > 3 && (
+        {ativos.length > 3 && (
           <TextField
             size="small"
             placeholder="Buscar projeto…"
@@ -219,11 +307,11 @@ export default function Projetos() {
             </Grid>
           ))}
         </Grid>
-      ) : projetos.length === 0 ? (
+      ) : ativos.length === 0 ? (
         <Paper>
           <EstadoVazio
-            titulo="Nenhum projeto ainda"
-            descricao="Crie o primeiro projeto para começar a cadastrar riscos."
+            titulo={arquivados.length ? "Nenhum projeto ativo" : "Nenhum projeto ainda"}
+            descricao={arquivados.length ? "Os seus projetos estão arquivados. Restaure um ou crie um novo." : "Crie o primeiro projeto para começar a cadastrar riscos."}
             acao={
               <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogoNovo(true)}>
                 Criar projeto
@@ -250,6 +338,47 @@ export default function Projetos() {
         </Grid>
       )}
 
+      {!carregando && arquivados.length > 0 && (
+        <Box sx={{ mt: 4 }}>
+          <Button
+            size="small"
+            startIcon={<ArchiveOutlinedIcon />}
+            onClick={() => setVerArquivados((v) => !v)}
+            aria-expanded={verArquivados || ativos.length === 0}
+            sx={{ color: "text.secondary" }}
+          >
+            {verArquivados || ativos.length === 0 ? "Esconder" : "Ver"} arquivados ({arquivados.length})
+          </Button>
+          {(verArquivados || ativos.length === 0) && (
+            <Box sx={{ display: "grid", gap: 1, mt: 1.5, gridTemplateColumns: { xs: "1fr", lg: "repeat(2, minmax(0, 1fr))" } }}>
+              {arquivados.map((p) => (
+                <CartaoArquivado
+                  key={p.id}
+                  projeto={p}
+                  totalRiscos={totalRiscos(p.id)}
+                  aoRestaurar={() => restaurar(p)}
+                  aoExcluir={() => setConfirmacao({ tipo: "excluir", projeto: p })}
+                />
+              ))}
+            </Box>
+          )}
+        </Box>
+      )}
+
+      <DialogoConfirmar
+        acao={confirmacao}
+        aoFechar={() => setConfirmacao(null)}
+        aoConfirmar={async () => {
+          const { tipo, projeto } = confirmacao;
+          if (tipo === "excluir") await servicoProjetos.excluir(projeto.id);
+          else await servicoProjetos.arquivar(projeto.id, true);
+          setConfirmacao(null);
+          setProjetoEmEdicao(null);
+          avisar(tipo === "excluir" ? `Projeto "${projeto.nome}" excluído.` : `Projeto "${projeto.nome}" arquivado.`);
+          carregar();
+        }}
+      />
+
       <DialogoProjeto
         titulo="Novo projeto"
         rotuloSalvar="Criar projeto"
@@ -269,6 +398,20 @@ export default function Projetos() {
         aberto={Boolean(projetoEmEdicao)}
         valoresIniciais={projetoEmEdicao}
         comCriterios
+        acoesExtras={
+          projetoEmEdicao && (
+            <>
+              <Button startIcon={<ArchiveOutlinedIcon />} onClick={() => setConfirmacao({ tipo: "arquivar", projeto: projetoEmEdicao })}>
+                Arquivar
+              </Button>
+              {totalRiscos(projetoEmEdicao.id) === 0 && (
+                <Button color="error" startIcon={<DeleteOutlineIcon />} onClick={() => setConfirmacao({ tipo: "excluir", projeto: projetoEmEdicao })}>
+                  Excluir
+                </Button>
+              )}
+            </>
+          )
+        }
         aoFechar={() => setProjetoEmEdicao(null)}
         aoSalvar={async (dados) => {
           await servicoProjetos.editar(projetoEmEdicao.id, dados);
@@ -293,7 +436,7 @@ const PRAZOS = [
 
 const criteriosDe = (projeto) => Object.fromEntries(Object.entries(CRITERIOS_PADRAO).map(([campo, padrao]) => [campo, projeto?.[campo] ?? padrao]));
 
-function DialogoProjeto({ titulo, rotuloSalvar, aberto, valoresIniciais, comCriterios = false, aoFechar, aoSalvar }) {
+function DialogoProjeto({ titulo, rotuloSalvar, aberto, valoresIniciais, comCriterios = false, acoesExtras = null, aoFechar, aoSalvar }) {
   const [nome, setNome] = useState(valoresIniciais?.nome ?? "");
   const [descricao, setDescricao] = useState(valoresIniciais?.descricao ?? "");
   const [criterios, setCriterios] = useState(criteriosDe(valoresIniciais));
@@ -402,7 +545,8 @@ function DialogoProjeto({ titulo, rotuloSalvar, aberto, valoresIniciais, comCrit
             </Typography>
           )}
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
+        <DialogActions sx={{ px: 3, pb: 2, flexWrap: "wrap", gap: 1 }}>
+          {acoesExtras && <Box sx={{ mr: "auto", display: "flex", gap: 1 }}>{acoesExtras}</Box>}
           <Button onClick={aoFechar}>Cancelar</Button>
           <Button type="submit" variant="contained" disabled={salvando}>
             {salvando ? "Salvando…" : rotuloSalvar}

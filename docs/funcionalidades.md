@@ -186,9 +186,24 @@ virar 4D só porque o dataset ficou mais rico.
 - **Migração:** `app/core/migrar_fase14.py` (colunas de `usuarios`; as tabelas
   novas saem do `create_all`) e `backend/migracoes/fase14_conta_auditoria.sql`.
 
+## Fase 15 — Arquivar e excluir projeto
+
+- **Arquivar** (Projetos › Editar › Arquivar; `PATCH /projetos/{id}/arquivo`):
+  o projeto e os riscos dele saem das listas, do painel, do sino e do
+  assistente, mas nada é apagado (histórico e treino do modelo continuam).
+  Cada risco ganha o evento "Arquivado junto com o projeto" na trilha. Ao
+  restaurar, voltam só os riscos arquivados junto com o projeto. Projeto
+  arquivado não recebe riscos novos nem restaura risco isolado.
+- **Excluir de vez** (`DELETE /projetos/{id}`): só projeto sem nenhum risco,
+  inclusive arquivado (409 caso contrário); apaga também as conversas do
+  assistente e os vínculos.
+- Projetos arquivados ficam em "Ver arquivados" no fim da página, com
+  Restaurar e Excluir. Coluna nova `projetos.arquivado`
+  (`app/core/migrar_fase15.py`, `backend/migracoes/fase15_arquivar_projeto.sql`).
+
 ## Testes automatizados (evidência da avaliação técnica)
 
-217 testes em `backend/tests/` (contagem atual; a tabela abaixo é da fase 4 e
+222 testes em `backend/tests/` (contagem atual; a tabela abaixo é da fase 4 e
 não foi atualizada arquivo a arquivo), executados com `python -m pytest`:
 
 | Arquivo | Testes | O que cobre |
