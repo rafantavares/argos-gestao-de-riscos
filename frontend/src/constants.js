@@ -203,6 +203,12 @@ export function rotulo(lista, value) {
   return lista.find((item) => item.value === value)?.label ?? value;
 }
 
+// "Rafael Tavares — Gerente de Projetos, Empresa X" (responsável nos PDFs).
+export function descricaoResponsavel(usuario) {
+  const funcao = [usuario?.cargo, usuario?.organizacao].filter(Boolean).join(", ");
+  return funcao ? `${usuario.nome} — ${funcao}` : usuario?.nome ?? "";
+}
+
 export function iniciais(nome) {
   return (nome ?? "")
     .split(" ")

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Avatar, Box, Button, ButtonBase, Chip, Divider, Paper, Stack, Typography } from "@mui/material";
+import { Alert, Avatar, Box, Button, ButtonBase, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Paper, Stack, TextField, Typography } from "@mui/material";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
@@ -21,7 +22,7 @@ import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import UpdateIcon from "@mui/icons-material/Update";
 import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
 import { useAuth } from "../contexts/AuthContext";
-import { projetos as servicoProjetos, recomendacoes as servicoRecomendacoes, riscos as servicoRiscos } from "../services/api";
+import { auth as servicoAuth, projetos as servicoProjetos, recomendacoes as servicoRecomendacoes, riscos as servicoRiscos } from "../services/api";
 import { misturar, texturaFaixa, v } from "../theme";
 import { AREAS_AFETADAS, FAIXAS_EXPOSICAO, faixaExposicao, iniciais, precisaReavaliar, rotulo } from "../constants";
 import CartaoEstatistica from "../components/CartaoEstatistica";
@@ -170,11 +171,66 @@ function Calibracao({ dados }) {
   );
 }
 
+// Nome, cargo e organização: cargo e organização saem como responsável nos PDFs.
+function DialogoPerfil({ aberto, usuario, aoFechar, aoSalvar }) {
+  const [valores, setValores] = useState({ nome: "", cargo: "", organizacao: "" });
+  const [erro, setErro] = useState("");
+  const [salvando, setSalvando] = useState(false);
+
+  useEffect(() => {
+    if (aberto) setValores({ nome: usuario.nome ?? "", cargo: usuario.cargo ?? "", organizacao: usuario.organizacao ?? "" });
+    setErro("");
+  }, [aberto, usuario]);
+
+  const alterar = (campo) => (e) => setValores((v) => ({ ...v, [campo]: e.target.value }));
+
+  async function salvar(evento) {
+    evento.preventDefault();
+    setSalvando(true);
+    try {
+      await aoSalvar({ nome: valores.nome.trim(), cargo: valores.cargo, organizacao: valores.organizacao });
+    } catch (e) {
+      const detalhe = e.response?.data?.detail;
+      setErro(typeof detalhe === "string" ? detalhe : "Não foi possível salvar. Confira o nome (2 a 120 caracteres).");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <Dialog open={aberto} onClose={aoFechar} maxWidth="sm" fullWidth>
+      <Box component="form" onSubmit={salvar}>
+        <DialogTitle>Editar perfil</DialogTitle>
+        <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
+          {erro && <Alert severity="error">{erro}</Alert>}
+          <TextField label="Nome" value={valores.nome} onChange={alterar("nome")} required inputProps={{ minLength: 2, maxLength: 120 }} sx={{ mt: 1 }} />
+          <TextField label="Cargo" value={valores.cargo} onChange={alterar("cargo")} inputProps={{ maxLength: 120 }} placeholder="Ex.: Gerente de Projetos…" />
+          <TextField
+            label="Organização"
+            value={valores.organizacao}
+            onChange={alterar("organizacao")}
+            inputProps={{ maxLength: 150 }}
+            placeholder="Ex.: Secretaria de Tecnologia…"
+            helperText="Cargo e organização aparecem como responsável nos relatórios e fichas em PDF."
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={aoFechar}>Cancelar</Button>
+          <Button type="submit" variant="contained" disabled={salvando}>
+            {salvando ? "Salvando…" : "Salvar"}
+          </Button>
+        </DialogActions>
+      </Box>
+    </Dialog>
+  );
+}
+
 // Página de perfil: quem é o usuário, como está a carteira de riscos dele, o
 // que ele fez por último e os projetos. Senha e preferências ficam em
 // Configurações (atalhos no cartão "Conta").
 export default function Perfil() {
-  const { usuario, sair } = useAuth();
+  const { usuario, sair, atualizarUsuario } = useAuth();
+  const [editando, setEditando] = useState(false);
   const navigate = useNavigate();
   const [projetos, setProjetos] = useState([]);
   const [riscos, setRiscos] = useState([]);
@@ -244,6 +300,11 @@ export default function Perfil() {
         </Avatar>
         <Box sx={{ flexGrow: 1, minWidth: 0 }}>
           <Typography variant="h5">{usuario.nome}</Typography>
+          {(usuario.cargo || usuario.organizacao) && (
+            <Typography variant="body2" sx={{ mt: 0.25 }}>
+              {[usuario.cargo, usuario.organizacao].filter(Boolean).join(" · ")}
+            </Typography>
+          )}
           <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }}>
             {usuario.email}
           </Typography>
@@ -256,10 +317,25 @@ export default function Perfil() {
             )}
           </Box>
         </Box>
-        <Button variant="outlined" startIcon={<LogoutIcon />} onClick={sair}>
-          Sair da conta
-        </Button>
+        <Stack direction={{ xs: "row", sm: "column", md: "row" }} spacing={1} useFlexGap flexWrap="wrap">
+          <Button variant="outlined" startIcon={<EditOutlinedIcon />} onClick={() => setEditando(true)}>
+            Editar perfil
+          </Button>
+          <Button startIcon={<LogoutIcon />} onClick={sair}>
+            Sair da conta
+          </Button>
+        </Stack>
       </Paper>
+
+      <DialogoPerfil
+        aberto={editando}
+        usuario={usuario}
+        aoFechar={() => setEditando(false)}
+        aoSalvar={async (dados) => {
+          atualizarUsuario(await servicoAuth.atualizar(dados));
+          setEditando(false);
+        }}
+      />
 
       {/* Indicadores pessoais */}
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr 1fr", lg: "repeat(4, minmax(0, 1fr))" } }}>

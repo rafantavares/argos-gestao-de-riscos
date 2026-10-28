@@ -2,14 +2,17 @@ import { useState } from "react";
 import { Box, Button, Stack, TextField } from "@mui/material";
 import { auth as servicoAuth } from "../services/api";
 import { useAviso } from "../contexts/FeedbackContext";
+import { useAuth } from "../contexts/AuthContext";
 
 // Troca da própria senha (confirma a atual; a nova precisa ter 8+ caracteres).
+// A troca encerra as outras sessões; esta continua com o token novo.
 export default function FormularioSenha() {
   const [atual, setAtual] = useState("");
   const [nova, setNova] = useState("");
   const [confirmacao, setConfirmacao] = useState("");
   const [salvando, setSalvando] = useState(false);
   const avisar = useAviso();
+  const { trocarToken } = useAuth();
   const diferente = confirmacao && nova !== confirmacao;
   const valido = atual && nova.length >= 8 && nova === confirmacao;
 
@@ -17,11 +20,12 @@ export default function FormularioSenha() {
     evento.preventDefault();
     setSalvando(true);
     try {
-      await servicoAuth.trocarSenha(atual, nova);
+      const { access_token: token } = await servicoAuth.trocarSenha(atual, nova);
+      trocarToken(token);
       setAtual("");
       setNova("");
       setConfirmacao("");
-      avisar("Senha alterada.");
+      avisar("Senha alterada. As outras sessões foram encerradas.");
     } catch (e) {
       const detalhe = e.response?.data?.detail;
       avisar(typeof detalhe === "string" ? detalhe : "Não foi possível alterar a senha.", "error");

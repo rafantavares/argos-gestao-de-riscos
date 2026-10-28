@@ -45,8 +45,16 @@ export const auth = {
   me: () => api.get("/auth/me").then((r) => r.data),
   // Cadastro aberto: cria a conta (gerente) e devolve o token, como o login.
   cadastrar: (nome, email, senha) => api.post("/auth/cadastro", { nome, email, senha }).then((r) => r.data),
+  // A troca de senha encerra as outras sessões e devolve um token novo.
   trocarSenha: (senhaAtual, senhaNova) =>
-    api.patch("/auth/me/senha", { senha_atual: senhaAtual, senha_nova: senhaNova }),
+    api.patch("/auth/me/senha", { senha_atual: senhaAtual, senha_nova: senhaNova }).then((r) => r.data),
+  atualizar: (dados) => api.patch("/auth/me", dados).then((r) => r.data),
+  salvarPreferencias: (preferencias) => api.put("/auth/me/preferencias", preferencias).then((r) => r.data),
+  resumo: () => api.get("/auth/me/resumo").then((r) => r.data),
+  acessos: () => api.get("/auth/me/acessos").then((r) => r.data),
+  encerrarOutrasSessoes: () => api.post("/auth/me/encerrar-outras-sessoes").then((r) => r.data),
+  exportarDados: () => api.get("/auth/me/dados").then((r) => r.data),
+  excluirConta: (senha) => api.post("/auth/me/excluir", { senha }),
 };
 
 // --- projetos ---
@@ -76,6 +84,7 @@ export const riscos = {
   atualizarStatus: (id, statusNovo, comentario) =>
     api.patch(`/riscos/${id}/status`, { status: statusNovo, comentario }).then((r) => r.data),
   historico: (id) => api.get(`/riscos/${id}/historico`).then((r) => r.data),
+  auditoria: (id) => api.get(`/riscos/${id}/auditoria`).then((r) => r.data),
   atualizarTratamento: (id, dados) => api.patch(`/riscos/${id}/tratamento`, dados).then((r) => r.data),
   reavaliar: (id, dados) => api.post(`/riscos/${id}/reavaliacao`, dados).then((r) => r.data),
   evolucao: (id) => api.get(`/riscos/${id}/evolucao`).then((r) => r.data),

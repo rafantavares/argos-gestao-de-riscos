@@ -37,6 +37,7 @@ import { Logo } from "./Logo";
 import LogoMark from "./Logo";
 import BuscaGlobal, { ATALHO } from "./BuscaGlobal";
 import Notificacoes, { itensPendentes } from "./Notificacoes";
+import useSincronizarPreferencias from "../hooks/useSincronizarPreferencias";
 
 const LARGURA_MENU = { xs: 68, md: 248 };
 const ALTURA_TOPO = 64;
@@ -111,6 +112,7 @@ function ItemRodape({ icone, rotulo, ativo, onClick, extra }) {
 
 export default function AppLayout({ children }) {
   const { usuario } = useAuth();
+  useSincronizarPreferencias();
   const { escuro, alternarModo } = usePreferencias();
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -144,7 +146,12 @@ export default function AppLayout({ children }) {
   }, []);
 
   const pendentesReavaliacao = useMemo(() => riscos.filter((r) => !r.arquivado && precisaReavaliar(r)).length, [riscos]);
-  const pendencias = useMemo(() => itensPendentes(riscos, recomendacoes), [riscos, recomendacoes]);
+  // O sino mostra só os tipos que o usuário escolheu em Configurações › Notificações.
+  const tiposAvisados = usuario?.preferencias?.notificacoes;
+  const pendencias = useMemo(
+    () => itensPendentes(riscos, recomendacoes).filter((item) => tiposAvisados?.[item.tipo] !== false),
+    [riscos, recomendacoes, tiposAvisados]
+  );
 
   const menu = MENU;
   const cargo = "Gerente de projetos";

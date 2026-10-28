@@ -14,6 +14,12 @@ class Configuracoes(BaseSettings):
     gemini_model: str = "gemini-flash-latest"
     # Usados em ordem quando o modelo principal está sobrecarregado ou no limite.
     gemini_modelos_reserva: str = "gemini-2.5-flash,gemini-flash-lite-latest"
+    # Resumo semanal por e-mail (Resend). Sem chave/remetente, nada é enviado.
+    resend_api_key: str = ""
+    resumo_remetente: str = ""  # ex.: "Argos <resumo@seu-dominio.com>"
+    # Token que o agendador manda em X-Tarefa-Token para POST /tarefas/*.
+    tarefas_token: str = ""
+    url_frontend: str = "https://argos-ti.vercel.app"
 
 
 configuracoes = Configuracoes()

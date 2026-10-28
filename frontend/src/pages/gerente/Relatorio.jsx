@@ -9,6 +9,7 @@ import {
 } from "../../services/api";
 import {
   AREAS_AFETADAS,
+  descricaoResponsavel,
   IMPACTOS,
   PROBABILIDADES,
   STATUS_RISCO,
@@ -105,7 +106,7 @@ export default function Relatorio() {
       resumo={`${riscos.length} ${riscos.length === 1 ? "risco" : "riscos"} · ${nomesProjetos.length || "todos os"} ${nomesProjetos.length === 1 ? "projeto" : "projetos"}`}
       metadados={[
         ["Emitido em", quando()],
-        ["Responsável", usuario.nome],
+        ["Responsável", descricaoResponsavel(usuario)],
         ["Riscos no relatório", String(riscos.length)],
         ["Recorte", pedido.filtros || (pedido.idProjeto ? "Riscos ativos do projeto" : "Riscos ativos")],
       ]}

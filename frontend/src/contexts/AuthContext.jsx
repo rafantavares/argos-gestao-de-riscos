@@ -47,8 +47,14 @@ export function AuthProvider({ children }) {
     setUsuario(null);
   }
 
+  // Depois de editar a conta (nome, cargo, preferências), a API devolve o
+  // usuário atualizado; e, ao encerrar as outras sessões ou trocar a senha, um
+  // token novo para esta sessão.
+  const atualizarUsuario = (dados) => setUsuario(dados);
+  const trocarToken = (token) => salvarToken(token);
+
   return (
-    <AuthContext.Provider value={{ usuario, carregando, entrar, cadastrar, sair }}>
+    <AuthContext.Provider value={{ usuario, carregando, entrar, cadastrar, sair, atualizarUsuario, trocarToken }}>
       {children}
     </AuthContext.Provider>
   );

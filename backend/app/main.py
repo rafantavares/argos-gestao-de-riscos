@@ -7,9 +7,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.migrar_fase12 import converter_admins_em_gerentes
 from app.core.migrar_fase13 import adicionar_colunas_fase13
+from app.core.migrar_fase14 import adicionar_colunas_fase14
 from app.core.seed import semear_planos_contingencia, sincronizar_textos_planos
 from app.database import Base, SessaoLocal, engine
-from app.routers import auth, chat, ml, planos, projetos, recomendacoes, riscos
+from app.routers import auth, chat, ml, planos, projetos, recomendacoes, riscos, tarefas
 
 
 @asynccontextmanager
@@ -19,6 +20,7 @@ async def ciclo_de_vida(_app: FastAPI):
     semeia/atualiza o catálogo de planos."""
     Base.metadata.create_all(bind=engine)
     adicionar_colunas_fase13()
+    adicionar_colunas_fase14()
     converter_admins_em_gerentes()
     sessao = SessaoLocal()
     try:
@@ -53,6 +55,7 @@ app.include_router(recomendacoes.roteador)
 app.include_router(planos.roteador)
 app.include_router(ml.roteador)
 app.include_router(chat.roteador)
+app.include_router(tarefas.roteador)
 
 
 @app.get("/")

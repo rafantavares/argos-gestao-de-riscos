@@ -9,6 +9,7 @@ import {
 } from "../../services/api";
 import {
   AREAS_AFETADAS,
+  descricaoResponsavel,
   CATEGORIAS,
   FASES_PROJETO,
   IMPACTOS,
@@ -90,7 +91,7 @@ export default function FichaRiscoPdf() {
         ["Situação", situacao],
         ["Cadastrado em", data(risco.criado_em)],
         ["Última avaliação", data(risco.ultima_avaliacao_em ?? risco.criado_em)],
-        ["Emitido em", `${quando()} por ${usuario.nome}`],
+        ["Emitido em", `${quando()} por ${descricaoResponsavel(usuario)}`],
       ]}
     >
       {/* Exposição em destaque: célula da matriz + posição na matriz */}

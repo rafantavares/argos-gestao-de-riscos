@@ -151,9 +151,43 @@ virar 4D só porque o dataset ficou mais rico.
 - **Migração:** `app/core/migrar_fase13.py` (idempotente, roda na subida da API
   em Postgres ou SQLite) e `backend/migracoes/fase13_criterios_risco.sql`.
 
+## Fase 14 — Conta, segurança, privacidade e auditoria
+
+- **Perfil:** "Editar perfil" (nome, cargo, organização). Cargo e organização
+  saem como responsável no relatório e na ficha em PDF.
+- **Preferências na conta:** tema, modo daltônico, tamanho do texto e reduzir
+  animações ficam em `usuarios.preferencias` (JSON) e valem em qualquer
+  computador (`useSincronizarPreferencias`: aplica ao entrar e grava cada
+  mudança). O navegador continua guardando uma cópia para o primeiro desenho.
+- **Notificações (Configurações):** escolher o que aparece no sino (fora do
+  apetite, decisões, reavaliações) e ligar o **resumo semanal por e-mail**, com
+  prévia (`GET /auth/me/resumo`). O envio é `POST /tarefas/resumo-semanal`
+  (cabeçalho `X-Tarefa-Token`), disparado toda segunda pelo workflow
+  `.github/workflows/resumo-semanal.yml`; usa a API do Resend. Variáveis no
+  Render: `TAREFAS_TOKEN`, `RESEND_API_KEY`, `RESUMO_REMETENTE`; segredo
+  `TAREFAS_TOKEN` no GitHub. Sem elas, nada é enviado e a prévia avisa.
+- **Segurança:** últimos 10 acessos (data, navegador, IP; tabela
+  `acessos_usuarios`, guarda os 20 mais recentes) e "Sair de todas as outras
+  sessões": o token leva a versão da sessão (`ver`) e `usuarios.versao_token`
+  sobe 1, invalidando os tokens antigos. Trocar a senha faz o mesmo e devolve
+  um token novo para a sessão atual.
+- **Privacidade (LGPD):** exportar todos os dados em JSON (`GET /auth/me/dados`)
+  e excluir a conta com confirmação de senha (`POST /auth/me/excluir`): nome,
+  e-mail, cargo, organização, preferências e acessos são apagados ou
+  anonimizados e o login deixa de funcionar; riscos e projetos ficam, sem o
+  nome do titular (histórico dos projetos e treino do modelo).
+- **Trilha de auditoria do risco** (aba Histórico da ficha,
+  `GET /riscos/{id}/auditoria`): junta cadastro, status, reavaliações,
+  recomendações e decisões (tabelas já existentes) com os eventos novos da
+  tabela `eventos_riscos`: edição do registro com o valor antes e depois de
+  cada campo, arquivamento/restauração e anexos. Salvar sem mudar nada não
+  gera evento.
+- **Migração:** `app/core/migrar_fase14.py` (colunas de `usuarios`; as tabelas
+  novas saem do `create_all`) e `backend/migracoes/fase14_conta_auditoria.sql`.
+
 ## Testes automatizados (evidência da avaliação técnica)
 
-205 testes em `backend/tests/` (contagem atual; a tabela abaixo é da fase 4 e
+217 testes em `backend/tests/` (contagem atual; a tabela abaixo é da fase 4 e
 não foi atualizada arquivo a arquivo), executados com `python -m pytest`:
 
 | Arquivo | Testes | O que cobre |

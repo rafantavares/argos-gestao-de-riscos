@@ -34,6 +34,11 @@ def criar_token_acesso(dados: dict, expira_em: Optional[timedelta] = None) -> st
     return jwt.encode(dados_token, configuracoes.jwt_chave_secreta, algorithm=configuracoes.jwt_algoritmo)
 
 
+def token_do_usuario(usuario: Usuario) -> str:
+    """Token de acesso com a versão atual das sessões do usuário."""
+    return criar_token_acesso({"sub": usuario.email, "ver": usuario.versao_token or 0})
+
+
 def decodificar_token_acesso(token: str) -> Optional[dict]:
     try:
         return jwt.decode(
@@ -57,7 +62,10 @@ def obter_usuario_atual(
         raise excecao_credenciais
 
     usuario = sessao.query(Usuario).filter(Usuario.email == dados_token["sub"]).first()
-    if usuario is None:
+    if usuario is None or usuario.excluido_em is not None:
+        raise excecao_credenciais
+    # Token de uma sessão encerrada ("sair de todas as outras" ou troca de senha).
+    if dados_token.get("ver", 0) != (usuario.versao_token or 0):
         raise excecao_credenciais
 
     return usuario

@@ -1,0 +1,24 @@
+# Toda segunda de manhã, pede à API que envie o resumo semanal por e-mail a quem
+# ligou essa opção em Configurações › Notificações. Precisa do segredo
+# TAREFAS_TOKEN no repositório (o mesmo valor da variável TAREFAS_TOKEN no Render)
+# e, no Render, de RESEND_API_KEY e RESUMO_REMETENTE. Sem o segredo, não faz nada.
+name: Resumo semanal por e-mail
+
+on:
+  schedule:
+    - cron: "0 11 * * 1" # segunda, 08:00 em Brasília
+  workflow_dispatch: {}
+
+jobs:
+  enviar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Disparar o envio
+        env:
+          TAREFAS_TOKEN: ${{ secrets.TAREFAS_TOKEN }}
+        run: |
+          if [ -z "$TAREFAS_TOKEN" ]; then echo "Segredo TAREFAS_TOKEN não configurado; nada a fazer."; exit 0; fi
+          curl -fsS --max-time 120 https://gestao-risco-api.onrender.com/health > /dev/null || sleep 30
+          curl -fsS --max-time 180 -X POST -H "X-Tarefa-Token: $TAREFAS_TOKEN" \
+            https://gestao-risco-api.onrender.com/tarefas/resumo-semanal

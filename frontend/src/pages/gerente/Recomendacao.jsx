@@ -6,7 +6,6 @@ import {
   Button,
   Chip,
   CircularProgress,
-  Divider,
   Fade,
   Grow,
   MenuItem,
@@ -43,6 +42,7 @@ import BarraConfianca from "../../components/BarraConfianca";
 import { useDialogoRejeicao } from "../../components/DialogoRejeicao";
 import EvolucaoExposicao from "../../components/EvolucaoExposicao";
 import AnexosRisco from "../../components/AnexosRisco";
+import TrilhaAuditoria from "../../components/TrilhaAuditoria";
 import FichaRisco from "../../components/FichaRisco";
 import { useAviso, useConfirmacao } from "../../contexts/FeedbackContext";
 import { ChipArea, ChipForaApetite, ChipSeveridade, ChipStatus, Marcador } from "../../components/Badges";
@@ -496,30 +496,14 @@ export default function Recomendacao() {
             </Typography>
           )}
 
-          <Stack divider={<Divider />} spacing={1.5}>
-            {historico.map((evento) => (
-              <Box key={evento.id}>
-                <Typography variant="body2">
-                  {evento.status_anterior ? (
-                    <>
-                      {rotulo(STATUS_RISCO, evento.status_anterior)} →{" "}
-                      <strong>{rotulo(STATUS_RISCO, evento.status_novo)}</strong>
-                    </>
-                  ) : (
-                    <strong>{rotulo(STATUS_RISCO, evento.status_novo)}</strong>
-                  )}
-                </Typography>
-                {evento.comentario && (
-                  <Typography variant="body2" color="text.secondary">
-                    {evento.comentario}
-                  </Typography>
-                )}
-                <Typography variant="caption" color="text.secondary">
-                  {new Date(evento.criado_em).toLocaleString("pt-BR")}
-                </Typography>
-              </Box>
-            ))}
-          </Stack>
+          <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+            Trilha de auditoria
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Tudo o que aconteceu com o risco: cadastro, edições do registro (com o antes e o depois), status, reavaliações, decisões
+            sobre recomendações, anexos e arquivamento, com quem fez e quando.
+          </Typography>
+          <TrilhaAuditoria idRisco={idRisco} versao={`${historico.length}-${risco.atualizado_em}-${risco.arquivado}`} />
         </Paper>
       )}
     </Box>

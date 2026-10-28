@@ -99,7 +99,10 @@ def test_usuario_troca_a_propria_senha(cliente, gerente):
 
     cabecalho = autenticar(cliente, gerente.email, SENHA_GERENTE)
     r = cliente.patch("/auth/me/senha", headers=cabecalho, json={"senha_atual": SENHA_GERENTE, "senha_nova": "nova-senha-123"})
-    assert r.status_code == 204
+    assert r.status_code == 200
+    # A troca encerra as outras sessões: o token antigo deixa de valer e o novo funciona.
+    assert cliente.get("/auth/me", headers=cabecalho).status_code == 401
+    assert cliente.get("/auth/me", headers={"Authorization": f"Bearer {r.json()['access_token']}"}).status_code == 200
     assert cliente.post("/auth/login", json={"email": gerente.email, "senha": SENHA_GERENTE}).status_code == 401
     assert cliente.post("/auth/login", json={"email": gerente.email, "senha": "nova-senha-123"}).status_code == 200
 

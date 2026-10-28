@@ -29,7 +29,7 @@ Responda ao Rafael em português, de forma objetiva.
 ## Rodar e testar
 
 - Testes: `cd backend && python -m pytest` (SQLite em memória, não usa rede
-  nem o Supabase; ML e Gemini simulados). 205 testes.
+  nem o Supabase; ML e Gemini simulados). 217 testes.
 - Backend local: `cd backend && uvicorn app.main:app --reload --port 8000`
   (precisa de `DATABASE_URL` no `.env`). Frontend: `cd frontend && npm run dev`
   (porta 5173 — o CORS local espera exatamente essa porta).
@@ -50,6 +50,12 @@ Responda ao Rafael em português, de forma objetiva.
 - `docs/assistente-chat.md`: chat com IA (Gemini) na barra lateral do gerente.
 - `docs/funcionalidades.md` › "Fase 13": apetite e prazos de reavaliação por
   projeto, decisão datada com motivo e calibração das avaliações.
+- `docs/funcionalidades.md` › "Fase 14": perfil e preferências na conta,
+  notificações e resumo semanal por e-mail, sessões e acessos, LGPD (exportar
+  e excluir a conta) e trilha de auditoria do risco.
+- Testar localmente aceitando recomendações retreina o modelo e sobrescreve
+  `backend/app/ml/modelos/*`: restaure com `git checkout -- backend/app/ml/modelos/`
+  antes de commitar.
 
 ## Estado atual (2026-10-01)
 

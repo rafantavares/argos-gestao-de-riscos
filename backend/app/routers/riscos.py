@@ -10,10 +10,12 @@ from app.core.security import exigir_perfil, obter_usuario_atual
 from app.database import obter_sessao
 from app.models.anexo_risco import AnexoRisco
 from app.models.enums import AREA_PARA_CATEGORIA, PerfilUsuario, StatusRisco
+from app.models.evento_risco import EventoRisco
 from app.models.historico_risco import HistoricoRisco
 from app.models.projeto import Projeto
 from app.models.projeto_gerente import ProjetoGerente
 from app.models.reavaliacao_risco import ReavaliacaoRisco
+from app.models.recomendacao import Recomendacao
 from app.models.risco import Risco
 from app.models.usuario import Usuario
 from app.schemas.risco import (
@@ -35,6 +37,29 @@ roteador = APIRouter(prefix="/riscos", tags=["Riscos"])
 # As listagens carregam as reavaliações numa consulta só (a data da última
 # avaliação de cada risco depende delas); sem isso seria uma consulta por risco.
 COM_REAVALIACOES = selectinload(Risco.reavaliacoes)
+
+
+# Rótulos dos campos editáveis do registro, para a trilha de auditoria.
+CAMPOS_REGISTRO = {
+    "titulo": "Risco",
+    "area_afetada": "Área afetada",
+    "orcamento_impacto": "Orçamento",
+    "urgencia": "Urgência",
+    "descricao_impacto": "Descrição do impacto",
+    "mitigacao": "Mitigação",
+    "probabilidade_residual": "Probabilidade residual",
+    "impacto_residual": "Impacto residual",
+    "contingencia": "Contingência",
+    "gatilho": "Gatilho",
+}
+
+
+def _valor(v):
+    return v.value if hasattr(v, "value") else v
+
+
+def _registrar_evento(sessao: Session, risco: Risco, usuario: Usuario, tipo: str, descricao: str, detalhes=None) -> None:
+    sessao.add(EventoRisco(id_risco=risco.id, id_usuario=usuario.id, tipo=tipo, descricao=descricao, detalhes=detalhes))
 
 
 def _verificar_gerente_vinculado(id_projeto: int, gerente: Usuario, sessao: Session) -> None:
@@ -346,6 +371,7 @@ def atualizar_tratamento_risco(
 ):
     """O gerente refina a descrição do impacto, a mitigação, a contingência e o gatilho."""
     risco = _obter_risco_do_gerente(id_risco, gerente, sessao)
+    antes = {campo: _valor(getattr(risco, campo)) for campo in CAMPOS_REGISTRO}
     for campo, valor in dados.model_dump(exclude_unset=True, exclude_none=True).items():
         setattr(risco, campo, valor.value if campo == "area_afetada" else valor)
     # O residual pode ser apagado (enviado como null).
@@ -355,6 +381,14 @@ def atualizar_tratamento_risco(
     if dados.area_afetada is not None:
         # O grupo PMBOK (feature do ML) acompanha a área afetada.
         risco.categoria = AREA_PARA_CATEGORIA[dados.area_afetada]
+    mudancas = {
+        campo: {"antes": antes[campo], "depois": _valor(getattr(risco, campo))}
+        for campo in CAMPOS_REGISTRO
+        if antes[campo] != _valor(getattr(risco, campo))
+    }
+    if mudancas:
+        nomes = ", ".join(CAMPOS_REGISTRO[c].lower() for c in mudancas)
+        _registrar_evento(sessao, risco, gerente, "edicao", f"Registro editado: {nomes}", mudancas)
     sessao.commit()
     sessao.refresh(risco)
     return risco
@@ -461,10 +495,67 @@ def arquivar_risco(
     """Arquiva (ou restaura) o risco: ele some das listas, painéis, do ML e do
     assistente, mas o registro e o histórico continuam no banco."""
     risco = _obter_risco_do_gerente(id_risco, gerente, sessao)
+    if risco.arquivado != dados.arquivado:
+        _registrar_evento(
+            sessao, risco, gerente, "arquivo", "Risco arquivado" if dados.arquivado else "Risco restaurado do arquivo"
+        )
     risco.arquivado = dados.arquivado
     sessao.commit()
     sessao.refresh(risco)
     return risco
+
+
+# ---------- trilha de auditoria ----------
+
+ROTULOS_STATUS = {
+    "identificado": "Identificado",
+    "em_tratamento": "Em tratamento",
+    "em_monitoramento": "Em monitoramento",
+    "mitigado": "Mitigado",
+    "encerrado": "Encerrado",
+}
+
+
+@roteador.get(
+    "/{id_risco}/auditoria",
+    dependencies=[Depends(exigir_perfil(PerfilUsuario.GERENTE))],
+)
+def trilha_de_auditoria(
+    id_risco: int,
+    sessao: Session = Depends(obter_sessao),
+    gerente: Usuario = Depends(obter_usuario_atual),
+):
+    """Tudo o que aconteceu com o risco, do mais recente ao mais antigo, com
+    quem fez: cadastro, edições do registro, status, reavaliações, decisões
+    sobre recomendações, arquivamento e anexos (rastreabilidade, MR-MPS-SW)."""
+    risco = _obter_risco_do_gerente(id_risco, gerente, sessao)
+    entradas = [{"data": risco.criado_em, "tipo": "cadastro", "descricao": "Risco cadastrado", "detalhes": None, "id_usuario": risco.id_gerente}]
+    for h in sessao.query(HistoricoRisco).filter(HistoricoRisco.id_risco == id_risco):
+        if h.status_anterior is None:
+            continue  # status inicial, gravado no cadastro (já está na trilha)
+        texto = f"Status: {ROTULOS_STATUS.get(_valor(h.status_anterior), _valor(h.status_anterior))} → {ROTULOS_STATUS.get(_valor(h.status_novo), _valor(h.status_novo))}"
+        entradas.append({"data": h.criado_em, "tipo": "status", "descricao": texto, "detalhes": {"comentario": h.comentario} if h.comentario else None, "id_usuario": h.id_usuario})
+    for a in sessao.query(ReavaliacaoRisco).filter(ReavaliacaoRisco.id_risco == id_risco):
+        texto = (
+            f"Reavaliado: {a.probabilidade_anterior}×{a.impacto_anterior} = {a.probabilidade_anterior * a.impacto_anterior}"
+            f" → {a.probabilidade}×{a.impacto} = {a.probabilidade * a.impacto}"
+        )
+        entradas.append({"data": a.criado_em, "tipo": "reavaliacao", "descricao": texto, "detalhes": {"justificativa": a.justificativa}, "id_usuario": a.id_usuario})
+    for r in sessao.query(Recomendacao).filter(Recomendacao.id_risco == id_risco):
+        entradas.append({"data": r.criado_em, "tipo": "recomendacao", "descricao": f"Plano #{r.id_plano} recomendado pelo modelo ({r.algoritmo_usado})", "detalhes": None, "id_usuario": None})
+        if r.decidida_em:
+            texto = f"Plano #{r.id_plano} aceito" if r.aceita else f"Plano #{r.id_plano} rejeitado"
+            detalhes = {"motivo": r.motivo_rejeicao} if r.motivo_rejeicao else None
+            entradas.append({"data": r.decidida_em, "tipo": "decisao", "descricao": texto, "detalhes": detalhes, "id_usuario": risco.id_gerente})
+    for e in sessao.query(EventoRisco).filter(EventoRisco.id_risco == id_risco):
+        entradas.append({"data": e.criado_em, "tipo": e.tipo, "descricao": e.descricao, "detalhes": e.detalhes, "id_usuario": e.id_usuario})
+
+    ids = {e["id_usuario"] for e in entradas if e["id_usuario"]}
+    nomes = {u.id: u.nome for u in sessao.query(Usuario).filter(Usuario.id.in_(ids))} if ids else {}
+    for e in entradas:
+        e["usuario"] = nomes.get(e.pop("id_usuario"), "Modelo de IA" if e["tipo"] == "recomendacao" else None)
+        e["data"] = monitoramento._em_utc(e["data"]) if e["data"] else None
+    return sorted(entradas, key=lambda e: e["data"] or monitoramento._em_utc(risco.criado_em), reverse=True)
 
 
 # ---------- anexos (evidências do risco) ----------
@@ -503,7 +594,7 @@ async def anexar_arquivo(
     sessao: Session = Depends(obter_sessao),
     gerente: Usuario = Depends(obter_usuario_atual),
 ):
-    _obter_risco_do_gerente(id_risco, gerente, sessao)
+    risco = _obter_risco_do_gerente(id_risco, gerente, sessao)
     conteudo = await arquivo.read(TAMANHO_MAXIMO_ANEXO + 1)
     if len(conteudo) > TAMANHO_MAXIMO_ANEXO:
         raise HTTPException(
@@ -521,6 +612,7 @@ async def anexar_arquivo(
         conteudo=conteudo,
     )
     sessao.add(anexo)
+    _registrar_evento(sessao, risco, gerente, "anexo", f"Anexo adicionado: {anexo.nome_arquivo}")
     sessao.commit()
     sessao.refresh(anexo)
     return anexo
@@ -570,6 +662,8 @@ def excluir_anexo(
     sessao: Session = Depends(obter_sessao),
     gerente: Usuario = Depends(obter_usuario_atual),
 ):
-    sessao.delete(_obter_anexo(id_risco, id_anexo, gerente, sessao))
+    anexo = _obter_anexo(id_risco, id_anexo, gerente, sessao)
+    _registrar_evento(sessao, anexo.risco, gerente, "anexo", f"Anexo removido: {anexo.nome_arquivo}")
+    sessao.delete(anexo)
     sessao.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
