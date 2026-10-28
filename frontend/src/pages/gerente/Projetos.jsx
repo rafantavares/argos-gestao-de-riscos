@@ -126,11 +126,11 @@ function CartaoProjeto({ projeto, resumo, aoEditar, aoVerRiscos }) {
         </Typography>
         <DistribuicaoFaixas porFaixa={resumo.porFaixa} ativos={resumo.ativos} />
         <Typography variant="caption" color="text.secondary" sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75, mt: 1 }}>
-          Apetite: até {projeto.apetite_exposicao ?? CRITERIOS_PADRAO.apetite_exposicao}
+          Limite de tolerância: {projeto.apetite_exposicao ?? CRITERIOS_PADRAO.apetite_exposicao}
           {resumo.foraDoApetite > 0 && (
             <Box component="strong" sx={{ color: "text.primary", display: "inline-flex", alignItems: "center", gap: 0.5 }}>
               · <Marcador cor="var(--argos-erro)" forma="circulo" tamanho={7} />
-              {resumo.foraDoApetite} fora do apetite
+              {resumo.foraDoApetite} acima do limite
             </Box>
           )}
         </Typography>
@@ -363,12 +363,12 @@ function DialogoProjeto({ titulo, rotuloSalvar, aberto, valoresIniciais, comCrit
                 Critérios de risco
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: -1 }}>
-                Cada organização define quanto risco aceita (ISO 31000). Acima do apetite, o risco aparece como fora do apetite e pede
+                Cada organização define quanto risco aceita (apetite a risco, ISO 31000). Acima do limite de tolerância, o risco pede
                 tratamento; o prazo diz de quantos em quantos dias cada faixa deve ser reavaliada (GPR 17).
               </Typography>
               <TextField
                 select
-                label="Apetite: maior exposição aceitável"
+                label="Limite de tolerância: maior exposição aceitável"
                 value={criterios.apetite_exposicao}
                 onChange={(e) => alterarCriterio("apetite_exposicao", e.target.value)}
               >
@@ -397,7 +397,7 @@ function DialogoProjeto({ titulo, rotuloSalvar, aberto, valoresIniciais, comCrit
             </Box>
           ) : (
             <Typography variant="caption" color="text.secondary">
-              O projeto começa com os critérios de risco padrão (apetite 15; reavaliação a cada 7, 15 ou 30 dias por faixa). Ajuste em
+              O projeto começa com os critérios de risco padrão (limite de tolerância 15; reavaliação a cada 7, 15 ou 30 dias por faixa). Ajuste em
               Editar.
             </Typography>
           )}

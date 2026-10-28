@@ -121,7 +121,7 @@ export default function Dashboard() {
     .map((risco) => {
       const rec = ultimaRecomendacao.get(risco.id);
       const motivos = [];
-      if (risco.fora_do_apetite && rec?.aceita !== true) motivos.push({ texto: "Fora do apetite sem plano aceito", cor: "var(--argos-erro)" });
+      if (risco.fora_do_apetite && rec?.aceita !== true) motivos.push({ texto: "Acima do limite de tolerância sem plano aceito", cor: "var(--argos-erro)" });
       else if (risco.exposicao >= 16 && rec?.aceita !== true) motivos.push({ texto: "Grave sem plano aceito", cor: "var(--argos-erro)" });
       if (precisaReavaliar(risco)) motivos.push({ texto: "Reavaliação pendente", cor: "var(--argos-atencao)" });
       if (rec && rec.aceita === null && Date.now() - new Date(rec.criado_em) > 7 * 86400000) {
@@ -352,7 +352,7 @@ export default function Dashboard() {
               )}
             </Box>
             <Typography variant="caption" color="text.secondary">
-              Riscos fora do apetite ou graves sem plano aceito, com a reavaliação vencida ou com recomendação parada
+              Riscos acima do limite de tolerância ou graves sem plano aceito, com a reavaliação vencida ou com recomendação parada
             </Typography>
           </Box>
           {precisamAtencao.length > 5 && (

@@ -241,7 +241,7 @@ export default function Sobre() {
           <strong>Reavaliação:</strong> conforme o projeto anda, o gerente revisa as notas e a fase; cada revisão vira um ponto
           na evolução da exposição. Cada projeto define o prazo entre reavaliações por faixa (padrão: 7 dias para Muito Grave, 15 para Grave e 30 para as demais); riscos com o prazo vencido ganham o aviso <em>Reavaliar</em>.
           <br />
-          <strong>Apetite ao risco:</strong> cada projeto define a maior exposição aceitável (padrão: 15). Riscos acima dela aparecem como <em>fora do apetite</em> e pedem tratamento (ISO 31000: os critérios de risco são da organização).
+          <strong>Limite de tolerância:</strong> cada projeto define a maior exposição aceitável (padrão: 15). Riscos acima dela aparecem como <em>acima do limite</em> e pedem tratamento (é o apetite a risco da ISO 31000: os critérios de risco são da organização).
           <br />
           <strong>Arquivar:</strong> tira o risco das listas, painéis, do modelo e do assistente, sem apagar o histórico
           (dá para restaurar pelo filtro de status “Arquivados”).

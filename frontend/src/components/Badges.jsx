@@ -211,15 +211,15 @@ export function ChipReavaliar({ size = "small" }) {
   );
 }
 
-// Exposição acima do apetite definido no projeto (critério de risco, ISO 31000).
+// Exposição acima do limite de tolerância do projeto (apetite a risco, ISO 31000).
 export function ChipForaApetite({ size = "small" }) {
   return (
-    <Tooltip title="Exposição acima do apetite de risco do projeto: pede tratamento">
+    <Tooltip title="Exposição acima do limite de tolerância do projeto (apetite a risco, ISO 31000): pede tratamento">
       <Chip
         size={size}
         variant="outlined"
         icon={<WarningAmberOutlinedIcon sx={{ fontSize: "0.9375rem" }} />}
-        label="Fora do apetite"
+        label="Acima do limite"
         sx={{ ...estiloMarcado, "& .MuiChip-icon": { color: "var(--argos-erro)", ml: "6px", mr: "-2px" } }}
       />
     </Tooltip>

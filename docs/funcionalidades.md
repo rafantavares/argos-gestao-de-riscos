@@ -136,7 +136,8 @@ virar 4D só porque o dataset ficou mais rico.
 - **Reavaliação pelo prazo do projeto (GPR 17).** O aviso "Reavaliar" e o
   `reavaliacao_pendente` da evolução usam o prazo da faixa do risco, não mais
   30 dias fixos.
-- **Fora do apetite.** Chip na lista, no quadro e na ficha; motivo no quadro
+- **Acima do limite de tolerância** (na tela, o apetite a risco da ISO 31000 se
+  chama "limite de tolerância"). Chip "Acima do limite" na lista, no quadro e na ficha; motivo no quadro
   "Precisam de atenção" da Visão geral; item no sino quando o risco ainda está
   "identificado" (sem tratamento); contagem no cartão do projeto.
 - **Decisão datada e com motivo.** `recomendacoes` ganhou `decidida_em` e

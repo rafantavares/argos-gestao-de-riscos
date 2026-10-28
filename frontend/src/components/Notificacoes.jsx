@@ -8,7 +8,7 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
 import { diasDesdeAvaliacao, precisaReavaliar } from "../constants";
 
-// O que pede ação do gerente agora: riscos fora do apetite ainda sem tratamento
+// O que pede ação do gerente agora: riscos acima do limite de tolerância ainda sem tratamento
 // (ISO 31000), recomendações da IA aguardando decisão e reavaliações vencidas
 // pelo prazo do projeto (GPR 17). Cada item abre o risco.
 export function itensPendentes(riscos, recomendacoes) {
@@ -42,7 +42,7 @@ export function itensPendentes(riscos, recomendacoes) {
       chave: `apet-${r.id}`,
       tipo: "apetite",
       titulo: `${r.indice} · ${r.titulo}`,
-      detalhe: `Exposição ${r.exposicao}, acima do apetite do projeto, sem tratamento`,
+      detalhe: `Exposição ${r.exposicao}, acima do limite de tolerância do projeto, sem tratamento`,
       destino: `/gerente/riscos/${r.id}/recomendacao`,
       data: r.criado_em,
     }));
@@ -97,7 +97,7 @@ export default function Notificacoes({ itens }) {
         {total === 0 ? (
           <Box sx={{ px: 2, py: 4, textAlign: "center", color: "text.secondary" }}>
             <CheckCircleOutlineIcon sx={{ color: "success.main", mb: 1 }} />
-            <Typography variant="body2">Tudo em dia. Nada fora do apetite, nenhuma decisão ou reavaliação pendente.</Typography>
+            <Typography variant="body2">Tudo em dia. Nada acima do limite de tolerância, nenhuma decisão ou reavaliação pendente.</Typography>
           </Box>
         ) : (
           <Box sx={{ maxHeight: 420, overflowY: "auto", py: 0.5 }}>

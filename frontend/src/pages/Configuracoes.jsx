@@ -232,7 +232,7 @@ function Seguranca() {
 // ---------- Notificações ----------
 
 const TIPOS_AVISO = [
-  { chave: "apetite", rotulo: "Riscos fora do apetite", detalhe: "Exposição acima do apetite do projeto e ainda sem tratamento." },
+  { chave: "apetite", rotulo: "Riscos acima do limite de tolerância", detalhe: "Exposição acima do limite de tolerância do projeto e ainda sem tratamento." },
   { chave: "decidir", rotulo: "Recomendações aguardando decisão", detalhe: "Plano sugerido pela IA que você ainda não aceitou nem rejeitou." },
   { chave: "reavaliar", rotulo: "Reavaliações vencidas", detalhe: "Riscos que passaram do prazo de reavaliação do projeto." },
 ];
@@ -290,7 +290,7 @@ function Notificacoes() {
 
       <Secao
         titulo="Resumo semanal por e-mail"
-        descricao="Toda segunda-feira, um e-mail com o que pede ação: riscos fora do apetite, reavaliações vencidas e decisões pendentes. Quem não tem nada pendente não recebe. O urgente continua no sino, na hora."
+        descricao="Toda segunda-feira, um e-mail com o que pede ação: riscos acima do limite de tolerância, reavaliações vencidas e decisões pendentes. Quem não tem nada pendente não recebe. O urgente continua no sino, na hora."
       >
         <FormControlLabel
           control={<Switch checked={Boolean(salvas.resumo_semanal)} onChange={(e) => salvar({ resumo_semanal: e.target.checked })} />}
@@ -312,10 +312,10 @@ function Notificacoes() {
             </Alert>
           )}
           {previa?.total === 0 ? (
-            <Typography variant="body2">Tudo em dia: nada fora do apetite, nenhuma reavaliação vencida e nenhuma decisão pendente.</Typography>
+            <Typography variant="body2">Tudo em dia: nada acima do limite de tolerância, nenhuma reavaliação vencida e nenhuma decisão pendente.</Typography>
           ) : (
             [
-              ["fora_do_apetite", "Fora do apetite, sem tratamento"],
+              ["fora_do_apetite", "Acima do limite de tolerância, sem tratamento"],
               ["reavaliar", "Reavaliação vencida"],
               ["decisoes_pendentes", "Recomendações aguardando decisão"],
             ]

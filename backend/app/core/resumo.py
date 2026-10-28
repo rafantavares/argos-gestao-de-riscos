@@ -39,7 +39,7 @@ def montar_resumo(sessao: Session, usuario: Usuario, agora: datetime | None = No
         return {"id": risco.id, "indice": risco.indice, "titulo": risco.titulo, "projeto": risco.projeto.nome, "detalhe": detalhe}
 
     fora_do_apetite = [
-        item(r, f"exposição {r.probabilidade * r.impacto}, apetite {r.projeto.apetite_exposicao}")
+        item(r, f"exposição {r.probabilidade * r.impacto}, limite {r.projeto.apetite_exposicao}")
         for r in riscos
         if r.fora_do_apetite and r.status == StatusRisco.IDENTIFICADO
     ]
@@ -63,7 +63,7 @@ def montar_resumo(sessao: Session, usuario: Usuario, agora: datetime | None = No
 
 
 SECOES = (
-    ("fora_do_apetite", "Fora do apetite, sem tratamento"),
+    ("fora_do_apetite", "Acima do limite de tolerância, sem tratamento"),
     ("reavaliar", "Reavaliação vencida"),
     ("decisoes_pendentes", "Recomendações aguardando decisão"),
 )
@@ -72,7 +72,7 @@ SECOES = (
 def html_do_resumo(usuario: Usuario, resumo: dict, url_sistema: str) -> str:
     partes = [f"<p>Olá, {html.escape(usuario.nome)}. Este é o resumo semanal dos seus riscos no Argos.</p>"]
     if resumo["total"] == 0:
-        partes.append("<p>Tudo em dia: nada fora do apetite, nenhuma reavaliação vencida e nenhuma decisão pendente.</p>")
+        partes.append("<p>Tudo em dia: nada acima do limite de tolerância, nenhuma reavaliação vencida e nenhuma decisão pendente.</p>")
     for chave, titulo in SECOES:
         itens = resumo[chave]
         if not itens:
