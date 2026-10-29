@@ -64,7 +64,7 @@ export const projetos = {
   criar: (dados) => api.post("/projetos", dados).then((r) => r.data),
   editar: (id, dados) => api.put(`/projetos/${id}`, dados).then((r) => r.data),
   arquivar: (id, arquivado) => api.patch(`/projetos/${id}/arquivo`, { arquivado }).then((r) => r.data),
-  excluir: (id) => api.delete(`/projetos/${id}`),
+  excluir: (id, confirmacao) => api.delete(`/projetos/${id}`, { params: confirmacao ? { confirmacao } : {} }),
 };
 
 // --- riscos ---

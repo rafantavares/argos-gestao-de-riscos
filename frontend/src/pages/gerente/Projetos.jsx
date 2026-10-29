@@ -168,27 +168,32 @@ function CartaoArquivado({ projeto, totalRiscos, aoRestaurar, aoExcluir }) {
       <Button size="small" startIcon={<UnarchiveOutlinedIcon />} onClick={aoRestaurar}>
         Restaurar
       </Button>
-      {totalRiscos === 0 && (
-        <Button size="small" color="error" startIcon={<DeleteOutlineIcon />} onClick={aoExcluir}>
-          Excluir
-        </Button>
-      )}
+      <Button size="small" color="error" startIcon={<DeleteOutlineIcon />} onClick={aoExcluir}>
+        Excluir
+      </Button>
     </Paper>
   );
 }
 
-// Confirmação de arquivar ou excluir projeto.
+// Confirmação de arquivar ou excluir projeto. Excluir projeto com riscos pede
+// o nome do projeto digitado, porque apaga os riscos e não tem volta.
 function DialogoConfirmar({ acao, aoFechar, aoConfirmar }) {
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
-  useEffect(() => setErro(""), [acao]);
+  const [nomeDigitado, setNomeDigitado] = useState("");
+  useEffect(() => {
+    setErro("");
+    setNomeDigitado("");
+  }, [acao]);
   if (!acao) return null;
   const excluir = acao.tipo === "excluir";
+  const comRiscos = excluir && acao.totalRiscos > 0;
+  const nomeConfere = nomeDigitado.trim() === acao.projeto.nome.trim();
 
   async function confirmar() {
     setEnviando(true);
     try {
-      await aoConfirmar();
+      await aoConfirmar(comRiscos ? nomeDigitado.trim() : undefined);
     } catch (e) {
       const detalhe = e.response?.data?.detail;
       setErro(typeof detalhe === "string" ? detalhe : "Não foi possível concluir. Tente de novo.");
@@ -198,12 +203,21 @@ function DialogoConfirmar({ acao, aoFechar, aoConfirmar }) {
   }
 
   return (
-    <Dialog open onClose={aoFechar} maxWidth="xs" fullWidth>
+    <Dialog open onClose={aoFechar} maxWidth="sm" fullWidth>
       <DialogTitle>{excluir ? "Excluir projeto?" : "Arquivar projeto?"}</DialogTitle>
       <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
         {erro && <Alert severity="error">{erro}</Alert>}
         <Typography variant="body2">
-          {excluir ? (
+          {comRiscos ? (
+            <>
+              <strong>{acao.projeto.nome}</strong> será apagado de vez com{" "}
+              <strong>
+                {acao.totalRiscos} risco{acao.totalRiscos === 1 ? "" : "s"}
+              </strong>{" "}
+              e tudo o que depende deles: recomendações, decisões, reavaliações, histórico, anexos e conversas do assistente. Esses riscos também
+              deixam de entrar no treino do modelo. Não dá para desfazer; para só tirar o projeto de vista, use Arquivar.
+            </>
+          ) : excluir ? (
             <>
               <strong>{acao.projeto.nome}</strong> será apagado de vez, junto com as conversas do assistente desse projeto. Não dá para desfazer.
             </>
@@ -214,10 +228,21 @@ function DialogoConfirmar({ acao, aoFechar, aoConfirmar }) {
             </>
           )}
         </Typography>
+        {comRiscos && (
+          <TextField
+            label="Digite o nome do projeto para confirmar"
+            value={nomeDigitado}
+            onChange={(e) => setNomeDigitado(e.target.value)}
+            placeholder={acao.projeto.nome}
+            autoComplete="off"
+            size="small"
+            sx={{ mt: 1 }}
+          />
+        )}
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button onClick={aoFechar}>Cancelar</Button>
-        <Button variant="contained" color={excluir ? "error" : "primary"} onClick={confirmar} disabled={enviando}>
+        <Button variant="contained" color={excluir ? "error" : "primary"} onClick={confirmar} disabled={enviando || (comRiscos && !nomeConfere)}>
           {excluir ? "Excluir de vez" : "Arquivar"}
         </Button>
       </DialogActions>
@@ -262,7 +287,7 @@ export default function Projetos() {
     () => new Map(projetos.map((p) => [p.id, resumir(riscos.filter((r) => r.id_projeto === p.id && !r.arquivado))])),
     [projetos, riscos]
   );
-  // Todos os riscos do projeto, inclusive arquivados: só projeto sem nenhum pode ser excluído.
+  // Todos os riscos do projeto, inclusive arquivados (excluir o projeto apaga todos).
   const totalRiscos = (id) => riscos.filter((r) => r.id_projeto === id).length;
   const arquivados = projetos.filter((p) => p.arquivado).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
   const ativos = projetos.filter((p) => !p.arquivado);
@@ -357,7 +382,7 @@ export default function Projetos() {
                   projeto={p}
                   totalRiscos={totalRiscos(p.id)}
                   aoRestaurar={() => restaurar(p)}
-                  aoExcluir={() => setConfirmacao({ tipo: "excluir", projeto: p })}
+                  aoExcluir={() => setConfirmacao({ tipo: "excluir", projeto: p, totalRiscos: totalRiscos(p.id) })}
                 />
               ))}
             </Box>
@@ -368,9 +393,9 @@ export default function Projetos() {
       <DialogoConfirmar
         acao={confirmacao}
         aoFechar={() => setConfirmacao(null)}
-        aoConfirmar={async () => {
+        aoConfirmar={async (nomeConfirmado) => {
           const { tipo, projeto } = confirmacao;
-          if (tipo === "excluir") await servicoProjetos.excluir(projeto.id);
+          if (tipo === "excluir") await servicoProjetos.excluir(projeto.id, nomeConfirmado);
           else await servicoProjetos.arquivar(projeto.id, true);
           setConfirmacao(null);
           setProjetoEmEdicao(null);
@@ -404,11 +429,9 @@ export default function Projetos() {
               <Button startIcon={<ArchiveOutlinedIcon />} onClick={() => setConfirmacao({ tipo: "arquivar", projeto: projetoEmEdicao })}>
                 Arquivar
               </Button>
-              {totalRiscos(projetoEmEdicao.id) === 0 && (
-                <Button color="error" startIcon={<DeleteOutlineIcon />} onClick={() => setConfirmacao({ tipo: "excluir", projeto: projetoEmEdicao })}>
-                  Excluir
-                </Button>
-              )}
+              <Button color="error" startIcon={<DeleteOutlineIcon />} onClick={() => setConfirmacao({ tipo: "excluir", projeto: projetoEmEdicao, totalRiscos: totalRiscos(projetoEmEdicao.id) })}>
+                Excluir
+              </Button>
             </>
           )
         }

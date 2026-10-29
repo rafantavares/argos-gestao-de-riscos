@@ -194,9 +194,11 @@ virar 4D só porque o dataset ficou mais rico.
   Cada risco ganha o evento "Arquivado junto com o projeto" na trilha. Ao
   restaurar, voltam só os riscos arquivados junto com o projeto. Projeto
   arquivado não recebe riscos novos nem restaura risco isolado.
-- **Excluir de vez** (`DELETE /projetos/{id}`): só projeto sem nenhum risco,
-  inclusive arquivado (409 caso contrário); apaga também as conversas do
-  assistente e os vínculos.
+- **Excluir de vez** (`DELETE /projetos/{id}`): apaga o projeto, as conversas
+  do assistente e os vínculos. Se houver riscos (mesmo arquivados), apaga
+  também os riscos e tudo o que depende deles (recomendações, reavaliações,
+  histórico, trilha, anexos) e exige `?confirmacao=<nome do projeto>`, digitado
+  na tela (409 sem ele). Não tem volta e tira esses riscos do treino do modelo.
 - Projetos arquivados ficam em "Ver arquivados" no fim da página, com
   Restaurar e Excluir. Coluna nova `projetos.arquivado`
   (`app/core/migrar_fase15.py`, `backend/migracoes/fase15_arquivar_projeto.sql`).

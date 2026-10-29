@@ -53,9 +53,23 @@ def test_excluir_projeto_sem_riscos(cliente, cabecalho_gerente):
     assert cliente.get("/projetos/meus?incluir_arquivados=true", headers=cabecalho_gerente).json() == []
 
 
-def test_nao_exclui_projeto_com_riscos_nem_de_outro_gerente(
-    cliente, cabecalho_gerente, cabecalho_outro_gerente, projeto_com_gerente, risco
+def test_projeto_com_riscos_so_e_excluido_confirmando_o_nome(
+    cliente, cabecalho_gerente, cabecalho_outro_gerente, projeto_com_gerente, risco, sessao
 ):
-    assert cliente.delete(f"/projetos/{projeto_com_gerente.id}", headers=cabecalho_gerente).status_code == 409
-    assert cliente.delete(f"/projetos/{projeto_com_gerente.id}", headers=cabecalho_outro_gerente).status_code == 404
+    from app.models.recomendacao import Recomendacao
+    from app.models.risco import Risco
+
+    url, id_risco, nome = f"/projetos/{projeto_com_gerente.id}", risco.id, projeto_com_gerente.nome
+    assert cliente.delete(url, headers=cabecalho_outro_gerente).status_code == 404
     assert _arquivar(cliente, cabecalho_outro_gerente, projeto_com_gerente.id).status_code == 404
+    assert cliente.delete(url, headers=cabecalho_gerente).status_code == 409
+    assert cliente.delete(url, headers=cabecalho_gerente, params={"confirmacao": "outro nome"}).status_code == 409
+
+    # Uma edição gera evento na trilha: precisa sair junto com o risco.
+    assert cliente.patch(f"/riscos/{id_risco}/tratamento", headers=cabecalho_gerente, json={"mitigacao": "Plano novo"}).status_code == 200
+    resposta = cliente.delete(url, headers=cabecalho_gerente, params={"confirmacao": nome})
+    assert resposta.status_code == 204
+    sessao.expire_all()
+    assert sessao.query(Risco).filter(Risco.id == id_risco).count() == 0
+    assert sessao.query(Recomendacao).filter(Recomendacao.id_risco == id_risco).count() == 0
+    assert cliente.get("/projetos/meus?incluir_arquivados=true", headers=cabecalho_gerente).json() == []

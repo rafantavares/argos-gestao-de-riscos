@@ -1,17 +1,21 @@
 """Router de projetos: o gerente cria, lista, edita, arquiva e exclui os projetos
 a que está vinculado."""
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.security import exigir_perfil, obter_usuario_atual
 from app.database import obter_sessao
+from app.models.anexo_risco import AnexoRisco
 from app.models.conversa_chat import ConversaChat
 from app.models.enums import PerfilUsuario
 from app.models.evento_risco import EventoRisco
+from app.models.historico_risco import HistoricoRisco
 from app.models.projeto import Projeto
 from app.models.projeto_gerente import ProjetoGerente
+from app.models.reavaliacao_risco import ReavaliacaoRisco
+from app.models.recomendacao import Recomendacao
 from app.models.risco import Risco
 from app.models.usuario import Usuario
 from app.schemas.projeto import ProjetoArquivar, ProjetoAtualizar, ProjetoCriar, ProjetoResposta
@@ -156,18 +160,26 @@ def arquivar_projeto(
 )
 def excluir_projeto(
     id_projeto: int,
+    confirmacao: Optional[str] = None,
     sessao: Session = Depends(obter_sessao),
     usuario: Usuario = Depends(obter_usuario_atual),
 ):
-    """Exclui de vez um projeto sem riscos (criado por engano, por exemplo).
-    Projeto com riscos, mesmo arquivados, não pode ser excluído: o histórico e
-    o treino do modelo dependem deles; nesse caso, arquive."""
+    """Exclui de vez o projeto. Se ele tem riscos (mesmo arquivados), apaga
+    também os riscos e tudo o que depende deles (recomendações, reavaliações,
+    histórico, trilha e anexos) e exige `confirmacao` igual ao nome do projeto,
+    porque não dá para desfazer e esses riscos saem do treino do modelo. Para
+    só tirar o projeto de vista, o caminho é arquivar."""
     projeto = _obter_projeto_acessivel(id_projeto, usuario, sessao)
-    if sessao.query(Risco).filter(Risco.id_projeto == projeto.id).count():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="O projeto tem riscos cadastrados e não pode ser excluído. Arquive-o.",
-        )
+    ids_riscos = [i for (i,) in sessao.query(Risco.id).filter(Risco.id_projeto == projeto.id)]
+    if ids_riscos:
+        if (confirmacao or "").strip() != projeto.nome.strip():
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="O projeto tem riscos. Para excluir tudo, confirme digitando o nome do projeto.",
+            )
+        for modelo in (AnexoRisco, EventoRisco, HistoricoRisco, ReavaliacaoRisco, Recomendacao):
+            sessao.query(modelo).filter(modelo.id_risco.in_(ids_riscos)).delete(synchronize_session=False)
+        sessao.query(Risco).filter(Risco.id.in_(ids_riscos)).delete(synchronize_session=False)
     for conversa in sessao.query(ConversaChat).filter(ConversaChat.id_projeto == projeto.id):
         sessao.delete(conversa)
     sessao.query(ProjetoGerente).filter(ProjetoGerente.id_projeto == projeto.id).delete()
